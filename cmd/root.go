@@ -5,16 +5,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Run executes the CLI interface
 func Run() error {
 	cmd := &cobra.Command{
 		Use:   "textnote",
 		Short: "open today's note",
 		Long:  "open a text based note template for today",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			// run the open command as the default
-			open.CreateCmd().Execute()
+			return open.CreateCmd().Execute()
 		},
 	}
-	cmd.AddCommand(open.CreateCmd())
+
+	cmd.AddCommand(
+		open.CreateCmd(),
+	)
+
 	return cmd.Execute()
 }

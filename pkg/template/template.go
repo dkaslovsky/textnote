@@ -51,11 +51,6 @@ func (b Body) Write(w io.Writer) error {
 	return err
 }
 
-// GetFileName returns the file name to be associated with a Body
-func (b Body) GetFileName() string {
-	return GetFileNameFromTime(b.Date)
-}
-
 func (b Body) makeHeader() string {
 	return fmt.Sprintf("%s\n%s",
 		b.Date.Format(timeFormatHeader),
@@ -63,9 +58,16 @@ func (b Body) makeHeader() string {
 	)
 }
 
-// GetFileNameFromTime formats a time.Time object into a format used as a filename
-func GetFileNameFromTime(t time.Time) string {
+// GetFileName formats a time.Time object into a format used as a filename
+func GetFileName(t time.Time) string {
 	return fmt.Sprintf("%s.%s", t.Format(timeFormatFileName), fileExt)
+}
+
+// GetFirstSectionLine calculates the line number of the first Section for Vim to open on
+func GetFirstSectionLine() int {
+	// there are 2 lines (the header itself and the section title) plus the header whitespace
+	// to get to the section title, so add one to start cursor inside the section
+	return headerTrailingNewlines + 3
 }
 
 // Section is a named section of a note

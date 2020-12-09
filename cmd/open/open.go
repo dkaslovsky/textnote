@@ -1,6 +1,7 @@
 package open
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO: move this to config, calculate the +4
+// TODO: move this to config
 var defaultSectionNames = []string{
 	"TODO",
 	"DONE",
@@ -23,26 +24,21 @@ func CreateCmd() *cobra.Command {
 		Long:  "open a text based note template for today",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			now := time.Now()
-			fileName := template.GetFileNameFromTime(now)
+			fileName := template.GetFileName(now)
 
 			_, err := os.Stat(fileName)
-			if !os.IsNotExist(err) {
-				return openInEditor(fileName)
+			if os.IsNotExist(err) {
+				body := makeNewBody(now)
+				fo, err := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR, 0644)
+				if err != nil {
+					return err
+				}
+				err = body.Write(fo)
+				if err != nil {
+					return err
+				}
 			}
-			if err != nil {
-				return err
-			}
-
-			body := makeNewBody(now)
-			fo, err := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR, 0644)
-			if err != nil {
-				return err
-			}
-			err = body.Write(fo)
-			if err != nil {
-				return err
-			}
-			return openInEditor(body.GetFileName())
+			return openInEditor(fileName, template.GetFirstSectionLine())
 		},
 	}
 	return cmd
@@ -57,8 +53,9 @@ func makeNewBody(date time.Time) template.Body {
 	return body
 }
 
-func openInEditor(fileName string) error {
-	cmd := exec.Command("vim", "+4", fileName)
+func openInEditor(fileName string, line int) error {
+	lineArg := fmt.Sprintf("+%d", line)
+	cmd := exec.Command("vim", lineArg, fileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
