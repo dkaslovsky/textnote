@@ -9,6 +9,8 @@ import (
 )
 
 const (
+	fileExt = "txt"
+
 	headerTrailingNewlines = 1
 
 	sectionNameWrapper      = "___"
@@ -51,7 +53,7 @@ func (b Body) Write(w io.Writer) error {
 
 // GetFileName returns the file name to be associated with a Body
 func (b Body) GetFileName() string {
-	return b.Date.Format(timeFormatFileName)
+	return GetFileNameFromTime(b.Date)
 }
 
 func (b Body) makeHeader() string {
@@ -59,6 +61,11 @@ func (b Body) makeHeader() string {
 		b.Date.Format(timeFormatHeader),
 		whitespace("\n", headerTrailingNewlines),
 	)
+}
+
+// GetFileNameFromTime formats a time.Time object into a format used as a filename
+func GetFileNameFromTime(t time.Time) string {
+	return fmt.Sprintf("%s.%s", t.Format(timeFormatFileName), fileExt)
 }
 
 // Section is a named section of a note
