@@ -12,13 +12,14 @@ func Run() error {
 		Short: "open today's note",
 		Long:  "open a text based note template for today",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// run the open command as the default
-			return open.CreateCmd().Execute()
+			// run the today command as the default
+			return open.CreateTodayCmd().Execute()
 		},
 	}
 
 	cmd.AddCommand(
-		open.CreateCmd(),
+		open.CreateTodayCmd(),
+		open.CreateTomorrowCmd(),
 	)
 
 	return cmd.Execute()

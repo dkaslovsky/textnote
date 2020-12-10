@@ -4,33 +4,28 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 )
 
-var (
-	regexSectionName = regexp.MustCompile(fmt.Sprintf("%s[A-Z]+%s", sectionNameWrapper, sectionNameWrapper))
-)
-
-// Read parses a note into a Body
+// Read parses a textnote into a Body
 func Read(r io.Reader) (b Body, err error) {
 	raw, err := ioutil.ReadAll(r)
 	if err != nil {
 		return b, err
 	}
 
-	headerAndBody := strings.SplitN(string(raw), "\n", 2)
-	if len(headerAndBody) != 2 {
-		return b, errors.New("failed to parse header")
+	// separate header from text
+	split := strings.SplitN(string(raw), "\n", 2)
+	if len(split) != 2 {
+		return b, errors.New("failed to parse header while reading textnote")
 	}
-
-	dateStr, text := headerAndBody[0], headerAndBody[1]
+	dateStr, text := split[0], split[1]
 	date, err := time.Parse(timeFormatHeader, dateStr)
 	if err != nil {
-		return b, errors.Wrap(err, "failed to parse header")
+		return b, errors.Wrap(err, "failed to parse header while reading textnote")
 	}
 
 	sections := []*Section{}
@@ -49,7 +44,7 @@ func Read(r io.Reader) (b Body, err error) {
 
 		section, err := parseSection(text[start:end])
 		if err != nil {
-			return b, err
+			return b, errors.Wrap(err, "failed to parse Section while reading textnote")
 		}
 
 		sections = append(sections, section)
@@ -58,24 +53,36 @@ func Read(r io.Reader) (b Body, err error) {
 	return NewBody(date, sections...), nil
 }
 
+// GetFileName formats a time.Time object into a format used as a filename
+func GetFileName(t time.Time) string {
+	return fmt.Sprintf("%s.%s", t.Format(timeFormatFileName), fileExt)
+}
+
 func parseSection(s string) (*Section, error) {
 	if len(s) == 0 {
 		return nil, errors.New("cannot parse Section from empty input")
 	}
 
-	lines := strings.Split(strings.TrimSuffix(s, whitespace("\n", sectionTrailingNewlines)), "\n")
-	name := strings.Trim(lines[0], sectionNameWrapper)
+	// trim off trailing newlines
+	s = strings.TrimSuffix(s, strings.Repeat("\n", sectionTrailingNewlines))
+	// split into lines
+	lines := strings.Split(s, "\n")
+	// extract name from first line
+	name := parseSectionName(lines[0])
 	if len(lines) == 1 {
 		return NewSection(name), nil
 	}
 
-	contents := strings.TrimRight(strings.Join(lines[1:], "\n"), "\n")
+	// reform without the first line
+	contents := strings.Join(lines[1:], "\n")
+	//contents = strings.TrimRight(contents, "\n")
 	if contents == "" {
 		return NewSection(name), nil
 	}
 	return NewSection(name, contents), nil
 }
 
-func whitespace(ch string, repeat int) string {
-	return strings.Repeat(string(ch), repeat)
+func parseSectionName(line string) string {
+	// trim the prefix and suffix to get the section name
+	return strings.TrimPrefix(strings.TrimSuffix(line, sectionNameSuffix), sectionNamePrefix)
 }

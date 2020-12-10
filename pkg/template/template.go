@@ -8,20 +8,31 @@ import (
 	"time"
 )
 
+// TODO: this is config!
 const (
 	fileExt = "txt"
 
+	headerPrefix           = ""
+	headerSuffix           = ""
 	headerTrailingNewlines = 1
 
-	sectionNameWrapper      = "___"
+	sectionNamePrefix       = "___"
+	sectionNameSuffix       = "___"
 	sectionTrailingNewlines = 3
+
+	// SectionNames are the names for each section
+	SectionNames = "TODO,DONE,NOTES"
 
 	timeFormatFileName = "2006-01-02"
 	timeFormatHeader   = "[Mon] 02 Jan 2006"
 )
 
 var (
-	regexNewlines = regexp.MustCompile(`\n{2,}`)
+	// FirstSectionFirstLine is the first line of content of the first Section, used when opening with Vim
+	FirstSectionFirstLine = headerTrailingNewlines + 3
+
+	regexNewlines    = regexp.MustCompile(`\n{2,}`)
+	regexSectionName = regexp.MustCompile(fmt.Sprintf("%s[A-Za-z]+%s", sectionNamePrefix, sectionNameSuffix))
 )
 
 // Body is the structure for a note
@@ -52,22 +63,12 @@ func (b Body) Write(w io.Writer) error {
 }
 
 func (b Body) makeHeader() string {
-	return fmt.Sprintf("%s\n%s",
+	return fmt.Sprintf("%s%s%s\n%s",
+		headerPrefix,
 		b.Date.Format(timeFormatHeader),
-		whitespace("\n", headerTrailingNewlines),
+		headerSuffix,
+		strings.Repeat("\n", headerTrailingNewlines),
 	)
-}
-
-// GetFileName formats a time.Time object into a format used as a filename
-func GetFileName(t time.Time) string {
-	return fmt.Sprintf("%s.%s", t.Format(timeFormatFileName), fileExt)
-}
-
-// GetFirstSectionLine calculates the line number of the first Section for Vim to open on
-func GetFirstSectionLine() int {
-	// there are 2 lines (the header itself and the section title) plus the header whitespace
-	// to get to the section title, so add one to start cursor inside the section
-	return headerTrailingNewlines + 3
 }
 
 // Section is a named section of a note
@@ -85,14 +86,14 @@ func NewSection(name string, contents ...string) *Section {
 }
 
 func (s *Section) String() string {
-	str := fmt.Sprintf("%s%s%s\n", sectionNameWrapper, s.Name, sectionNameWrapper)
+	str := fmt.Sprintf("%s%s%s\n", sectionNamePrefix, s.Name, sectionNameSuffix)
 	for _, content := range s.Contents {
 		if !strings.HasSuffix(content, "\n") {
 			content += "\n"
 		}
 		str += content
 	}
-	return str + whitespace("\n", sectionTrailingNewlines)
+	return str + strings.Repeat("\n", sectionTrailingNewlines)
 }
 
 // CleanNewlines mutates a section to remove all newlines
