@@ -3,102 +3,107 @@ package template
 import (
 	"fmt"
 	"io"
-	"regexp"
+	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/dkaslovsky/TextNote/pkg/config"
 )
 
-// TODO: this is config!
-const (
-	fileExt = "txt"
-
-	headerPrefix           = ""
-	headerSuffix           = ""
-	headerTrailingNewlines = 1
-
-	sectionNamePrefix       = "___"
-	sectionNameSuffix       = "___"
-	sectionTrailingNewlines = 3
-
-	// SectionNames are the names for each section
-	SectionNames = "TODO,DONE,NOTES"
-
-	timeFormatFileName = "2006-01-02"
-	timeFormatHeader   = "[Mon] 02 Jan 2006"
-)
-
-var (
-	// FirstSectionFirstLine is the first line of content of the first Section, used when opening with Vim
-	FirstSectionFirstLine = headerTrailingNewlines + 3
-
-	regexNewlines    = regexp.MustCompile(`\n{2,}`)
-	regexSectionName = regexp.MustCompile(fmt.Sprintf("%s[A-Za-z]+%s", sectionNamePrefix, sectionNameSuffix))
-)
-
-// Body is the structure for a note
-type Body struct {
-	Date     time.Time
-	Sections []*Section
+// Template contains the structure of a TextNote
+type Template struct {
+	date     time.Time
+	sections []*section
+	opts     config.Opts
 }
 
-// NewBody constructs a Body
-func NewBody(date time.Time, sections ...*Section) Body {
-	return Body{
-		Date:     date,
-		Sections: sections,
+// NewTemplate constructs a new template
+func NewTemplate(opts config.Opts) *Template {
+	t := &Template{
+		sections: []*section{},
+		opts:     opts,
 	}
-}
-
-func (b Body) String() string {
-	s := b.makeHeader()
-	for _, section := range b.Sections {
-		s += section.String()
+	for _, sectionName := range opts.Section.Names {
+		t.AddSection(newSection(sectionName))
 	}
-	return s
+	return t
 }
 
-func (b Body) Write(w io.Writer) error {
-	_, err := w.Write([]byte(b.String()))
+// SetDate is a setter for a Template's date field
+func (t *Template) SetDate(date time.Time) {
+	t.date = date
+}
+
+// AddSection adds a section to a Template
+func (t *Template) AddSection(s *section) {
+	t.sections = append(t.sections, s)
+}
+
+func (t *Template) Write(w io.Writer) error {
+	if t.date.IsZero() {
+		return fmt.Errorf("must set date before writing a template")
+	}
+	_, err := w.Write([]byte(t.string()))
 	return err
 }
 
-func (b Body) makeHeader() string {
+// GetFirstSectionFirstLine returns the first line of content of the first Section (used when opening with Vim)
+func (t *Template) GetFirstSectionFirstLine() int {
+	return t.opts.Header.TrailingNewlines + 3
+}
+
+// GetFilePath generates a name for a file based on the template date
+func (t *Template) GetFilePath() string {
+	fileName := fmt.Sprintf("%s.%s", t.date.Format(t.opts.File.TimeFormat), fileExt)
+	return filepath.Join(t.opts.AppDir, fileName)
+}
+
+func (t *Template) string() string {
+	str := t.makeHeader()
+	for _, section := range t.sections {
+		str += section.string(t.opts.Section.Prefix, t.opts.Section.Suffix, t.opts.Section.TrailingNewlines)
+	}
+	return str
+}
+
+func (t *Template) makeHeader() string {
 	return fmt.Sprintf("%s%s%s\n%s",
-		headerPrefix,
-		b.Date.Format(timeFormatHeader),
-		headerSuffix,
-		strings.Repeat("\n", headerTrailingNewlines),
+		t.opts.Header.Prefix,
+		t.date.Format(t.opts.Header.TimeFormat),
+		t.opts.Header.Suffix,
+		strings.Repeat("\n", t.opts.Header.TrailingNewlines),
 	)
 }
 
-// Section is a named section of a note
-type Section struct {
+// section is a named section of a note
+type section struct {
 	Name     string
 	Contents []string // use a slice in case we want to treat contents as a list of bulleted items
 }
 
-// NewSection constructs a Section
-func NewSection(name string, contents ...string) *Section {
-	return &Section{
+// newSection constructs a Section
+func newSection(name string, contents ...string) *section {
+	return &section{
 		Name:     name,
 		Contents: contents,
 	}
 }
 
-func (s *Section) String() string {
-	str := fmt.Sprintf("%s%s%s\n", sectionNamePrefix, s.Name, sectionNameSuffix)
+func (s *section) string(prefix string, suffix string, trailing int) string {
+	str := fmt.Sprintf("%s%s%s\n", prefix, s.Name, suffix)
 	for _, content := range s.Contents {
 		if !strings.HasSuffix(content, "\n") {
 			content += "\n"
 		}
 		str += content
 	}
-	return str + strings.Repeat("\n", sectionTrailingNewlines)
+	return str + strings.Repeat("\n", trailing)
 }
 
-// CleanNewlines mutates a section to remove all newlines
-func (s *Section) CleanNewlines() {
-	for i, content := range s.Contents {
-		s.Contents[i] = strings.Trim(regexNewlines.ReplaceAllString(content, "\n"), "\n")
-	}
-}
+// // CleanNewlines mutates a section to remove all newlines
+// func (s *Section) CleanNewlines() {
+//	regexNewlines    = regexp.MustCompile(`\n{2,}`)
+// 	for i, content := range s.Contents {
+// 		s.Contents[i] = strings.Trim(regexNewlines.ReplaceAllString(content, "\n"), "\n")
+// 	}
+// }
