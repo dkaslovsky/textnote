@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
+	"github.com/dkaslovsky/TextNote/pkg/config"
 	"github.com/dkaslovsky/TextNote/pkg/template"
 	"github.com/spf13/cobra"
 )
@@ -19,12 +19,7 @@ func CreateTodayCmd() *cobra.Command {
 		Long:  "open a text based note template for today",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			date := time.Now()
-			fileName := template.GetFileName(date)
-			err := createIfNotExists(date, fileName)
-			if err != nil {
-				return err
-			}
-			return openInEditor(fileName, template.FirstSectionFirstLine)
+			return run(date)
 		},
 	}
 	return cmd
@@ -38,41 +33,41 @@ func CreateTomorrowCmd() *cobra.Command {
 		Long:  "open a text based note template for tomorrow",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			date := time.Now().Add(24 * time.Hour)
-			fileName := template.GetFileName(date)
-			err := createIfNotExists(date, fileName)
-			if err != nil {
-				return err
-			}
-			return openInEditor(fileName, template.FirstSectionFirstLine)
+			return run(date)
 		},
 	}
 	return cmd
 }
 
-func createIfNotExists(date time.Time, fileName string) error {
+func run(date time.Time) error {
+	opts, err := config.LoadOrCreate()
+	if err != nil {
+		return err
+	}
+
+	t := template.NewTemplate(opts)
+	t.SetDate(date)
+	err = createFileIfNotExists(t)
+	if err != nil {
+		return err
+	}
+	return openInEditor(t.GetFilePath(), t.GetFirstSectionFirstLine())
+}
+
+func createFileIfNotExists(t *template.Template) error {
+	fileName := t.GetFilePath()
 	_, err := os.Stat(fileName)
 	if os.IsNotExist(err) {
-		body := makeBody(date)
 		fo, err := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR, 0644)
 		if err != nil {
 			return err
 		}
-		err = body.Write(fo)
+		err = t.Write(fo)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func makeBody(date time.Time) template.Body {
-	sections := []*template.Section{}
-	sectionNames := strings.Split(template.SectionNames, ",")
-	for _, name := range sectionNames {
-		sections = append(sections, template.NewSection(name))
-	}
-	body := template.NewBody(date, sections...)
-	return body
 }
 
 func openInEditor(fileName string, line int) error {
