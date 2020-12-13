@@ -2,38 +2,45 @@ package file
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
-
-	"github.com/dkaslovsky/TextNote/pkg/template"
 )
 
-// Exists evaluates if a file for a template exists
-func Exists(t *template.Template) bool {
-	fileName := t.GetFilePath()
+// ReadWriteable is the interface for which file operations are executed
+type ReadWriteable interface {
+	Load(io.Reader) error
+	Write(io.Writer) error
+	GetFilePath() string
+	GetFileStartLine() int
+}
+
+// Exists evaluates if a file exists
+func Exists(rw ReadWriteable) bool {
+	fileName := rw.GetFilePath()
 	_, err := os.Stat(fileName)
 	return !os.IsNotExist(err)
 }
 
-// Read reads a template from file
-func Read(t *template.Template) error {
-	r, err := os.Open(t.GetFilePath())
+// Read reads from file
+func Read(rw ReadWriteable) error {
+	r, err := os.Open(rw.GetFilePath())
 	if err != nil {
 		return err
 	}
 	defer r.Close()
-	return t.Load(r)
+	return rw.Load(r)
 }
 
 // Overwrite writes a template to a file, overwriting existing file contents if any
-func Overwrite(t *template.Template) error {
-	f, err := os.OpenFile(t.GetFilePath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+func Overwrite(rw ReadWriteable) error {
+	f, err := os.OpenFile(rw.GetFilePath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	err = t.Write(f)
+	err = rw.Write(f)
 	if err != nil {
 		return err
 	}
@@ -41,17 +48,17 @@ func Overwrite(t *template.Template) error {
 }
 
 // WriteIfNotExists writes a template to a file if the file does not already exist
-func WriteIfNotExists(t *template.Template) error {
-	if Exists(t) {
+func WriteIfNotExists(rw ReadWriteable) error {
+	if Exists(rw) {
 		return nil
 	}
-	return Overwrite(t)
+	return Overwrite(rw)
 }
 
 // OpenInEditor opens a template in Vim
-func OpenInEditor(t *template.Template) error {
-	lineArg := fmt.Sprintf("+%d", t.GetFileStartLine())
-	cmd := exec.Command("vim", lineArg, t.GetFilePath())
+func OpenInEditor(rw ReadWriteable) error {
+	lineArg := fmt.Sprintf("+%d", rw.GetFileStartLine())
+	cmd := exec.Command("vim", lineArg, rw.GetFilePath())
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
