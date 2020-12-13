@@ -1,8 +1,6 @@
 package today
 
 import (
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/dkaslovsky/TextNote/pkg/config"
@@ -76,8 +74,6 @@ func CreateTodayCmd() *cobra.Command {
 					return err
 				}
 			}
-			fmt.Println("t:")
-			t.Write(os.Stdout)
 			err = file.Overwrite(t)
 			if err != nil {
 				return err
