@@ -57,7 +57,12 @@ func (t *Template) Load(r io.Reader) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to parse Section while reading textnote")
 		}
-		t.AddSection(section)
+
+		idx, found := t.sectionIdx[section.name]
+		if !found {
+			return fmt.Errorf("cannot load undefined section [%s]", section.name)
+		}
+		t.sections[idx] = section
 	}
 
 	return nil

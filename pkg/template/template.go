@@ -12,19 +12,22 @@ import (
 
 // Template contains the structure of a TextNote
 type Template struct {
-	date     time.Time
-	sections []*section
-	opts     config.Opts
+	opts       config.Opts
+	date       time.Time
+	sections   []*section
+	sectionIdx map[string]int
 }
 
 // NewTemplate constructs a new template
 func NewTemplate(opts config.Opts) *Template {
 	t := &Template{
-		sections: []*section{},
-		opts:     opts,
+		opts:       opts,
+		sections:   []*section{},
+		sectionIdx: map[string]int{},
 	}
-	for _, sectionName := range opts.Section.Names {
-		t.AddSection(newSection(sectionName))
+	for i, sectionName := range opts.Section.Names {
+		t.sections = append(t.sections, newSection(sectionName))
+		t.sectionIdx[sectionName] = i
 	}
 	return t
 }
@@ -34,17 +37,49 @@ func (t *Template) SetDate(date time.Time) {
 	t.date = date
 }
 
-// AddSection adds a section to a Template
-func (t *Template) AddSection(s *section) {
-	t.sections = append(t.sections, s)
-}
-
 func (t *Template) Write(w io.Writer) error {
 	if t.date.IsZero() {
 		return fmt.Errorf("must set date before writing a template")
 	}
 	_, err := w.Write([]byte(t.string()))
 	return err
+}
+
+// CopySectionContents copies the contents of the specified section from a source template by
+// appending to the contents of the target's section
+func (t *Template) CopySectionContents(src *Template, sectionName string) error {
+	tgtIdx, found := t.sectionIdx[sectionName]
+	if !found {
+		return fmt.Errorf("section [%s] not found in template", sectionName)
+	}
+	srcIdx, found := src.sectionIdx[sectionName]
+	if !found {
+		return fmt.Errorf("section [%s] not found in source template", sectionName)
+	}
+
+	tgtSec := t.sections[tgtIdx]
+	srcSec := src.sections[srcIdx]
+	tgtSec.contents = append(tgtSec.contents, srcSec.contents...)
+	return nil
+}
+
+// MoveSectionContents moves the contents of the specified section from a source template by
+// appending to the contents of the target's section and deleting from the source
+func (t *Template) MoveSectionContents(src *Template, sectionName string) error {
+	tgtIdx, found := t.sectionIdx[sectionName]
+	if !found {
+		return fmt.Errorf("section [%s] not found in template", sectionName)
+	}
+	srcIdx, found := src.sectionIdx[sectionName]
+	if !found {
+		return fmt.Errorf("section [%s] not found in source template", sectionName)
+	}
+
+	tgtSec := t.sections[tgtIdx]
+	srcSec := src.sections[srcIdx]
+	tgtSec.contents = append(tgtSec.contents, srcSec.contents...)
+	srcSec.deleteContents()
+	return nil
 }
 
 // GetFirstSectionFirstLine returns the first line of content of the first Section (used when opening with Vim)
@@ -77,21 +112,29 @@ func (t *Template) makeHeader() string {
 
 // section is a named section of a note
 type section struct {
-	Name     string
-	Contents []string // use a slice in case we want to treat contents as a list of bulleted items
+	name     string
+	contents []string // use a slice in case we want to treat contents as a list of bulleted items
 }
 
 // newSection constructs a Section
 func newSection(name string, contents ...string) *section {
 	return &section{
-		Name:     name,
-		Contents: contents,
+		name:     name,
+		contents: contents,
 	}
 }
 
+func (s *section) appendContents(contents string) {
+	s.contents = append(s.contents, contents)
+}
+
+func (s *section) deleteContents() {
+	s.contents = []string{}
+}
+
 func (s *section) string(prefix string, suffix string, trailing int) string {
-	str := fmt.Sprintf("%s%s%s\n", prefix, s.Name, suffix)
-	for _, content := range s.Contents {
+	str := fmt.Sprintf("%s%s%s\n", prefix, s.name, suffix)
+	for _, content := range s.contents {
 		if !strings.HasSuffix(content, "\n") {
 			content += "\n"
 		}
