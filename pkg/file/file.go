@@ -50,7 +50,7 @@ func WriteIfNotExists(t *template.Template) error {
 
 // OpenInEditor opens a template in Vim
 func OpenInEditor(t *template.Template) error {
-	lineArg := fmt.Sprintf("+%d", t.GetFirstSectionFirstLine())
+	lineArg := fmt.Sprintf("+%d", t.GetFileStartLine())
 	cmd := exec.Command("vim", lineArg, t.GetFilePath())
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin

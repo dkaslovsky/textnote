@@ -12,8 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const fileExt = "txt"
-
 // Load populates a Template from the contents of a TextNote
 func (t *Template) Load(r io.Reader) error {
 	raw, err := ioutil.ReadAll(r)
@@ -53,7 +51,7 @@ func (t *Template) Load(r io.Reader) error {
 			end = len(sectionText) - 1
 		}
 
-		section, err := parseSectionText(sectionText[start:end], t.opts.Section)
+		section, err := parseSection(sectionText[start:end], t.opts.Section)
 		if err != nil {
 			return errors.Wrap(err, "failed to parse Section while reading textnote")
 		}
@@ -68,7 +66,7 @@ func (t *Template) Load(r io.Reader) error {
 	return nil
 }
 
-func parseSectionText(text string, opts config.SectionOpts) (*section, error) {
+func parseSection(text string, opts config.SectionOpts) (*section, error) {
 	if len(text) == 0 {
 		return nil, errors.New("cannot parse Section from empty input")
 	}
