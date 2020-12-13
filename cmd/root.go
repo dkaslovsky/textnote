@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/dkaslovsky/TextNote/cmd/today"
+	"github.com/dkaslovsky/TextNote/cmd/open"
 	"github.com/spf13/cobra"
 )
 
@@ -14,13 +14,15 @@ func Run() error {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// run the today command as the default
-			return today.CreateTodayCmd().Execute()
+			// run the today command with default options as the default application command
+			return open.CreateTodayCmd().Execute()
 		},
 	}
 
 	cmd.AddCommand(
-		today.CreateTodayCmd(),
+		open.CreateTodayCmd(),
+		open.CreateTomorrowCmd(),
+		open.CreateYesterdayCmd(),
 	)
 
 	return cmd.Execute()
