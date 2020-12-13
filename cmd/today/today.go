@@ -37,11 +37,11 @@ func CreateTodayCmd() *cobra.Command {
 			t.SetDate(date)
 
 			if !shouldCopy {
-				err = file.CreateIfNotExists(t)
+				err = file.WriteIfNotExists(t)
 				if err != nil {
 					return err
 				}
-				return file.OpenInEditor(t.GetFilePath(), t.GetFirstSectionFirstLine())
+				return file.OpenInEditor(t)
 			}
 
 			if file.Exists(t) {
@@ -71,14 +71,14 @@ func CreateTodayCmd() *cobra.Command {
 				}
 			}
 			if cmdOpts.Delete {
-				err = file.Write(src)
+				err = file.Overwrite(src)
 				if err != nil {
 					return err
 				}
 			}
 			fmt.Println("t:")
 			t.Write(os.Stdout)
-			err = file.Write(t)
+			err = file.Overwrite(t)
 			if err != nil {
 				return err
 			}
