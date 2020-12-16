@@ -69,7 +69,13 @@ func (t *Template) getSection(name string) (sec *section, err error) {
 func (t *Template) string() string {
 	str := t.makeHeader()
 	for _, section := range t.sections {
-		str += section.string(t.opts.Section.Prefix, t.opts.Section.Suffix, t.opts.Section.TrailingNewlines)
+		name := section.getNameString(t.opts.Section.Prefix, t.opts.Section.Suffix)
+		body := section.getBodyString()
+		// default to trailing whitespace for empty body
+		if len(body) == 0 {
+			body = strings.Repeat("\n", t.opts.Section.TrailingNewlines)
+		}
+		str += name + body
 	}
 	return str
 }
@@ -105,14 +111,11 @@ func (s *section) deleteContents() {
 	s.contents = []string{}
 }
 
-func (s *section) string(prefix string, suffix string, trailing int) string {
-	title := fmt.Sprintf("%s%s%s\n", prefix, s.name, suffix)
+func (s *section) getNameString(prefix string, suffix string) string {
+	return fmt.Sprintf("%s%s%s\n", prefix, s.name, suffix)
+}
 
-	// default to adding trailing newlines
-	if len(s.contents) == 0 {
-		return title + strings.Repeat("\n", trailing)
-	}
-
+func (s *section) getBodyString() string {
 	body := ""
 	for _, content := range s.contents {
 		if !strings.HasSuffix(content, "\n") {
@@ -120,7 +123,7 @@ func (s *section) string(prefix string, suffix string, trailing int) string {
 		}
 		body += content
 	}
-	return title + body
+	return body
 }
 
 // // CleanNewlines mutates a section to remove all newlines
