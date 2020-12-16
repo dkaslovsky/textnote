@@ -46,7 +46,7 @@ func (t *Template) Load(r io.Reader) error {
 		var start, end int
 		start = idx[0]
 		if i+1 < len(matchIdx) {
-			end = matchIdx[i+1][0]
+			end = matchIdx[i+1][0] - 1
 		} else {
 			end = len(sectionText) - 1
 		}
@@ -71,25 +71,33 @@ func parseSection(text string, opts config.SectionOpts) (*section, error) {
 		return nil, errors.New("cannot parse Section from empty input")
 	}
 
-	// trim off trailing newlines
-	text = strings.TrimSuffix(text, strings.Repeat("\n", opts.TrailingNewlines))
-	// split into lines
 	lines := strings.Split(text, "\n")
-	// extract name from first line
 	name := parseSectionName(lines[0], opts.Prefix, opts.Suffix)
-	if len(lines) == 1 {
-		return newSection(name), nil
-	}
-
-	// reform without the first line
-	contents := strings.Join(lines[1:], "\n")
-	if contents == "" {
-		return newSection(name), nil
-	}
-	return newSection(name, contents), nil
+	// if len(lines) == 1 {
+	// 	return newSection(name), nil
+	// }
+	contents := parseSectionContents(lines[1:])
+	return newSection(name, contents...), nil
 }
 
-// remove prefix and suffix from a line to get the section name
+func parseSectionContents(lines []string) []string {
+	contents := []string{}
+	curItems := []string{lines[0]}
+	for _, line := range lines[1:] {
+		// if line is not a continuation then reform and add as an element of contents
+		if !strings.HasPrefix(line, " ") {
+			contents = append(contents, strings.Join(curItems, "\n"))
+			curItems = []string{}
+		}
+		curItems = append(curItems, line)
+	}
+	// ensure last set of items are appended
+	if len(curItems) > 0 {
+		contents = append(contents, strings.Join(curItems, "\n"))
+	}
+	return contents
+}
+
 func parseSectionName(line string, prefix string, suffix string) string {
 	return strings.TrimPrefix(strings.TrimSuffix(line, suffix), prefix)
 }

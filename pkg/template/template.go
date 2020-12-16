@@ -106,14 +106,21 @@ func (s *section) deleteContents() {
 }
 
 func (s *section) string(prefix string, suffix string, trailing int) string {
-	str := fmt.Sprintf("%s%s%s\n", prefix, s.name, suffix)
+	title := fmt.Sprintf("%s%s%s\n", prefix, s.name, suffix)
+
+	// default to adding trailing newlines
+	if len(s.contents) == 0 {
+		return title + strings.Repeat("\n", trailing)
+	}
+
+	body := ""
 	for _, content := range s.contents {
 		if !strings.HasSuffix(content, "\n") {
 			content += "\n"
 		}
-		str += content
+		body += content
 	}
-	return str + strings.Repeat("\n", trailing)
+	return title + body
 }
 
 // // CleanNewlines mutates a section to remove all newlines
