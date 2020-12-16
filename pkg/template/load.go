@@ -73,15 +73,16 @@ func parseSection(text string, opts config.SectionOpts) (*section, error) {
 
 	lines := strings.Split(text, "\n")
 	name := parseSectionName(lines[0], opts.Prefix, opts.Suffix)
-	// if len(lines) == 1 {
-	// 	return newSection(name), nil
-	// }
 	contents := parseSectionContents(lines[1:])
 	return newSection(name, contents...), nil
 }
 
 func parseSectionContents(lines []string) []string {
 	contents := []string{}
+	if len(lines) == 0 {
+		return contents
+	}
+
 	curItems := []string{lines[0]}
 	for _, line := range lines[1:] {
 		// if line is not a continuation then reform and add as an element of contents
