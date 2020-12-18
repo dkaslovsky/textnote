@@ -17,13 +17,7 @@ func (t *Template) Load(r io.Reader) error {
 	if err != nil {
 		return errors.Wrap(err, "error loading template")
 	}
-
-	// extract header and section text
-	split := strings.SplitN(string(raw), "\n", 2)
-	if len(split) != 2 {
-		return fmt.Errorf("malformed textnote file [%s]", t.GetFilePath())
-	}
-	sectionText := split[1]
+	sectionText := string(raw)
 
 	// extract sections from sectionText
 	sectionNameRegex, err := getSectionNameRegex(t.opts.Section.Prefix, t.opts.Section.Suffix)
