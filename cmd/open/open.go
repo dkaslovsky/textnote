@@ -24,27 +24,25 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 
 func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time) error {
 	t := template.NewTemplate(templateOpts, date)
+	err := file.WriteIfNotExists(t)
+	if err != nil {
+		return err
+	}
 
 	// open file if no further operations (copy/move)
 	if len(cmdOpts.Copy) == 0 {
-		err := file.WriteIfNotExists(t)
-		if err != nil {
-			return err
-		}
 		return file.OpenInEditor(t)
 	}
 
-	// load t from file if it exists
-	if file.Exists(t) {
-		err := file.Read(t)
-		if err != nil {
-			return errors.Wrap(err, "cannot load file")
-		}
+	// load target and source files
+	// (read target from file to ensure that all trailing whitespace is properly
+	// represented in memory)
+	err = file.Read(t)
+	if err != nil {
+		return errors.Wrap(err, "cannot load template file")
 	}
-
-	// load source file
 	src := template.NewTemplate(templateOpts, date.Add(-24*time.Hour))
-	err := file.Read(src)
+	err = file.Read(src)
 	if err != nil {
 		return errors.Wrap(err, "cannot read source file for copy")
 	}
