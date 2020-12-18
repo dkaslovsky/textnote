@@ -121,11 +121,3 @@ func (s *section) getBodyString() string {
 	}
 	return body
 }
-
-// // CleanNewlines mutates a section to remove all newlines
-// func (s *Section) CleanNewlines() {
-//	regexNewlines    = regexp.MustCompile(`\n{2,}`)
-// 	for i, content := range s.Contents {
-// 		s.Contents[i] = strings.Trim(regexNewlines.ReplaceAllString(content, "\n"), "\n")
-// 	}
-// }
