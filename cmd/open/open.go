@@ -26,33 +26,50 @@ func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time) error
 	t := template.NewTemplate(templateOpts)
 	t.SetDate(date)
 
-	// ensure template file exists
-	err := file.WriteIfNotExists(t)
-	if err != nil {
-		return err
-	}
-
 	// open file if no further operations (copy/move)
 	if len(cmdOpts.Copy) == 0 {
-		return file.OpenInEditor(t)
-	}
-
-	src := template.NewTemplate(templateOpts)
-	src.SetDate(date.Add(-24 * time.Hour))
-
-	// copy + delete (move)
-	if cmdOpts.Delete {
-		err = moveSections(src, t, cmdOpts.Copy)
+		err := file.WriteIfNotExists(t)
 		if err != nil {
 			return err
 		}
 		return file.OpenInEditor(t)
 	}
 
-	// copy
-	err = copySections(src, t, cmdOpts.Copy)
+	// load t from file if it exists
+	if file.Exists(t) {
+		err := file.Read(t)
+		if err != nil {
+			return errors.Wrap(err, "cannot load file")
+		}
+	}
+
+	// load source file
+	src := template.NewTemplate(templateOpts)
+	src.SetDate(date.Add(-24 * time.Hour))
+	err := file.Read(src)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "cannot read source file for copy")
+	}
+
+	if cmdOpts.Delete {
+		err := moveSections(src, t, cmdOpts.Copy)
+		if err != nil {
+			return err
+		}
+		err = file.Overwrite(src)
+		if err != nil {
+			return errors.Wrap(err, "failed to save changes to source file")
+		}
+	} else {
+		err = copySections(src, t, cmdOpts.Copy)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = file.Overwrite(t)
+	if err != nil {
+		return errors.Wrap(err, "failed to write file")
 	}
 	return file.OpenInEditor(t)
 }
@@ -67,51 +84,21 @@ func open(templateOpts config.Opts, date time.Time) error {
 }
 
 func copySections(src *template.Template, tgt *template.Template, sectionNames []string) error {
-	err := file.Read(src)
-	if err != nil {
-		return errors.Wrap(err, "cannot read source file for copy")
-	}
-	err = file.Read(tgt)
-	if err != nil {
-		return errors.Wrap(err, "cannot read target file for copy")
-	}
-
 	for _, sectionName := range sectionNames {
 		err := template.CopySectionContents(src, tgt, sectionName)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("cannot copy section [%s] from source to target", sectionName))
 		}
 	}
-	err = file.Overwrite(tgt)
-	if err != nil {
-		return errors.Wrap(err, "failed to save changes to target file")
-	}
 	return nil
 }
 
 func moveSections(src *template.Template, tgt *template.Template, sectionNames []string) error {
-	err := file.Read(src)
-	if err != nil {
-		return errors.Wrap(err, "cannot read source file for copy")
-	}
-	err = file.Read(tgt)
-	if err != nil {
-		return errors.Wrap(err, "cannot read target file for copy")
-	}
-
 	for _, sectionName := range sectionNames {
 		err := template.MoveSectionContents(src, tgt, sectionName)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("cannot copy section [%s] from source to target", sectionName))
 		}
-	}
-	err = file.Overwrite(src)
-	if err != nil {
-		return errors.Wrap(err, "failed to save changes to source file")
-	}
-	err = file.Overwrite(tgt)
-	if err != nil {
-		return errors.Wrap(err, "failed to save changes to target file")
 	}
 	return nil
 }
