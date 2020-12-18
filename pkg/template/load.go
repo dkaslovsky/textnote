@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/dkaslovsky/TextNote/pkg/config"
 	"github.com/pkg/errors"
@@ -22,25 +21,15 @@ func (t *Template) Load(r io.Reader) error {
 	// extract header and section text
 	split := strings.SplitN(string(raw), "\n", 2)
 	if len(split) != 2 {
-		return errors.New("failed to parse header while loading textnote")
+		return fmt.Errorf("malformed textnote file [%s]", t.GetFilePath())
 	}
-	header, sectionText := split[0], split[1]
-
-	// parse date from header
-	dateStr := stripPrefixSuffix(header, t.opts.Header.Prefix, t.opts.Header.Suffix)
-	date, err := time.Parse(t.opts.Header.TimeFormat, dateStr)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse header while loading textnote")
-	}
-	t.SetDate(date)
+	sectionText := split[1]
 
 	// extract sections from sectionText
-	sectionPattern := fmt.Sprintf("%s[A-Za-z]+%s", t.opts.Section.Prefix, t.opts.Section.Suffix)
-	sectionNameRegex, err := regexp.Compile(sectionPattern)
+	sectionNameRegex, err := getSectionNameRegex(t.opts.Section.Prefix, t.opts.Section.Suffix)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse sections while loading textnote")
+		return errors.Wrap(err, "cannot parse sections")
 	}
-
 	matchIdx := sectionNameRegex.FindAllStringSubmatchIndex(sectionText, -1)
 	for i, idx := range matchIdx {
 		// get start and end indices for each section
@@ -54,7 +43,7 @@ func (t *Template) Load(r io.Reader) error {
 
 		section, err := parseSection(sectionText[start:end], t.opts.Section)
 		if err != nil {
-			return errors.Wrap(err, "failed to parse Section while reading textnote")
+			return errors.Wrap(err, "failed to parse section while reading textnote")
 		}
 
 		idx, found := t.sectionIdx[section.name]
@@ -102,4 +91,13 @@ func parseSectionContents(lines []string) []string {
 
 func stripPrefixSuffix(line string, prefix string, suffix string) string {
 	return strings.TrimPrefix(strings.TrimSuffix(line, suffix), prefix)
+}
+
+func getSectionNameRegex(prefix string, suffix string) (*regexp.Regexp, error) {
+	sectionPattern := fmt.Sprintf("%s[A-Za-z]+%s", prefix, suffix)
+	sectionNameRegex, err := regexp.Compile(sectionPattern)
+	if err != nil {
+		return sectionNameRegex, fmt.Errorf("invalid section prefix [%s] or suffix [%s]", prefix, suffix)
+	}
+	return sectionNameRegex, nil
 }

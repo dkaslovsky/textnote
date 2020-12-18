@@ -21,9 +21,10 @@ type Template struct {
 }
 
 // NewTemplate constructs a new template
-func NewTemplate(opts config.Opts) *Template {
+func NewTemplate(opts config.Opts, date time.Time) *Template {
 	t := &Template{
 		opts:       opts,
+		date:       date,
 		sections:   []*section{},
 		sectionIdx: map[string]int{},
 	}
@@ -32,11 +33,6 @@ func NewTemplate(opts config.Opts) *Template {
 		t.sectionIdx[sectionName] = i
 	}
 	return t
-}
-
-// SetDate is a setter for a Template's date field
-func (t *Template) SetDate(date time.Time) {
-	t.date = date
 }
 
 func (t *Template) Write(w io.Writer) error {

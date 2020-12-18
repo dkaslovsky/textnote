@@ -23,8 +23,7 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 }
 
 func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time) error {
-	t := template.NewTemplate(templateOpts)
-	t.SetDate(date)
+	t := template.NewTemplate(templateOpts, date)
 
 	// open file if no further operations (copy/move)
 	if len(cmdOpts.Copy) == 0 {
@@ -44,8 +43,7 @@ func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time) error
 	}
 
 	// load source file
-	src := template.NewTemplate(templateOpts)
-	src.SetDate(date.Add(-24 * time.Hour))
+	src := template.NewTemplate(templateOpts, date.Add(-24*time.Hour))
 	err := file.Read(src)
 	if err != nil {
 		return errors.Wrap(err, "cannot read source file for copy")
@@ -75,8 +73,7 @@ func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time) error
 }
 
 func open(templateOpts config.Opts, date time.Time) error {
-	t := template.NewTemplate(templateOpts)
-	t.SetDate(date)
+	t := template.NewTemplate(templateOpts, date)
 	if !file.Exists(t) {
 		return fmt.Errorf("file [%s] for template does not exist", t.GetFilePath())
 	}
