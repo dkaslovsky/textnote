@@ -15,7 +15,7 @@ func CopySectionContents(src *Template, tgt *Template, sectionName string) error
 	if err != nil {
 		return errors.Wrap(err, "failed to find section in source")
 	}
-	tgtSec.contents = appendBeforeTrailingNewlines(tgtSec.contents, srcSec.contents)
+	tgtSec.contents = insert(tgtSec.contents, srcSec.contents)
 	return nil
 }
 
@@ -34,15 +34,33 @@ func MoveSectionContents(src *Template, tgt *Template, sectionName string) error
 	return nil
 }
 
-func appendBeforeTrailingNewlines(tgt []string, contents []string) []string {
-	tgtLen := len(tgt)
-	for i := 0; i < tgtLen; i++ {
-		idx := tgtLen - i - 1
-		if tgt[idx] != "\n" && tgt[idx] != "" {
-			updated := append(tgt[:idx+1], contents...)
-			updated = append(updated, tgt[idx+1:]...)
-			return updated
+// insert inserts contents into tgt before any trailing empty elements, omitting trailing empty
+// elements of contents
+func insert(tgt []string, contents []string) []string {
+	if len(contents) == 0 {
+		return tgt
+	}
+	if len(tgt) == 0 {
+		return contents
+	}
+
+	contentsIdx := getLastPopulatedIndex(contents) + 1
+	insertIdx := getLastPopulatedIndex(tgt) + 1
+
+	updated := []string{}
+	updated = append(updated, tgt[:insertIdx]...)
+	updated = append(updated, contents[:contentsIdx]...)
+	updated = append(updated, tgt[insertIdx:]...)
+	return updated
+}
+
+func getLastPopulatedIndex(s []string) int {
+	ln := len(s)
+	for i := 0; i < ln; i++ {
+		idx := ln - i - 1
+		if s[idx] != "\n" && s[idx] != "" {
+			return idx
 		}
 	}
-	return contents
+	return -1
 }
