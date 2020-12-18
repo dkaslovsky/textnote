@@ -24,9 +24,10 @@ func (t *Template) Load(r io.Reader) error {
 	if len(split) != 2 {
 		return errors.New("failed to parse header while loading textnote")
 	}
-	dateStr, sectionText := split[0], split[1]
+	header, sectionText := split[0], split[1]
 
 	// parse date from header
+	dateStr := stripPrefixSuffix(header, t.opts.Header.Prefix, t.opts.Header.Suffix)
 	date, err := time.Parse(t.opts.Header.TimeFormat, dateStr)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse header while loading textnote")
@@ -72,7 +73,7 @@ func parseSection(text string, opts config.SectionOpts) (*section, error) {
 	}
 
 	lines := strings.Split(text, "\n")
-	name := parseSectionName(lines[0], opts.Prefix, opts.Suffix)
+	name := stripPrefixSuffix(lines[0], opts.Prefix, opts.Suffix)
 	contents := parseSectionContents(lines[1:])
 	return newSection(name, contents...), nil
 }
@@ -99,6 +100,6 @@ func parseSectionContents(lines []string) []string {
 	return contents
 }
 
-func parseSectionName(line string, prefix string, suffix string) string {
+func stripPrefixSuffix(line string, prefix string, suffix string) string {
 	return strings.TrimPrefix(strings.TrimSuffix(line, suffix), prefix)
 }
