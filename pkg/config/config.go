@@ -17,6 +17,10 @@ const (
 	configFileName = ".config.yml"
 )
 
+var (
+	appDir = os.Getenv(envAppDir)
+)
+
 // Opts are options that configure the application
 type Opts struct {
 	AppDir  string      `yaml:"appdir,omitempty"`
@@ -74,7 +78,6 @@ func getDefaultOpts() Opts {
 func LoadOrCreate() (Opts, error) {
 	opts := Opts{}
 
-	appDir := os.Getenv(envAppDir)
 	if appDir == "" {
 		return opts, fmt.Errorf("environment variable [%s] is not set", envAppDir)
 	}
@@ -102,4 +105,24 @@ func LoadOrCreate() (Opts, error) {
 	opts.AppDir = appDir
 
 	return opts, err
+}
+
+// EnsureAppDir validates that the application directory exists or is created
+func EnsureAppDir() error {
+	if appDir == "" {
+		return fmt.Errorf("required environment variable [%s] is not set", envAppDir)
+	}
+	finfo, err := os.Stat(appDir)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(appDir, 0755)
+		if err != nil {
+			return err
+		}
+		log.Printf("created directory [%s]", appDir)
+		return nil
+	}
+	if !finfo.IsDir() {
+		return fmt.Errorf("[%s=%s] must be a directory", envAppDir, appDir)
+	}
+	return nil
 }
