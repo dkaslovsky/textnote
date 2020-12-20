@@ -27,6 +27,7 @@ type Opts struct {
 	Header  HeaderOpts  `yaml:"header"`
 	Section SectionOpts `yaml:"section"`
 	File    FileOpts    `yaml:"file"`
+	Archive ArchiveOpts `yaml:"archive"`
 }
 
 // HeaderOpts are options for configuring the header of TextNote
@@ -34,7 +35,7 @@ type HeaderOpts struct {
 	Prefix           string `yaml:"prefix" env:"TEXTNOTE_HEADER_PREFIX" env-description:"prefix to attach to header"`
 	Suffix           string `yaml:"suffix" env:"TEXTNOTE_HEADER_SUFFIX" env-description:"suffix to attach to header"`
 	TrailingNewlines int    `yaml:"trailingNewlines" env:"TEXTNOTE_HEADER_TRAILING_NEWLINES" env-description:"number of newlines to attach to end of header"`
-	TimeFormat       string `yaml:"timeFormat" env:"TEXTNOTE_HEADER_TIME_FORMAT" env-description:"formatting time string to form headers"`
+	TimeFormat       string `yaml:"timeFormat" env:"TEXTNOTE_HEADER_TIME_FORMAT" env-description:"formatting string to form headers from timestamps"`
 }
 
 // SectionOpts are options for configuring sections of TextNote
@@ -47,7 +48,20 @@ type SectionOpts struct {
 
 // FileOpts are options for configuring files written by TextNote
 type FileOpts struct {
-	TimeFormat string `yaml:"timeFormat" env:"TEXTNOTE_FILENAME_TIME_FORMAT" env-description:"formatting time string to form file names"`
+	TimeFormat string `yaml:"timeFormat" env:"TEXTNOTE_FILENAME_TIME_FORMAT" env-description:"formatting string to form file names from timestamps"`
+}
+
+// ArchiveOpts are options for configuring archive files written by TextNote
+type ArchiveOpts struct {
+	HeaderPrefix             string `yaml:"headerPrefix" env:"TEXTNOTE_ARCHIVE_HEADER_PREFIX" env-description:"override header prefix for archive files"`
+	HeaderSuffix             string `yaml:"headerSuffix" env:"TEXTNOTE_ARCHIVE_HEADER_SUFFIX" env-description:"override header suffix for archive files"`
+	FilePrefix               string `yaml:"filePrefix" env:"TEXTNOTE_ARCHIVE_FILE_PREFIX" env-description:"prefix to attach to archive file names"`
+	FileSuffix               string `yaml:"fileSuffix" env:"TEXTNOTE_ARCHIVE_FILE_SUFFIX" env-description:"suffix to attach to archive file names"`
+	SectionContentPrefix     string `yaml:"sectionContentPrefix" env:"TEXTNOTE_ARCHIVE_SECTION_CONTENT_PREFIX" env-description:"prefix to attach to section content date"`
+	SectionContentSuffix     string `yaml:"sectionContentSuffix" env:"TEXTNOTE_ARCHIVE_SECTION_CONTENT_SUFFIX" env-description:"suffix to attach to section content date"`
+	SectionContentTimeFormat string `yaml:"sectionContentTimeFormat" env:"TEXTNOTE_ARCHIVE_SECTION_CONTENT_TIME_FORMAT" env-description:"formatting string dated section content"`
+	MonthTimeFormat          string `yaml:"monthTimeFormat" env:"TEXTNOTE_ARCHIVE_MONTH_TIME_FORMAT" env-description:"formatting string for month archives"`
+	YearTimeFormat           string `yaml:"yearTimeFormat" env:"TEXTNOTE_ARCHIVE_YEAR_TIME_FORMAT" env-description:"formatting string for year archives"`
 }
 
 func getDefaultOpts() Opts {
@@ -70,6 +84,17 @@ func getDefaultOpts() Opts {
 		},
 		File: FileOpts{
 			TimeFormat: "2006-01-02",
+		},
+		Archive: ArchiveOpts{
+			HeaderPrefix:             "ARCHIVE ",
+			HeaderSuffix:             "",
+			FilePrefix:               "archive_",
+			FileSuffix:               "",
+			SectionContentPrefix:     "[",
+			SectionContentSuffix:     "]",
+			SectionContentTimeFormat: "2006-01-02",
+			MonthTimeFormat:          "Jan2006",
+			YearTimeFormat:           "2006",
 		},
 	}
 }

@@ -20,7 +20,7 @@ type Template struct {
 	sectionIdx map[string]int
 }
 
-// NewTemplate constructs a new template
+// NewTemplate constructs a new Template
 func NewTemplate(opts config.Opts, date time.Time) *Template {
 	t := &Template{
 		opts:       opts,
@@ -36,9 +36,6 @@ func NewTemplate(opts config.Opts, date time.Time) *Template {
 }
 
 func (t *Template) Write(w io.Writer) error {
-	if t.date.IsZero() {
-		return fmt.Errorf("must set date before writing a template")
-	}
 	_, err := w.Write([]byte(t.string()))
 	return err
 }
