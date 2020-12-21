@@ -85,7 +85,7 @@ func (t *Template) makeHeader() string {
 // section is a named section of a note
 type section struct {
 	name     string
-	contents []string // use a slice in case we want to treat contents as a list of bulleted items
+	contents []string
 }
 
 // newSection constructs a Section

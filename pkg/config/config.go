@@ -55,8 +55,6 @@ type FileOpts struct {
 type ArchiveOpts struct {
 	HeaderPrefix             string `yaml:"headerPrefix" env:"TEXTNOTE_ARCHIVE_HEADER_PREFIX" env-description:"override header prefix for archive files"`
 	HeaderSuffix             string `yaml:"headerSuffix" env:"TEXTNOTE_ARCHIVE_HEADER_SUFFIX" env-description:"override header suffix for archive files"`
-	FilePrefix               string `yaml:"filePrefix" env:"TEXTNOTE_ARCHIVE_FILE_PREFIX" env-description:"prefix to attach to archive file names"`
-	FileSuffix               string `yaml:"fileSuffix" env:"TEXTNOTE_ARCHIVE_FILE_SUFFIX" env-description:"suffix to attach to archive file names"`
 	SectionContentPrefix     string `yaml:"sectionContentPrefix" env:"TEXTNOTE_ARCHIVE_SECTION_CONTENT_PREFIX" env-description:"prefix to attach to section content date"`
 	SectionContentSuffix     string `yaml:"sectionContentSuffix" env:"TEXTNOTE_ARCHIVE_SECTION_CONTENT_SUFFIX" env-description:"suffix to attach to section content date"`
 	SectionContentTimeFormat string `yaml:"sectionContentTimeFormat" env:"TEXTNOTE_ARCHIVE_SECTION_CONTENT_TIME_FORMAT" env-description:"formatting string dated section content"`
@@ -88,8 +86,6 @@ func getDefaultOpts() Opts {
 		Archive: ArchiveOpts{
 			HeaderPrefix:             "ARCHIVE ",
 			HeaderSuffix:             "",
-			FilePrefix:               "archive_",
-			FileSuffix:               "",
 			SectionContentPrefix:     "[",
 			SectionContentSuffix:     "]",
 			SectionContentTimeFormat: "2006-01-02",
