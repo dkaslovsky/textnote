@@ -65,15 +65,16 @@ func (t *MonthArchiveTemplate) CopySectionContents(src *Template, sectionName st
 }
 
 func (t *MonthArchiveTemplate) string() string {
+	trailing := strings.Repeat("\n", t.opts.Section.TrailingNewlines)
+
 	str := t.makeHeader()
 	for _, section := range t.sections {
 		name := section.getNameString(t.opts.Section.Prefix, t.opts.Section.Suffix)
 		body := section.getBodyString()
-		str += fmt.Sprintf("%s%s%s",
-			name,
-			body,
-			strings.Repeat("\n", t.opts.Section.TrailingNewlines),
-		)
+		if !strings.HasSuffix(body, trailing) {
+			body += trailing
+		}
+		str += fmt.Sprintf("%s%s", name, body)
 	}
 	return str
 }
