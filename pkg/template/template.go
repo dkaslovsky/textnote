@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dkaslovsky/TextNote/pkg/config"
+	"github.com/pkg/errors"
 )
 
 const fileExt = "txt"
@@ -51,6 +52,31 @@ func (t *Template) GetFilePath() string {
 	return filepath.Join(t.opts.AppDir, fileName)
 }
 
+// CopySectionContents copies the contents of the specified section from a source template by
+// appending to the contents of the receiver's section
+func (t *Template) CopySectionContents(src *Template, sectionName string) error {
+	tgtSec, err := t.getSection(sectionName)
+	if err != nil {
+		return errors.Wrap(err, "failed to find section in target")
+	}
+	srcSec, err := src.getSection(sectionName)
+	if err != nil {
+		return errors.Wrap(err, "failed to find section in source")
+	}
+	tgtSec.contents = insert(tgtSec.contents, srcSec.contents)
+	return nil
+}
+
+// DeleteSectionContents deletes the contents of a specified section
+func (t *Template) DeleteSectionContents(sectionName string) error {
+	sec, err := t.getSection(sectionName)
+	if err != nil {
+		return fmt.Errorf("section [%s] does not exist", sectionName)
+	}
+	sec.deleteContents()
+	return nil
+}
+
 func (t *Template) getSection(name string) (sec *section, err error) {
 	idx, found := t.sectionIdx[name]
 	if !found {
@@ -82,39 +108,33 @@ func (t *Template) makeHeader() string {
 	)
 }
 
-// section is a named section of a note
-type section struct {
-	name     string
-	contents []string
-}
-
-// newSection constructs a Section
-func newSection(name string, contents ...string) *section {
-	return &section{
-		name:     name,
-		contents: contents,
+// insert inserts contents into tgt before any trailing empty elements, omitting trailing empty
+// elements of contents
+func insert(tgt []string, contents []string) []string {
+	if len(contents) == 0 {
+		return tgt
 	}
+	if len(tgt) == 0 {
+		return contents
+	}
+
+	contentsIdx := getLastPopulatedIndex(contents) + 1
+	insertIdx := getLastPopulatedIndex(tgt) + 1
+
+	updated := []string{}
+	updated = append(updated, tgt[:insertIdx]...)
+	updated = append(updated, contents[:contentsIdx]...)
+	updated = append(updated, tgt[insertIdx:]...)
+	return updated
 }
 
-func (s *section) appendContents(contents string) {
-	s.contents = append(s.contents, contents)
-}
-
-func (s *section) deleteContents() {
-	s.contents = []string{}
-}
-
-func (s *section) getNameString(prefix string, suffix string) string {
-	return fmt.Sprintf("%s%s%s\n", prefix, s.name, suffix)
-}
-
-func (s *section) getBodyString() string {
-	body := ""
-	for _, content := range s.contents {
-		if !strings.HasSuffix(content, "\n") {
-			content += "\n"
+func getLastPopulatedIndex(s []string) int {
+	ln := len(s)
+	for i := 0; i < ln; i++ {
+		idx := ln - i - 1
+		if s[idx] != "\n" && s[idx] != "" {
+			return idx
 		}
-		body += content
 	}
-	return body
+	return -1
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dkaslovsky/TextNote/pkg/config"
+	"github.com/pkg/errors"
 )
 
 // ArchiveFilePrefix is the prefix attached to the file name of all archive files
@@ -34,6 +35,33 @@ func (t *MonthArchiveTemplate) Write(w io.Writer) error {
 func (t *MonthArchiveTemplate) GetFilePath() string {
 	fileName := fmt.Sprintf("%s%s.%s", ArchiveFilePrefix, t.date.Format(t.opts.Archive.MonthTimeFormat), fileExt)
 	return filepath.Join(t.opts.AppDir, fileName)
+}
+
+// CopySectionContents archives the contents of the specified section from a source template by
+// appending to the contents of the receiver's section and prepending the date of the source template
+func (t *MonthArchiveTemplate) CopySectionContents(src *Template, sectionName string) error {
+	tgtSec, err := t.getSection(sectionName)
+	if err != nil {
+		return errors.Wrap(err, "failed to find section in target")
+	}
+	srcSec, err := src.getSection(sectionName)
+	if err != nil {
+		return errors.Wrap(err, "failed to find section in source")
+	}
+
+	contents := []string{}
+	for _, content := range srcSec.contents {
+		if content == "" || content == "\n" {
+			continue
+		}
+		contents = append(contents, content)
+	}
+	if len(contents) > 0 {
+		dateStr := t.makeSectionContentPrefix(src.date)
+		contents = append([]string{dateStr}, contents...)
+		tgtSec.contents = insert(tgtSec.contents, contents)
+	}
+	return nil
 }
 
 func (t *MonthArchiveTemplate) string() string {
