@@ -14,21 +14,21 @@ import (
 
 const weekHours = 24 * 7
 
+// Archiver consolidates TextNotes into archive files
 type Archiver struct {
 	opts config.Opts
 	date time.Time
 
-	Month map[string]*template.MonthArchiveTemplate
-	Year  map[string]*template.YearArchiveTemplate
+	Months map[string]*template.MonthArchiveTemplate
 }
 
+// NewArchiver constructs a new Archiver
 func NewArchiver(opts config.Opts, date time.Time) *Archiver {
 	return &Archiver{
 		opts: opts,
 		date: date,
 
-		Month: map[string]*template.MonthArchiveTemplate{},
-		Year:  map[string]*template.YearArchiveTemplate{},
+		Months: map[string]*template.MonthArchiveTemplate{},
 	}
 }
 
@@ -37,6 +37,7 @@ type fileInfo interface {
 	IsDir() bool
 }
 
+// Add adds a file to the archive
 func (a *Archiver) Add(f fileInfo) error {
 	if shouldSkip(f) {
 		return nil
@@ -58,53 +59,45 @@ func (a *Archiver) Add(f fileInfo) error {
 		return errors.Wrapf(err, "cannot add unreadable file [%s] to archive", f.Name())
 	}
 
-	if fileDate.Year() < a.date.Year() {
-		key := fileDate.Format(a.opts.Archive.YearTimeFormat)
-		if _, found := a.Year[key]; !found {
-			a.Year[key] = template.NewYearArchiveTemplate(a.opts, fileDate)
-		}
-
-		for _, section := range a.opts.Section.Names {
-			err := template.ArchiveSectionContents(t, a.Year[key], section)
-			if err != nil {
-				return errors.Wrapf(err, "cannot add contents from [%s] to archive", f.Name())
-			}
-		}
-		return nil
+	monthKey := fileDate.Format(a.opts.Archive.MonthTimeFormat)
+	if _, found := a.Months[monthKey]; !found {
+		a.Months[monthKey] = template.NewMonthArchiveTemplate(a.opts, fileDate)
 	}
 
-	if fileDate.Month() <= a.date.Month() {
-		key := fileDate.Format(a.opts.Archive.MonthTimeFormat)
-		if _, found := a.Month[key]; !found {
-			a.Month[key] = template.NewMonthArchiveTemplate(a.opts, fileDate)
+	for _, section := range a.opts.Section.Names {
+		err := template.ArchiveSectionContents(t, a.Months[monthKey], section)
+		if err != nil {
+			return errors.Wrapf(err, "cannot add contents from [%s] to archive", f.Name())
 		}
-
-		for _, section := range a.opts.Section.Names {
-			err := template.ArchiveSectionContents(t, a.Month[key], section)
-			if err != nil {
-				return errors.Wrapf(err, "cannot add contents from [%s] to archive", f.Name())
-			}
-		}
-		return nil
 	}
+	return nil
+}
 
-	return fmt.Errorf("cannot archive file with date [%v]", fileDate)
+func (a *Archiver) Write() error {
+	// TODO: check if file already exists; if it does append the two and overwrite
+	for _, t := range a.Months {
+		err := file.Overwrite(t)
+		if err != nil {
+			return errors.Wrapf(err, "failed to write archive file [%s]", t.GetFilePath())
+		}
+	}
+	return nil
 }
 
 func shouldSkip(f fileInfo) bool {
+	switch {
 	// skip archive files
-	if strings.HasPrefix(f.Name(), template.ArchiveFilePrefix) {
+	case strings.HasPrefix(f.Name(), template.ArchiveFilePrefix):
 		return true
-	}
 	// skip hidden files
-	if strings.HasPrefix(f.Name(), ".") {
+	case strings.HasPrefix(f.Name(), "."):
 		return true
-	}
 	// skip directories
-	if f.IsDir() {
+	case f.IsDir():
 		return true
+	default:
+		return false
 	}
-	return false
 }
 
 func parseFileName(fileName string, format string) (time.Time, error) {

@@ -68,7 +68,7 @@ func (t *Template) string() string {
 		if len(body) == 0 {
 			body = strings.Repeat("\n", t.opts.Section.TrailingNewlines)
 		}
-		str += name + body
+		str += fmt.Sprintf("%s%s", name, body)
 	}
 	return str
 }

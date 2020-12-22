@@ -58,8 +58,7 @@ type ArchiveOpts struct {
 	SectionContentPrefix     string `yaml:"sectionContentPrefix" env:"TEXTNOTE_ARCHIVE_SECTION_CONTENT_PREFIX" env-description:"prefix to attach to section content date"`
 	SectionContentSuffix     string `yaml:"sectionContentSuffix" env:"TEXTNOTE_ARCHIVE_SECTION_CONTENT_SUFFIX" env-description:"suffix to attach to section content date"`
 	SectionContentTimeFormat string `yaml:"sectionContentTimeFormat" env:"TEXTNOTE_ARCHIVE_SECTION_CONTENT_TIME_FORMAT" env-description:"formatting string dated section content"`
-	MonthTimeFormat          string `yaml:"monthTimeFormat" env:"TEXTNOTE_ARCHIVE_MONTH_TIME_FORMAT" env-description:"formatting string for month archives"`
-	YearTimeFormat           string `yaml:"yearTimeFormat" env:"TEXTNOTE_ARCHIVE_YEAR_TIME_FORMAT" env-description:"formatting string for year archives"`
+	MonthTimeFormat          string `yaml:"monthTimeFormat" env:"TEXTNOTE_ARCHIVE_MONTH_TIME_FORMAT" env-description:"formatting string for month archive timestamps"`
 }
 
 func getDefaultOpts() Opts {
@@ -90,7 +89,6 @@ func getDefaultOpts() Opts {
 			SectionContentSuffix:     "]",
 			SectionContentTimeFormat: "2006-01-02",
 			MonthTimeFormat:          "Jan2006",
-			YearTimeFormat:           "2006",
 		},
 	}
 }

@@ -1,7 +1,6 @@
 package template
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -50,13 +49,18 @@ func ArchiveSectionContents(src *Template, tgt archiveTarget, sectionName string
 		return errors.Wrap(err, "failed to find section in source")
 	}
 
-	dateStr := tgt.makeSectionContentPrefix(src.date)
-	datedContents := []string{}
+	contents := []string{}
 	for _, content := range srcSec.contents {
-		datedContent := fmt.Sprintf("%s %s", dateStr, content)
-		datedContents = append(datedContents, datedContent)
+		if content == "" || content == "\n" {
+			continue
+		}
+		contents = append(contents, content)
 	}
-	tgtSec.contents = insert(tgtSec.contents, datedContents)
+	if len(contents) > 0 {
+		dateStr := tgt.makeSectionContentPrefix(src.date)
+		contents = append([]string{dateStr}, contents...)
+		tgtSec.contents = insert(tgtSec.contents, contents)
+	}
 	return nil
 }
 
