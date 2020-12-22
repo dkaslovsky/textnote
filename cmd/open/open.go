@@ -47,19 +47,19 @@ func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time) error
 		return errors.Wrap(err, "cannot read source file for copy")
 	}
 
+	err = copySections(src, t, cmdOpts.Copy)
+	if err != nil {
+		return err
+	}
+
 	if cmdOpts.Delete {
-		err := moveSections(src, t, cmdOpts.Copy)
+		err = deleteSections(src, cmdOpts.Copy)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to remove section content from source file")
 		}
 		err = file.Overwrite(src)
 		if err != nil {
 			return errors.Wrap(err, "failed to save changes to source file")
-		}
-	} else {
-		err = copySections(src, t, cmdOpts.Copy)
-		if err != nil {
-			return err
 		}
 	}
 
@@ -80,7 +80,7 @@ func open(templateOpts config.Opts, date time.Time) error {
 
 func copySections(src *template.Template, tgt *template.Template, sectionNames []string) error {
 	for _, sectionName := range sectionNames {
-		err := template.CopySectionContents(src, tgt, sectionName)
+		err := tgt.CopySectionContents(src, sectionName)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("cannot copy section [%s] from source to target", sectionName))
 		}
@@ -88,11 +88,11 @@ func copySections(src *template.Template, tgt *template.Template, sectionNames [
 	return nil
 }
 
-func moveSections(src *template.Template, tgt *template.Template, sectionNames []string) error {
+func deleteSections(t *template.Template, sectionNames []string) error {
 	for _, sectionName := range sectionNames {
-		err := template.MoveSectionContents(src, tgt, sectionName)
+		err := t.DeleteSectionContents(sectionName)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("cannot copy section [%s] from source to target", sectionName))
+			return errors.Wrap(err, fmt.Sprintf("cannot delete section [%s] from template", sectionName))
 		}
 	}
 	return nil
