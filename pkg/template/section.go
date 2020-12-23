@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -25,6 +26,10 @@ func (s *section) appendContents(contents string) {
 
 func (s *section) deleteContents() {
 	s.contents = []string{}
+}
+
+func (s *section) sortContents() {
+	sort.Strings(s.contents)
 }
 
 func (s *section) getNameString(prefix string, suffix string) string {

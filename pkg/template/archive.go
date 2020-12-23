@@ -59,7 +59,7 @@ func (t *MonthArchiveTemplate) CopySectionContents(src *Template, sectionName st
 	if len(contents) > 0 {
 		dateStr := t.makeSectionContentPrefix(src.date)
 		contents = append([]string{dateStr}, contents...)
-		tgtSec.contents = insert(tgtSec.contents, contents)
+		tgtSec.contents = insert(tgtSec.contents, []string{strings.Join(contents, "\n")})
 	}
 	return nil
 }
@@ -69,6 +69,7 @@ func (t *MonthArchiveTemplate) string() string {
 
 	str := t.makeHeader()
 	for _, section := range t.sections {
+		section.sortContents()
 		name := section.getNameString(t.opts.Section.Prefix, t.opts.Section.Suffix)
 		body := section.getBodyString()
 		if !strings.HasSuffix(body, trailing) {
