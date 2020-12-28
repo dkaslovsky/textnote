@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/dkaslovsky/TextNote/pkg/config"
 	"github.com/pkg/errors"
@@ -30,12 +31,12 @@ func (t *Template) Load(r io.Reader) error {
 		var start, end int
 		start = idx[0]
 		if i+1 < len(matchIdx) {
-			end = matchIdx[i+1][0] - 1
+			end = matchIdx[i+1][0]
 		} else {
-			end = len(sectionText) - 1
+			end = len(sectionText)
 		}
 
-		section, err := parseSection(sectionText[start:end], t.opts.Section)
+		section, err := parseSection(sectionText[start:end], t.opts)
 		if err != nil {
 			return errors.Wrap(err, "failed to parse section while reading textnote")
 		}
@@ -50,35 +51,64 @@ func (t *Template) Load(r io.Reader) error {
 	return nil
 }
 
-func parseSection(text string, opts config.SectionOpts) (*section, error) {
+func parseSection(text string, opts config.Opts) (*section, error) {
 	if len(text) == 0 {
 		return nil, errors.New("cannot parse Section from empty input")
 	}
 
 	lines := strings.Split(text, "\n")
-	name := stripPrefixSuffix(lines[0], opts.Prefix, opts.Suffix)
-	contents := parseSectionContents(lines[1:])
+	name := stripPrefixSuffix(lines[0], opts.Section.Prefix, opts.Section.Suffix)
+	contents := parseSectionContents(
+		lines[1:],
+		opts.Archive.HeaderPrefix,
+		opts.Archive.HeaderSuffix,
+		opts.File.TimeFormat,
+	)
+
+	// do not include trailing newlines for empty sections as content
+	if len(contents) == 1 && contents[0].text == strings.Repeat("\n", opts.Section.TrailingNewlines) {
+		return newSection(name), nil
+	}
+
 	return newSection(name, contents...), nil
 }
 
-func parseSectionContents(lines []string) []string {
-	contents := []string{}
+func parseSectionContents(lines []string, prefix, suffix, format string) []item {
+	contents := []item{}
 	if len(lines) == 0 {
 		return contents
 	}
 
-	curItems := []string{lines[0]}
-	for _, line := range lines[1:] {
-		// if line is not a continuation then reform and add as an element of contents
-		if !strings.HasPrefix(line, " ") {
-			contents = append(contents, strings.Join(curItems, "\n"))
-			curItems = []string{}
-		}
-		curItems = append(curItems, line)
+	// parse first line
+	line := lines[0]
+	header := ""
+	body := []string{}
+	if isItemHeader(line, prefix, suffix, format) {
+		header = line
+	} else {
+		body = append(body, line)
 	}
-	// ensure last set of items are appended
-	if len(curItems) > 0 {
-		contents = append(contents, strings.Join(curItems, "\n"))
+
+	for _, line := range lines[1:] {
+		if !isItemHeader(line, prefix, suffix, format) {
+			body = append(body, line)
+			continue
+		}
+
+		contents = append(contents, item{
+			header: header,
+			text:   strings.Join(body, "\n"),
+		})
+
+		header = line
+		body = []string{}
+	}
+
+	if len(body) != 0 || header != "" {
+		contents = append(contents, item{
+			header: header,
+			text:   strings.Join(body, "\n"),
+		})
 	}
 	return contents
 }
@@ -94,4 +124,18 @@ func getSectionNameRegex(prefix string, suffix string) (*regexp.Regexp, error) {
 		return sectionNameRegex, fmt.Errorf("invalid section prefix [%s] or suffix [%s]", prefix, suffix)
 	}
 	return sectionNameRegex, nil
+}
+
+func isItemHeader(line string, prefix string, suffix string, format string) bool {
+	if !strings.HasPrefix(line, prefix) {
+		return false
+	}
+	if !strings.HasSuffix(line, suffix) {
+		return false
+	}
+	_, err := time.Parse(format, stripPrefixSuffix(line, prefix, suffix))
+	if err != nil {
+		return false
+	}
+	return true
 }
