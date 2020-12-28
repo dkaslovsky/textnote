@@ -73,8 +73,8 @@ func parseSection(text string, opts config.Opts) (*section, error) {
 	return newSection(name, contents...), nil
 }
 
-func parseSectionContents(lines []string, prefix, suffix, format string) []item {
-	contents := []item{}
+func parseSectionContents(lines []string, prefix, suffix, format string) []contentItem {
+	contents := []contentItem{}
 	if len(lines) == 0 {
 		return contents
 	}
@@ -95,7 +95,7 @@ func parseSectionContents(lines []string, prefix, suffix, format string) []item 
 			continue
 		}
 
-		contents = append(contents, item{
+		contents = append(contents, contentItem{
 			header: header,
 			text:   strings.Join(body, "\n"),
 		})
@@ -105,7 +105,7 @@ func parseSectionContents(lines []string, prefix, suffix, format string) []item 
 	}
 
 	if len(body) != 0 || header != "" {
-		contents = append(contents, item{
+		contents = append(contents, contentItem{
 			header: header,
 			text:   strings.Join(body, "\n"),
 		})

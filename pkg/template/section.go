@@ -8,11 +8,11 @@ import (
 // section is a named section of a Template
 type section struct {
 	name     string
-	contents []item
+	contents []contentItem
 }
 
 // newSection constructs a Section
-func newSection(name string, items ...item) *section {
+func newSection(name string, items ...contentItem) *section {
 	return &section{
 		name:     name,
 		contents: items,
@@ -20,7 +20,7 @@ func newSection(name string, items ...item) *section {
 }
 
 func (s *section) deleteContents() {
-	s.contents = []item{}
+	s.contents = []contentItem{}
 }
 
 func (s *section) getNameString(prefix string, suffix string) string {
@@ -30,7 +30,7 @@ func (s *section) getNameString(prefix string, suffix string) string {
 func (s *section) getContentString() string {
 	str := ""
 	for _, content := range s.contents {
-		txt := content.text
+		txt := content.string()
 		if !strings.HasSuffix(txt, "\n") {
 			txt += "\n"
 		}
@@ -39,7 +39,14 @@ func (s *section) getContentString() string {
 	return str
 }
 
-type item struct {
+type contentItem struct {
 	header string
 	text   string
+}
+
+func (ci contentItem) string() string {
+	if ci.header != "" {
+		return fmt.Sprintf("%s\n%s", ci.header, ci.text)
+	}
+	return ci.text
 }
