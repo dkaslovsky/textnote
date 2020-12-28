@@ -2,47 +2,44 @@ package template
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 )
 
 // section is a named section of a Template
 type section struct {
 	name     string
-	contents []string
+	contents []item
 }
 
 // newSection constructs a Section
-func newSection(name string, contents ...string) *section {
+func newSection(name string, items ...item) *section {
 	return &section{
 		name:     name,
-		contents: contents,
+		contents: items,
 	}
 }
 
-func (s *section) appendContents(contents string) {
-	s.contents = append(s.contents, contents)
-}
-
 func (s *section) deleteContents() {
-	s.contents = []string{}
-}
-
-func (s *section) sortContents() {
-	sort.Strings(s.contents)
+	s.contents = []item{}
 }
 
 func (s *section) getNameString(prefix string, suffix string) string {
 	return fmt.Sprintf("%s%s%s\n", prefix, s.name, suffix)
 }
 
-func (s *section) getBodyString() string {
-	body := ""
+func (s *section) getContentString() string {
+	str := ""
 	for _, content := range s.contents {
-		if !strings.HasSuffix(content, "\n") {
-			content += "\n"
+		txt := content.text
+		if !strings.HasSuffix(txt, "\n") {
+			txt += "\n"
 		}
-		body += content
+		str += txt
 	}
-	return body
+	return str
+}
+
+type item struct {
+	header string
+	text   string
 }

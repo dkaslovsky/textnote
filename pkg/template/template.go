@@ -63,7 +63,7 @@ func (t *Template) CopySectionContents(src *Template, sectionName string) error 
 	if err != nil {
 		return errors.Wrap(err, "failed to find section in source")
 	}
-	tgtSec.contents = insert(tgtSec.contents, srcSec.contents)
+	tgtSec.contents = append(tgtSec.contents, srcSec.contents...)
 	return nil
 }
 
@@ -89,7 +89,7 @@ func (t *Template) string() string {
 	str := t.makeHeader()
 	for _, section := range t.sections {
 		name := section.getNameString(t.opts.Section.Prefix, t.opts.Section.Suffix)
-		body := section.getBodyString()
+		body := section.getContentString()
 		// default to trailing whitespace for empty body
 		if len(body) == 0 {
 			body = strings.Repeat("\n", t.opts.Section.TrailingNewlines)
@@ -110,31 +110,31 @@ func (t *Template) makeHeader() string {
 
 // insert inserts contents into tgt before any trailing empty elements, omitting trailing empty
 // elements of contents
-func insert(tgt []string, contents []string) []string {
-	if len(contents) == 0 {
-		return tgt
-	}
-	if len(tgt) == 0 {
-		return contents
-	}
+// func insert(tgt []string, contents []string) []string {
+// 	if len(contents) == 0 {
+// 		return tgt
+// 	}
+// 	if len(tgt) == 0 {
+// 		return contents
+// 	}
 
-	contentsIdx := getLastPopulatedIndex(contents) + 1
-	insertIdx := getLastPopulatedIndex(tgt) + 1
+// 	contentsIdx := getLastPopulatedIndex(contents) + 1
+// 	insertIdx := getLastPopulatedIndex(tgt) + 1
 
-	updated := []string{}
-	updated = append(updated, tgt[:insertIdx]...)
-	updated = append(updated, contents[:contentsIdx]...)
-	updated = append(updated, tgt[insertIdx:]...)
-	return updated
-}
+// 	updated := []string{}
+// 	updated = append(updated, tgt[:insertIdx]...)
+// 	updated = append(updated, contents[:contentsIdx]...)
+// 	updated = append(updated, tgt[insertIdx:]...)
+// 	return updated
+// }
 
-func getLastPopulatedIndex(s []string) int {
-	ln := len(s)
-	for i := 0; i < ln; i++ {
-		idx := ln - i - 1
-		if s[idx] != "\n" && s[idx] != "" {
-			return idx
-		}
-	}
-	return -1
-}
+// func getLastPopulatedIndex(s []string) int {
+// 	ln := len(s)
+// 	for i := 0; i < ln; i++ {
+// 		idx := ln - i - 1
+// 		if s[idx] != "\n" && s[idx] != "" {
+// 			return idx
+// 		}
+// 	}
+// 	return -1
+// }
