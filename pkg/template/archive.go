@@ -39,10 +39,15 @@ func (t *MonthArchiveTemplate) GetFilePath() string {
 	return filepath.Join(t.opts.AppDir, fileName)
 }
 
+type dateSectionGettable interface {
+	GetDate() time.Time
+	getSection(string) (*section, error)
+}
+
 // CopySectionContents archives the contents of the specified section from a source template by
 // concatenating its contents' text and appending to the contents of the receiver's section with a
 // header corresponding to the source template's date
-func (t *MonthArchiveTemplate) CopySectionContents(src *Template, sectionName string) error {
+func (t *MonthArchiveTemplate) CopySectionContents(src dateSectionGettable, sectionName string) error {
 	tgtSec, err := t.getSection(sectionName)
 	if err != nil {
 		return errors.Wrap(err, "failed to find section in target")
@@ -62,7 +67,7 @@ func (t *MonthArchiveTemplate) CopySectionContents(src *Template, sectionName st
 	}
 
 	tgtSec.contents = append(tgtSec.contents, contentItem{
-		header: t.makeContentHeader(src.date),
+		header: t.makeContentHeader(src.GetDate()),
 		text:   txt,
 	})
 	return nil

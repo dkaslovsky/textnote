@@ -43,6 +43,11 @@ func (t *Template) Write(w io.Writer) error {
 	return err
 }
 
+// GetDate returns the template's date
+func (t *Template) GetDate() time.Time {
+	return t.date
+}
+
 // GetFileStartLine returns the first line of content of the first Section (used when opening with Vim)
 func (t *Template) GetFileStartLine() int {
 	return t.opts.Header.TrailingNewlines + 3
