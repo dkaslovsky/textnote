@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -21,6 +22,13 @@ func newSection(name string, items ...contentItem) *section {
 
 func (s *section) deleteContents() {
 	s.contents = []contentItem{}
+}
+
+func (s *section) sortContents() {
+	// stable sort to preserve order for empty header case
+	sort.SliceStable(s.contents, func(i, j int) bool {
+		return s.contents[i].header < s.contents[j].header
+	})
 }
 
 func (s *section) getNameString(prefix string, suffix string) string {

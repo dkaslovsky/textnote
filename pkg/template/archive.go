@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -38,7 +39,8 @@ func (t *MonthArchiveTemplate) GetFilePath() string {
 }
 
 // CopySectionContents archives the contents of the specified section from a source template by
-// appending to the contents of the receiver's section and prepending the date of the source template
+// concatenating its contents' text and appending to the contents of the receiver's section with a
+// header corresponding to the source template's date
 func (t *MonthArchiveTemplate) CopySectionContents(src *Template, sectionName string) error {
 	tgtSec, err := t.getSection(sectionName)
 	if err != nil {
@@ -49,18 +51,17 @@ func (t *MonthArchiveTemplate) CopySectionContents(src *Template, sectionName st
 		return errors.Wrap(err, "failed to find section in source")
 	}
 
-	contents := []string{}
+	txt := ""
 	for _, content := range srcSec.contents {
-		if content == "" || content == "\n" {
-			continue
-		}
-		contents = append(contents, content)
+		txt += content.text
 	}
-	if len(contents) > 0 {
-		dateStr := t.makeSectionContentPrefix(src.date)
-		contents = append([]string{dateStr}, contents...)
-		tgtSec.contents = insert(tgtSec.contents, []string{strings.Join(contents, "\n")})
+	if len(txt) == 0 {
+		return nil
 	}
+	tgtSec.contents = append(tgtSec.contents, contentItem{
+		header: t.makeContentHeader(src.date),
+		text:   txt,
+	})
 	return nil
 }
 
@@ -69,12 +70,15 @@ func (t *MonthArchiveTemplate) string() string {
 
 	str := t.makeHeader()
 	for _, section := range t.sections {
-		section.sortContents()
 		name := section.getNameString(t.opts.Section.Prefix, t.opts.Section.Suffix)
-		body := section.getBodyString()
+
+		section.sortContents()
+		body := section.getContentString()
+		body = regexp.MustCompile(`\n{2,}`).ReplaceAllString(body, "\n") // remove blank lines
 		if !strings.HasSuffix(body, trailing) {
 			body += trailing
 		}
+
 		str += fmt.Sprintf("%s%s", name, body)
 	}
 	return str
@@ -89,8 +93,8 @@ func (t *MonthArchiveTemplate) makeHeader() string {
 	)
 }
 
-func (t *MonthArchiveTemplate) makeSectionContentPrefix(date time.Time) string {
-	return fmt.Sprintf("\n%s%s%s",
+func (t *MonthArchiveTemplate) makeContentHeader(date time.Time) string {
+	return fmt.Sprintf("%s%s%s",
 		t.opts.Archive.SectionContentPrefix,
 		date.Format(t.opts.Archive.SectionContentTimeFormat),
 		t.opts.Archive.SectionContentSuffix,

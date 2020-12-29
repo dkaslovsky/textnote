@@ -60,11 +60,12 @@ func parseSection(text string, opts config.Opts) (*section, error) {
 	name := stripPrefixSuffix(lines[0], opts.Section.Prefix, opts.Section.Suffix)
 	contents := parseSectionContents(
 		lines[1:],
-		opts.Archive.HeaderPrefix,
-		opts.Archive.HeaderSuffix,
+		opts.Archive.SectionContentPrefix,
+		opts.Archive.SectionContentSuffix,
 		opts.File.TimeFormat,
 	)
 
+	// TODO - clean up this hack
 	// do not include trailing newlines for empty sections as content
 	if len(contents) == 1 && contents[0].text == strings.Repeat("\n", opts.Section.TrailingNewlines) {
 		return newSection(name), nil
@@ -73,7 +74,7 @@ func parseSection(text string, opts config.Opts) (*section, error) {
 	return newSection(name, contents...), nil
 }
 
-func parseSectionContents(lines []string, prefix, suffix, format string) []contentItem {
+func parseSectionContents(lines []string, prefix string, suffix string, format string) []contentItem {
 	contents := []contentItem{}
 	if len(lines) == 0 {
 		return contents
