@@ -107,34 +107,3 @@ func (t *Template) makeHeader() string {
 		strings.Repeat("\n", t.opts.Header.TrailingNewlines),
 	)
 }
-
-// insert inserts contents into tgt before any trailing empty elements, omitting trailing empty
-// elements of contents
-// func insert(tgt []string, contents []string) []string {
-// 	if len(contents) == 0 {
-// 		return tgt
-// 	}
-// 	if len(tgt) == 0 {
-// 		return contents
-// 	}
-
-// 	contentsIdx := getLastPopulatedIndex(contents) + 1
-// 	insertIdx := getLastPopulatedIndex(tgt) + 1
-
-// 	updated := []string{}
-// 	updated = append(updated, tgt[:insertIdx]...)
-// 	updated = append(updated, contents[:contentsIdx]...)
-// 	updated = append(updated, tgt[insertIdx:]...)
-// 	return updated
-// }
-
-// func getLastPopulatedIndex(s []string) int {
-// 	ln := len(s)
-// 	for i := 0; i < ln; i++ {
-// 		idx := ln - i - 1
-// 		if s[idx] != "\n" && s[idx] != "" {
-// 			return idx
-// 		}
-// 	}
-// 	return -1
-// }
