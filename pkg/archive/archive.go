@@ -75,8 +75,21 @@ func (a *Archiver) Add(f fileInfo) error {
 }
 
 func (a *Archiver) Write() error {
-	// TODO: check if file already exists; if it does append the two and overwrite
 	for _, t := range a.Months {
+		if file.Exists(t) {
+			existing := template.NewMonthArchiveTemplate(a.opts, t.GetDate())
+			err := file.Read(existing)
+			if err != nil {
+				return errors.Wrapf(err, "unable to open existing archive file [%s]", existing.GetFilePath())
+			}
+			for _, sectionName := range a.opts.Section.Names {
+				err = t.CopySectionContents(existing, sectionName)
+				if err != nil {
+					return errors.Wrapf(err, "unable to copy section [%s] from existing archive file [%s]", sectionName, existing.GetFilePath())
+				}
+			}
+		}
+
 		err := file.Overwrite(t)
 		if err != nil {
 			return errors.Wrapf(err, "failed to write archive file [%s]", t.GetFilePath())
