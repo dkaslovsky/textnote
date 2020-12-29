@@ -2,8 +2,6 @@ package template
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 	"regexp"
 	"strings"
 	"time"
@@ -11,45 +9,6 @@ import (
 	"github.com/dkaslovsky/TextNote/pkg/config"
 	"github.com/pkg/errors"
 )
-
-// Load populates a Template from the contents of a TextNote
-func (t *Template) Load(r io.Reader) error {
-	raw, err := ioutil.ReadAll(r)
-	if err != nil {
-		return errors.Wrap(err, "error loading template")
-	}
-	sectionText := string(raw)
-
-	// extract sections from sectionText
-	sectionNameRegex, err := getSectionNameRegex(t.opts.Section.Prefix, t.opts.Section.Suffix)
-	if err != nil {
-		return errors.Wrap(err, "cannot parse sections")
-	}
-	matchIdx := sectionNameRegex.FindAllStringSubmatchIndex(sectionText, -1)
-	for i, idx := range matchIdx {
-		// get start and end indices for each section
-		var start, end int
-		start = idx[0]
-		if i+1 < len(matchIdx) {
-			end = matchIdx[i+1][0]
-		} else {
-			end = len(sectionText)
-		}
-
-		section, err := parseSection(sectionText[start:end], t.opts)
-		if err != nil {
-			return errors.Wrap(err, "failed to parse section while reading textnote")
-		}
-
-		idx, found := t.sectionIdx[section.name]
-		if !found {
-			return fmt.Errorf("cannot load undefined section [%s]", section.name)
-		}
-		t.sections[idx] = section
-	}
-
-	return nil
-}
 
 func parseSection(text string, opts config.Opts) (*section, error) {
 	if len(text) == 0 {
@@ -65,12 +24,9 @@ func parseSection(text string, opts config.Opts) (*section, error) {
 		opts.File.TimeFormat,
 	)
 
-	// TODO - clean up this hack
-	// do not include trailing newlines for empty sections as content
-	if len(contents) == 1 && contents[0].text == strings.Repeat("\n", opts.Section.TrailingNewlines) {
+	if isEmptyContents(contents) {
 		return newSection(name), nil
 	}
-
 	return newSection(name, contents...), nil
 }
 
@@ -91,20 +47,21 @@ func parseSectionContents(lines []string, prefix string, suffix string, format s
 	}
 
 	for _, line := range lines[1:] {
-		if !isItemHeader(line, prefix, suffix, format) {
-			body = append(body, line)
+		if isItemHeader(line, prefix, suffix, format) {
+			contents = append(contents, contentItem{
+				header: header,
+				text:   strings.Join(body, "\n"),
+			})
+
+			header = line
+			body = []string{}
 			continue
 		}
 
-		contents = append(contents, contentItem{
-			header: header,
-			text:   strings.Join(body, "\n"),
-		})
-
-		header = line
-		body = []string{}
+		body = append(body, line)
 	}
 
+	// ensure remaining content is appended
 	if len(body) != 0 || header != "" {
 		contents = append(contents, contentItem{
 			header: header,
@@ -139,4 +96,16 @@ func isItemHeader(line string, prefix string, suffix string, format string) bool
 		return false
 	}
 	return true
+}
+
+func isEmptyContents(c []contentItem) bool {
+	if len(c) == 0 {
+		return true
+	}
+	if len(c) == 1 {
+		// do not include trailing newlines as content for empty section
+		strippedTxt := strings.Replace(c[0].text, "\n", "", -1)
+		return len(strippedTxt) == 0
+	}
+	return false
 }

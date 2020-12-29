@@ -3,6 +3,7 @@ package template
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"time"
@@ -36,6 +37,7 @@ func NewTemplate(opts config.Opts, date time.Time) *Template {
 	return t
 }
 
+// Write writes the template
 func (t *Template) Write(w io.Writer) error {
 	_, err := w.Write([]byte(t.string()))
 	return err
@@ -46,7 +48,7 @@ func (t *Template) GetFileStartLine() int {
 	return t.opts.Header.TrailingNewlines + 3
 }
 
-// GetFilePath generates a name for a file based on the template date
+// GetFilePath generates a full path for a file based on the template date
 func (t *Template) GetFilePath() string {
 	fileName := fmt.Sprintf("%s.%s", t.date.Format(t.opts.File.TimeFormat), fileExt)
 	return filepath.Join(t.opts.AppDir, fileName)
@@ -71,18 +73,49 @@ func (t *Template) CopySectionContents(src *Template, sectionName string) error 
 func (t *Template) DeleteSectionContents(sectionName string) error {
 	sec, err := t.getSection(sectionName)
 	if err != nil {
-		return fmt.Errorf("section [%s] does not exist", sectionName)
+		return errors.Wrap(err, "cannot delete section")
 	}
 	sec.deleteContents()
 	return nil
 }
 
-func (t *Template) getSection(name string) (sec *section, err error) {
-	idx, found := t.sectionIdx[name]
-	if !found {
-		return sec, fmt.Errorf("section [%s] not found", name)
+// Load populates a Template from the contents of a TextNote
+func (t *Template) Load(r io.Reader) error {
+	raw, err := ioutil.ReadAll(r)
+	if err != nil {
+		return errors.Wrap(err, "error loading template")
 	}
-	return t.sections[idx], nil
+	sectionText := string(raw)
+
+	// extract sections from sectionText
+	sectionNameRegex, err := getSectionNameRegex(t.opts.Section.Prefix, t.opts.Section.Suffix)
+	if err != nil {
+		return errors.Wrap(err, "cannot parse sections")
+	}
+	matchIdx := sectionNameRegex.FindAllStringSubmatchIndex(sectionText, -1)
+	for i, idx := range matchIdx {
+		// get start and end indices for each section
+		var start, end int
+		start = idx[0]
+		if i+1 < len(matchIdx) {
+			end = matchIdx[i+1][0]
+		} else {
+			end = len(sectionText)
+		}
+
+		section, err := parseSection(sectionText[start:end], t.opts)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse section while reading textnote")
+		}
+
+		idx, found := t.sectionIdx[section.name]
+		if !found {
+			return fmt.Errorf("cannot load undefined section [%s]", section.name)
+		}
+		t.sections[idx] = section
+	}
+
+	return nil
 }
 
 func (t *Template) string() string {
@@ -106,4 +139,12 @@ func (t *Template) makeHeader() string {
 		t.opts.Header.Suffix,
 		strings.Repeat("\n", t.opts.Header.TrailingNewlines),
 	)
+}
+
+func (t *Template) getSection(name string) (sec *section, err error) {
+	idx, found := t.sectionIdx[name]
+	if !found {
+		return sec, fmt.Errorf("section [%s] not found", name)
+	}
+	return t.sections[idx], nil
 }
