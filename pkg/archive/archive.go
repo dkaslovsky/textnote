@@ -82,11 +82,9 @@ func (a *Archiver) Write() error {
 			if err != nil {
 				return errors.Wrapf(err, "unable to open existing archive file [%s]", existing.GetFilePath())
 			}
-			for _, sectionName := range a.opts.Section.Names {
-				err = t.CopySectionContents(existing, sectionName)
-				if err != nil {
-					return errors.Wrapf(err, "unable to copy section [%s] from existing archive file [%s]", sectionName, existing.GetFilePath())
-				}
+			err = t.Merge(existing)
+			if err != nil {
+				return errors.Wrapf(err, "unable to from merge existing archive file [%s]", existing.GetFilePath())
 			}
 		}
 

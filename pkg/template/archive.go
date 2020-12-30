@@ -73,6 +73,23 @@ func (t *MonthArchiveTemplate) CopySectionContents(src dateSectionGettable, sect
 	return nil
 }
 
+// Merge merges a source MonthArchiveTemplate into the receiver
+func (t *MonthArchiveTemplate) Merge(src *MonthArchiveTemplate) error {
+	for sectionName := range t.sectionIdx {
+		tgtSec, err := t.getSection(sectionName)
+		if err != nil {
+			return errors.Wrap(err, "failed to find section in target")
+		}
+		srcSec, err := src.getSection(sectionName)
+		if err != nil {
+			return errors.Wrap(err, "failed to find section in source")
+		}
+
+		tgtSec.contents = append(tgtSec.contents, srcSec.contents...)
+	}
+	return nil
+}
+
 func (t *MonthArchiveTemplate) string() string {
 	str := t.makeHeader()
 	for _, section := range t.sections {
