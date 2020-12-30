@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/dkaslovsky/TextNote/cmd/archive"
 	"github.com/dkaslovsky/TextNote/cmd/open"
 	"github.com/spf13/cobra"
 )
@@ -23,6 +24,7 @@ func Run() error {
 		open.CreateTodayCmd(),
 		open.CreateTomorrowCmd(),
 		open.CreateYesterdayCmd(),
+		archive.CreateArchiveCmd(),
 	)
 
 	return cmd.Execute()
