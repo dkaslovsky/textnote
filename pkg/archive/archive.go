@@ -64,9 +64,9 @@ func (a *Archiver) Add(f fileInfo) error {
 		a.Months[monthKey] = template.NewMonthArchiveTemplate(a.opts, fileDate)
 	}
 
-	month := a.Months[monthKey]
+	archive := a.Months[monthKey]
 	for _, section := range a.opts.Section.Names {
-		err := month.CopySectionContents(t, section)
+		err := archive.CopySectionContents(t, section)
 		if err != nil {
 			return errors.Wrapf(err, "cannot add contents from [%s] to archive", f.Name())
 		}
