@@ -189,3 +189,51 @@ func TestParseSectionContents(t *testing.T) {
 		})
 	}
 }
+
+func TestIsItemHeader(t *testing.T) {
+	type testCase struct {
+		header   string
+		prefix   string
+		suffix   string
+		format   string
+		expected bool
+	}
+
+	tests := map[string]testCase{
+		"valid header": {
+			header:   "[2020-07-28]",
+			prefix:   "[",
+			suffix:   "]",
+			format:   "2006-01-02",
+			expected: true,
+		},
+		"invalid header with wrong prefix": {
+			header:   "<2020-07-28]",
+			prefix:   "[",
+			suffix:   "]",
+			format:   "2006-01-02",
+			expected: false,
+		},
+		"invalid header with wrong suffix": {
+			header:   "[2020-07-28>",
+			prefix:   "[",
+			suffix:   "]",
+			format:   "2006-01-02",
+			expected: false,
+		},
+		"invalid header with wrong format": {
+			header:   "[2020-July-28]",
+			prefix:   "[",
+			suffix:   "]",
+			format:   "2006-01-02",
+			expected: false,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			val := isItemHeader(test.header, test.prefix, test.suffix, test.format)
+			require.Equal(t, test.expected, val)
+		})
+	}
+}
