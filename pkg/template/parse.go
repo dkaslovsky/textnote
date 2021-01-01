@@ -98,14 +98,17 @@ func isItemHeader(line string, prefix string, suffix string, format string) bool
 	return true
 }
 
-func isEmptyContents(c []contentItem) bool {
-	if len(c) == 0 {
+func isEmptyContents(contents []contentItem) bool {
+	if len(contents) == 0 {
 		return true
 	}
-	if len(c) == 1 {
+
+	for _, content := range contents {
 		// do not include trailing newlines as content for empty section
-		strippedTxt := strings.Replace(c[0].text, "\n", "", -1)
-		return len(strippedTxt) == 0
+		strippedTxt := strings.Replace(content.text, "\n", "", -1)
+		if len(strippedTxt) != 0 {
+			return false
+		}
 	}
-	return false
+	return true
 }

@@ -207,6 +207,13 @@ func TestIsItemHeader(t *testing.T) {
 			format:   "2006-01-02",
 			expected: true,
 		},
+		"valid header with no prefix or suffix": {
+			header:   "2020-07-28",
+			prefix:   "",
+			suffix:   "",
+			format:   "2006-01-02",
+			expected: true,
+		},
 		"invalid header with wrong prefix": {
 			header:   "<2020-07-28]",
 			prefix:   "[",
@@ -233,6 +240,115 @@ func TestIsItemHeader(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			val := isItemHeader(test.header, test.prefix, test.suffix, test.format)
+			require.Equal(t, test.expected, val)
+		})
+	}
+}
+
+func TestIsEmptyContents(t *testing.T) {
+	type testCase struct {
+		contents []contentItem
+		expected bool
+	}
+
+	tests := map[string]testCase{
+		"empty contents": {
+			contents: []contentItem{},
+			expected: true,
+		},
+		"single content with only newlines and empty header": {
+			contents: []contentItem{
+				contentItem{
+					header: "",
+					text:   "\n\n\n",
+				},
+			},
+			expected: true,
+		},
+		"single content with only newlines and populated header": {
+			contents: []contentItem{
+				contentItem{
+					header: "header",
+					text:   "\n\n\n",
+				},
+			},
+			expected: true,
+		},
+		"multiple contents with only newlines and empty headers": {
+			contents: []contentItem{
+				contentItem{
+					header: "",
+					text:   "\n\n\n",
+				},
+				contentItem{
+					header: "",
+					text:   "\n",
+				},
+			},
+			expected: true,
+		},
+		"multiple contents with only newlines and populated headers": {
+			contents: []contentItem{
+				contentItem{
+					header: "header1",
+					text:   "\n\n\n",
+				},
+				contentItem{
+					header: "header2",
+					text:   "\n",
+				},
+			},
+			expected: true,
+		},
+		"single content with text and no header": {
+			contents: []contentItem{
+				contentItem{
+					header: "",
+					text:   "\n\nfoo\n",
+				},
+			},
+			expected: false,
+		},
+		"single content with text and populated header": {
+			contents: []contentItem{
+				contentItem{
+					header: "header",
+					text:   "\n\nfoo\n",
+				},
+			},
+			expected: false,
+		},
+		"multiple contents with text and no headers": {
+			contents: []contentItem{
+				contentItem{
+					header: "",
+					text:   "\n\nfoo\n",
+				},
+				contentItem{
+					header: "",
+					text:   "bar",
+				},
+			},
+			expected: false,
+		},
+		"multiple contents with text and populated headers": {
+			contents: []contentItem{
+				contentItem{
+					header: "header1",
+					text:   "\n\nfoo\n",
+				},
+				contentItem{
+					header: "header2",
+					text:   "bar",
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			val := isEmptyContents(test.contents)
 			require.Equal(t, test.expected, val)
 		})
 	}
