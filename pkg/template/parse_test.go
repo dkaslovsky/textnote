@@ -6,49 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dkaslovsky/TextNote/pkg/config"
+	"github.com/dkaslovsky/TextNote/pkg/template/templatetest"
 	"github.com/stretchr/testify/require"
 )
-
-var testOpts = config.Opts{
-	Header: config.HeaderOpts{
-		Prefix:           "-^-",
-		Suffix:           "-v-",
-		TrailingNewlines: 1,
-		TimeFormat:       "[Mon] 02 Jan 2006",
-	},
-	Section: config.SectionOpts{
-		Prefix:           "_p_",
-		Suffix:           "_q_",
-		TrailingNewlines: 3,
-		Names: []string{
-			"TestSection1",
-			"TestSection2",
-			"TestSection3",
-		},
-	},
-	File: config.FileOpts{
-		TimeFormat: "2006-01-02",
-	},
-	Archive: config.ArchiveOpts{
-		HeaderPrefix:             "ARCHIVEPREFIX ",
-		HeaderSuffix:             " ARCHIVESUFFIX",
-		SectionContentPrefix:     "[",
-		SectionContentSuffix:     "]",
-		SectionContentTimeFormat: "2006-01-02",
-		MonthTimeFormat:          "Jan2006",
-	},
-}
-
-var testDate = time.Date(2020, 12, 20, 1, 1, 1, 1, time.UTC)
-
-func makeTestItemHeader(date time.Time, opts config.Opts) string {
-	return fmt.Sprintf("%s%s%s",
-		opts.Archive.HeaderPrefix,
-		date.Format(opts.Archive.SectionContentTimeFormat),
-		opts.Archive.HeaderSuffix,
-	)
-}
 
 func TestParseSectionContents(t *testing.T) {
 	type testCase struct {
@@ -87,25 +47,25 @@ func TestParseSectionContents(t *testing.T) {
 		},
 		"lines with single header": {
 			lines: strings.Split(
-				fmt.Sprintf("%s\nhello\n  world", makeTestItemHeader(testDate, testOpts)),
+				fmt.Sprintf("%s\nhello\n  world", templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts())),
 				"\n",
 			),
 			expected: []contentItem{
 				{
-					header: makeTestItemHeader(testDate, testOpts),
+					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "hello\n  world",
 				},
 			},
 		},
 		"lines with single header with newline at start and end": {
 			lines: strings.Split(
-				fmt.Sprintf("\n%s\n\nhello\n  world\n", makeTestItemHeader(testDate, testOpts)),
+				fmt.Sprintf("\n%s\n\nhello\n  world\n", templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts())),
 				"\n",
 			),
 			expected: []contentItem{
 				{},
 				{
-					header: makeTestItemHeader(testDate, testOpts),
+					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "\nhello\n  world\n",
 				},
 			},
@@ -113,18 +73,18 @@ func TestParseSectionContents(t *testing.T) {
 		"lines with multiple headers": {
 			lines: strings.Split(
 				fmt.Sprintf("%s\nhello\n  world\n%s\nhello2\n  world2",
-					makeTestItemHeader(testDate, testOpts),
-					makeTestItemHeader(testDate.Add(24*time.Hour), testOpts),
+					templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
+					templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 				),
 				"\n",
 			),
 			expected: []contentItem{
 				{
-					header: makeTestItemHeader(testDate, testOpts),
+					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "hello\n  world",
 				},
 				{
-					header: makeTestItemHeader(testDate.Add(24*time.Hour), testOpts),
+					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "hello2\n  world2",
 				},
 			},
@@ -132,31 +92,31 @@ func TestParseSectionContents(t *testing.T) {
 		"lines with multiple headers with newline at start and end": {
 			lines: strings.Split(
 				fmt.Sprintf("\n%s\nhello\n  world\n\n%s\nhello2\n  world2\n",
-					makeTestItemHeader(testDate, testOpts),
-					makeTestItemHeader(testDate.Add(24*time.Hour), testOpts),
+					templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
+					templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 				),
 				"\n",
 			),
 			expected: []contentItem{
 				{},
 				{
-					header: makeTestItemHeader(testDate, testOpts),
+					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "hello\n  world\n",
 				},
 				{
-					header: makeTestItemHeader(testDate.Add(24*time.Hour), testOpts),
+					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "hello2\n  world2\n",
 				},
 			},
 		},
 		"header with no text": {
 			lines: strings.Split(
-				makeTestItemHeader(testDate, testOpts),
+				templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 				"\n",
 			),
 			expected: []contentItem{
 				{
-					header: makeTestItemHeader(testDate, testOpts),
+					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "",
 				},
 			},
@@ -164,18 +124,18 @@ func TestParseSectionContents(t *testing.T) {
 		"multiple headers with no text": {
 			lines: strings.Split(
 				fmt.Sprintf("%s\n%s",
-					makeTestItemHeader(testDate, testOpts),
-					makeTestItemHeader(testDate.Add(24*time.Hour), testOpts),
+					templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
+					templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 				),
 				"\n",
 			),
 			expected: []contentItem{
 				{
-					header: makeTestItemHeader(testDate, testOpts),
+					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "",
 				},
 				{
-					header: makeTestItemHeader(testDate.Add(24*time.Hour), testOpts),
+					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "",
 				},
 			},
@@ -184,7 +144,7 @@ func TestParseSectionContents(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			contents := parseSectionContents(test.lines, testOpts.Archive.HeaderPrefix, testOpts.Archive.HeaderSuffix, testOpts.File.TimeFormat)
+			contents := parseSectionContents(test.lines, templatetest.GetOpts().Archive.HeaderPrefix, templatetest.GetOpts().Archive.HeaderSuffix, templatetest.GetOpts().File.TimeFormat)
 			require.Equal(t, test.expected, contents)
 		})
 	}
