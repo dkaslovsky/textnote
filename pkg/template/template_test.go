@@ -241,6 +241,188 @@ func TestDeleteSectionContents(t *testing.T) {
 	})
 }
 
+func TestLoad(t *testing.T) {
+	type testCase struct {
+		text             string
+		expectedSections []*section
+	}
+
+	tests := map[string]testCase{
+		"empty text": {
+			text: ``,
+			expectedSections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
+		"no sections in text": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+`,
+			expectedSections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
+		"single empty section in text": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_`,
+			expectedSections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
+		"single empty section with trainling newlines in text": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+
+
+`,
+			expectedSections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
+		"single empty section with too many trainling newlines in text": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+
+
+
+
+`,
+			expectedSections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
+		"single empty second section in text": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection2_q_`,
+			expectedSections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
+		"multiple empty sections in text": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+_p_TestSection2_q_
+_p_TestSection3_q_`,
+			expectedSections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
+		"multiple empty sections with trailing newlines in text": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+			expectedSections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
+		"single section with contents in text": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+text1
+  text2
+
+
+_p_TestSection2_q_
+_p_TestSection3_q_
+`,
+			expectedSections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "",
+						text:   "text1\n  text2\n\n\n",
+					},
+				),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
+		"multiple sections with contents in text": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+text1
+  text2
+
+
+_p_TestSection2_q_
+  text3
+_p_TestSection3_q_
+
+text4
+
+`,
+			expectedSections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "",
+						text:   "text1\n  text2\n\n\n",
+					},
+				),
+				newSection("TestSection2",
+					contentItem{
+						header: "",
+						text:   "  text3\n",
+					},
+				),
+				newSection("TestSection3",
+					contentItem{
+						header: "",
+						text:   "\ntext4\n\n",
+					}),
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			template := NewTemplate(templatetest.GetOpts(), templatetest.Date)
+			err := template.Load(strings.NewReader(test.text))
+			require.NoError(t, err)
+			for _, expectedSection := range test.expectedSections {
+				sec, err := template.getSection(expectedSection.name)
+				require.NoError(t, err)
+				require.Equal(t, expectedSection, sec)
+			}
+		})
+	}
+}
+
 func TestString(t *testing.T) {
 	type testCase struct {
 		sections []*section
