@@ -8,10 +8,10 @@ import (
 	"github.com/dkaslovsky/TextNote/pkg/config"
 )
 
-// Date is a fixed date
+// Date is a fixed date - changing this value will affect some tests
 var Date = time.Date(2020, 12, 20, 1, 1, 1, 1, time.UTC)
 
-// GetOpts returns a configuration struct for tests
+// GetOpts returns a configuration struct for tests - changing these values will affect some tests
 func GetOpts() config.Opts {
 	return config.Opts{
 		Header: config.HeaderOpts{

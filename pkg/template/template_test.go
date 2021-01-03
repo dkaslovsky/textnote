@@ -165,9 +165,6 @@ func TestCopySectionContents(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			opts := templatetest.GetOpts()
-			// require sectionName is contained in sections names from config, otherwise test is not valid
-			require.Contains(t, opts.Section.Names, test.sectionName)
-
 			src := NewTemplate(opts, templatetest.Date)
 			src.sections[src.sectionIdx[test.sectionName]].contents = test.incomingContents
 			template := NewTemplate(opts, templatetest.Date)
@@ -186,9 +183,6 @@ func TestCopySectionContentsFail(t *testing.T) {
 	t.Run("section does not exist in template", func(t *testing.T) {
 		toCopy := "toBeCopied"
 		opts := templatetest.GetOpts()
-		// require sectionName is contained in sections names from config, otherwise test is not valid
-		require.NotContains(t, opts.Section.Names, toCopy)
-
 		template := NewTemplate(opts, templatetest.Date)
 		src := NewTemplate(opts, templatetest.Date)
 		src.sections = append(src.sections, newSection(toCopy))
@@ -201,9 +195,6 @@ func TestCopySectionContentsFail(t *testing.T) {
 	t.Run("section does not exist in source", func(t *testing.T) {
 		toCopy := "toBeCopied"
 		opts := templatetest.GetOpts()
-		// require sectionName is contained in sections names from config, otherwise test is not valid
-		require.NotContains(t, opts.Section.Names, toCopy)
-
 		template := NewTemplate(opts, templatetest.Date)
 		template.sections = append(template.sections, newSection(toCopy))
 		template.sectionIdx[toCopy] = len(template.sections) - 1
@@ -243,8 +234,6 @@ func TestDeleteSectionContents(t *testing.T) {
 	t.Run("delete non-existent section", func(t *testing.T) {
 		toDelete := "sectionToBeDeleted"
 		opts := templatetest.GetOpts()
-		// require that toDelete is not in section names from config, otherwise test is not valid
-		require.NotContains(t, opts.Section.Names, toDelete)
 		template := NewTemplate(opts, templatetest.Date)
 
 		err := template.DeleteSectionContents(toDelete)
