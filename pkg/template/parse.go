@@ -76,7 +76,7 @@ func stripPrefixSuffix(line string, prefix string, suffix string) string {
 }
 
 func getSectionNameRegex(prefix string, suffix string) (*regexp.Regexp, error) {
-	sectionPattern := fmt.Sprintf("%s[A-Za-z]+%s", prefix, suffix)
+	sectionPattern := fmt.Sprintf("%s.*%s", prefix, suffix)
 	sectionNameRegex, err := regexp.Compile(sectionPattern)
 	if err != nil {
 		return sectionNameRegex, fmt.Errorf("invalid section prefix [%s] or suffix [%s]", prefix, suffix)
