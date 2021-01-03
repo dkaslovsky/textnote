@@ -66,15 +66,17 @@ func TestNewTemplate(t *testing.T) {
 }
 
 func TestGetFilePath(t *testing.T) {
-	opts := templatetest.GetOpts()
-	template := NewTemplate(opts, templatetest.Date)
-	filePath := template.GetFilePath()
-	require.True(t, strings.HasPrefix(filePath, opts.AppDir))
-	require.True(t, strings.HasSuffix(filePath, fileExt))
-	require.Equal(t, templatetest.Date.Format(opts.File.TimeFormat), stripPrefixSuffix(filePath,
-		fmt.Sprintf("%s/", opts.AppDir),
-		fmt.Sprintf(".%s", fileExt),
-	))
+	t.Run("get file path", func(t *testing.T) {
+		opts := templatetest.GetOpts()
+		template := NewTemplate(opts, templatetest.Date)
+		filePath := template.GetFilePath()
+		require.True(t, strings.HasPrefix(filePath, opts.AppDir))
+		require.True(t, strings.HasSuffix(filePath, fileExt))
+		require.Equal(t, templatetest.Date.Format(opts.File.TimeFormat), stripPrefixSuffix(filePath,
+			fmt.Sprintf("%s/", opts.AppDir),
+			fmt.Sprintf(".%s", fileExt),
+		))
+	})
 }
 
 func TestCopySectionContents(t *testing.T) {
@@ -250,6 +252,221 @@ func TestDeleteSectionContents(t *testing.T) {
 	})
 }
 
-// Load
+func TestString(t *testing.T) {
+	type testCase struct {
+		sections []*section
+		expected string
+	}
 
-// string
+	tests := map[string]testCase{
+		"empty template": {
+			sections: []*section{},
+			expected: `-^-[Sun] 20 Dec 2020-v-
+
+`,
+		},
+		"single empty section": {
+			sections: []*section{
+				newSection("TestSection1"),
+			},
+			expected: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+
+
+`,
+		},
+		"single section with text": {
+			sections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "",
+						text:   "text",
+					},
+				),
+			},
+			expected: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+text
+`,
+		},
+		"single section with multiline text": {
+			sections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "",
+						text:   "text1\ntext2\n\n text3text4\n- text5\n\n  -text6\n\n",
+					},
+				),
+			},
+			expected: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+text1
+text2
+
+ text3text4
+- text5
+
+  -text6
+
+`,
+		},
+		"single section with text and header": {
+			sections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						// in practice a Template will not have sections with headers
+						// and as such we expect no formatting to be applied
+						header: "header",
+						text:   "text",
+					},
+				),
+			},
+			expected: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+header
+text
+`,
+		},
+		"single section with multiple contents": {
+			sections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "",
+						text:   "text1",
+					},
+					// in practice a Template will not have sections with multiple contents
+					contentItem{
+						header: "",
+						text:   "text2",
+					},
+				),
+			},
+			expected: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+text1
+text2
+`,
+		},
+		"multiple empty sections": {
+			sections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+			expected: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+		},
+		"multiple sections with only first populated": {
+			sections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "",
+						text:   "text",
+					},
+				),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+			expected: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+text
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+		},
+		"multiple sections with only middle populated": {
+			sections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2",
+					contentItem{
+						header: "",
+						text:   "text",
+					},
+				),
+				newSection("TestSection3"),
+			},
+			expected: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+
+
+_p_TestSection2_q_
+text
+_p_TestSection3_q_
+
+
+
+`,
+		},
+		"multiple sections with only last populated": {
+			sections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3",
+					contentItem{
+						header: "",
+						text:   "text",
+					},
+				),
+			},
+			expected: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+text
+`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			opts := templatetest.GetOpts()
+			names := []string{}
+			for _, section := range test.sections {
+				names = append(names, section.name)
+			}
+			opts.Section.Names = names
+
+			template := NewTemplate(opts, templatetest.Date)
+			for i, section := range test.sections {
+				template.sections[i] = section
+			}
+
+			require.Equal(t, test.expected, template.string())
+		})
+	}
+}
