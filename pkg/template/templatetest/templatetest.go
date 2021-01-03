@@ -48,8 +48,8 @@ func GetOpts() config.Opts {
 // MakeItemHeader is a helper to construct an expected header property of a contentItem struct
 func MakeItemHeader(date time.Time, opts config.Opts) string {
 	return fmt.Sprintf("%s%s%s",
-		opts.Archive.HeaderPrefix,
+		opts.Archive.SectionContentPrefix,
 		date.Format(opts.Archive.SectionContentTimeFormat),
-		opts.Archive.HeaderSuffix,
+		opts.Archive.SectionContentSuffix,
 	)
 }

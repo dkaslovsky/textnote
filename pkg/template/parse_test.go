@@ -144,7 +144,8 @@ func TestParseSectionContents(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			contents := parseSectionContents(test.lines, templatetest.GetOpts().Archive.HeaderPrefix, templatetest.GetOpts().Archive.HeaderSuffix, templatetest.GetOpts().File.TimeFormat)
+			opts := templatetest.GetOpts()
+			contents := parseSectionContents(test.lines, opts.Archive.SectionContentPrefix, opts.Archive.SectionContentSuffix, opts.File.TimeFormat)
 			require.Equal(t, test.expected, contents)
 		})
 	}
