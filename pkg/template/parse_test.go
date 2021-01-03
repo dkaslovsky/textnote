@@ -91,7 +91,7 @@ func TestParseSectionContents(t *testing.T) {
 		},
 		"lines with multiple headers with newline at start and end": {
 			lines: strings.Split(
-				fmt.Sprintf("\n%s\nhello\n  world\n\n%s\nhello2\n  world2\n",
+				fmt.Sprintf("\n%s\nhello\n\n  world\n\n\n\n%s\nhello2\n  world2\n\n\n\n\n",
 					templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 				),
@@ -101,11 +101,11 @@ func TestParseSectionContents(t *testing.T) {
 				{},
 				{
 					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
-					text:   "hello\n  world\n",
+					text:   "hello\n\n  world\n\n\n",
 				},
 				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
-					text:   "hello2\n  world2\n",
+					text:   "hello2\n  world2\n\n\n\n\n",
 				},
 			},
 		},
