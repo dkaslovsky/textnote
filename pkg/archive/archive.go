@@ -66,7 +66,7 @@ func (a *Archiver) Add(f fileInfo) error {
 
 	archive := a.Months[monthKey]
 	for _, section := range a.opts.Section.Names {
-		err := archive.CopySectionContents(t, section)
+		err := archive.ArchiveSectionContents(t, section)
 		if err != nil {
 			return errors.Wrapf(err, "cannot add contents from [%s] to archive", f.Name())
 		}

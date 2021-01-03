@@ -39,10 +39,9 @@ func (t *MonthArchiveTemplate) GetFilePath() string {
 	return filepath.Join(t.opts.AppDir, fileName)
 }
 
-// CopySectionContents archives the contents of the specified section from a source Template by
-// concatenating its contents' text and appending to the contents of the receiver's section with a
-// header corresponding to the source template's date
-func (t *MonthArchiveTemplate) CopySectionContents(src *Template, sectionName string) error {
+// ArchiveSectionContents concatenates the contents of the specified section from a source Template and
+// appends to the contents of the receiver's section with a header corresponding to the source template's date
+func (t *MonthArchiveTemplate) ArchiveSectionContents(src *Template, sectionName string) error {
 	tgtSec, err := t.getSection(sectionName)
 	if err != nil {
 		return errors.Wrap(err, "failed to find section in target")
@@ -69,18 +68,13 @@ func (t *MonthArchiveTemplate) CopySectionContents(src *Template, sectionName st
 }
 
 // Merge merges a source MonthArchiveTemplate into the receiver
+// This is a convenience function that iterates and calls for all sections in the receiver
 func (t *MonthArchiveTemplate) Merge(src *MonthArchiveTemplate) error {
 	for sectionName := range t.sectionIdx {
-		tgtSec, err := t.getSection(sectionName)
+		err := t.CopySectionContents(src, sectionName)
 		if err != nil {
-			return errors.Wrap(err, "failed to find section in target")
+			return err
 		}
-		srcSec, err := src.getSection(sectionName)
-		if err != nil {
-			return errors.Wrap(err, "failed to find section in source")
-		}
-
-		tgtSec.contents = append(tgtSec.contents, srcSec.contents...)
 	}
 	return nil
 }

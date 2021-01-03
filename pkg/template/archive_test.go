@@ -26,7 +26,7 @@ func TestArchiveGetFilePath(t *testing.T) {
 	})
 }
 
-func TestArchiveCopySectionContents(t *testing.T) {
+func TestArchiveSectionContents(t *testing.T) {
 	type testCase struct {
 		sectionName      string
 		existingContents []contentItem
@@ -36,14 +36,14 @@ func TestArchiveCopySectionContents(t *testing.T) {
 	}
 
 	tests := map[string]testCase{
-		"copy empty contents into empty section": {
+		"archive empty contents into empty section": {
 			sectionName:      "TestSection1",
 			existingContents: []contentItem{},
 			sourceDate:       templatetest.Date,
 			sourceContents:   []contentItem{},
 			expectedContents: []contentItem{},
 		},
-		"copy empty contents into populated section": {
+		"archive empty contents into populated section": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
 				contentItem{
@@ -60,7 +60,7 @@ func TestArchiveCopySectionContents(t *testing.T) {
 				},
 			},
 		},
-		"copy contents with single element into empty section": {
+		"archive contents with single element into empty section": {
 			sectionName:      "TestSection1",
 			existingContents: []contentItem{},
 			sourceDate:       templatetest.Date.Add(24 * time.Hour),
@@ -77,7 +77,7 @@ func TestArchiveCopySectionContents(t *testing.T) {
 				},
 			},
 		},
-		"copy contents with single element into populated section": {
+		"archive contents with single element into populated section": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
 				contentItem{
@@ -103,7 +103,7 @@ func TestArchiveCopySectionContents(t *testing.T) {
 				},
 			},
 		},
-		"copy contents with multiple element into empty section": {
+		"archive contents with multiple element into empty section": {
 			sectionName:      "TestSection1",
 			existingContents: []contentItem{},
 			sourceDate:       templatetest.Date.Add(24 * time.Hour),
@@ -124,7 +124,7 @@ func TestArchiveCopySectionContents(t *testing.T) {
 				},
 			},
 		},
-		"copy contents with multiple elements into populated section": {
+		"archive contents with multiple elements into populated section": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
 				contentItem{
@@ -154,7 +154,7 @@ func TestArchiveCopySectionContents(t *testing.T) {
 				},
 			},
 		},
-		"copy contents from source with same date": {
+		"archive contents from source with same date": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
 				contentItem{
@@ -215,35 +215,35 @@ func TestArchiveCopySectionContents(t *testing.T) {
 			template := NewMonthArchiveTemplate(opts, templatetest.Date)
 			template.sections[template.sectionIdx[test.sectionName]].contents = test.existingContents
 
-			err := template.CopySectionContents(src, test.sectionName)
+			err := template.ArchiveSectionContents(src, test.sectionName)
 			require.NoError(t, err)
 			require.Equal(t, template.sections[template.sectionIdx[test.sectionName]].contents, test.expectedContents)
 		})
 	}
 }
 
-func TestArchiveCopySectionContentsFail(t *testing.T) {
+func TestArchiveSectionContentsFail(t *testing.T) {
 	t.Run("section does not exist in template", func(t *testing.T) {
-		toCopy := "toBeCopied"
+		toCopy := "toBeArchived"
 		opts := templatetest.GetOpts()
 		template := NewMonthArchiveTemplate(opts, templatetest.Date)
 		src := NewTemplate(opts, templatetest.Date)
 		src.sections = append(src.sections, newSection(toCopy))
 		src.sectionIdx[toCopy] = len(src.sections) - 1
 
-		err := template.CopySectionContents(src, toCopy)
+		err := template.ArchiveSectionContents(src, toCopy)
 		require.Error(t, err)
 	})
 
 	t.Run("section does not exist in source", func(t *testing.T) {
-		toCopy := "toBeCopied"
+		toCopy := "toBeArchived"
 		opts := templatetest.GetOpts()
 		template := NewMonthArchiveTemplate(opts, templatetest.Date)
 		template.sections = append(template.sections, newSection(toCopy))
 		template.sectionIdx[toCopy] = len(template.sections) - 1
 		src := NewTemplate(opts, templatetest.Date)
 
-		err := template.CopySectionContents(src, toCopy)
+		err := template.ArchiveSectionContents(src, toCopy)
 		require.Error(t, err)
 	})
 }

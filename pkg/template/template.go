@@ -59,9 +59,13 @@ func (t *Template) GetFilePath() string {
 	return filepath.Join(t.opts.AppDir, fileName)
 }
 
+type sectionGettable interface {
+	getSection(string) (*section, error)
+}
+
 // CopySectionContents copies the contents of the specified section from a source template by
 // appending to the contents of the receiver's section
-func (t *Template) CopySectionContents(src *Template, sectionName string) error {
+func (t *Template) CopySectionContents(src sectionGettable, sectionName string) error {
 	tgtSec, err := t.getSection(sectionName)
 	if err != nil {
 		return errors.Wrap(err, "failed to find section in target")
