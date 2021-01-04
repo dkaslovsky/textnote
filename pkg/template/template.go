@@ -12,8 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const fileExt = "txt"
-
 // Template contains the structure of a TextNote
 type Template struct {
 	opts       config.Opts
@@ -55,8 +53,11 @@ func (t *Template) GetFileStartLine() int {
 
 // GetFilePath generates a full path for a file based on the template date
 func (t *Template) GetFilePath() string {
-	fileName := fmt.Sprintf("%s.%s", t.date.Format(t.opts.File.TimeFormat), fileExt)
-	return filepath.Join(t.opts.AppDir, fileName)
+	name := filepath.Join(t.opts.AppDir, t.date.Format(t.opts.File.TimeFormat))
+	if t.opts.File.Ext != "" {
+		name = fmt.Sprintf("%s.%s", name, t.opts.File.Ext)
+	}
+	return name
 }
 
 type sectionGettable interface {

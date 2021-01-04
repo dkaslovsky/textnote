@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/pkg/errors"
@@ -48,11 +50,13 @@ type SectionOpts struct {
 
 // FileOpts are options for configuring files written by TextNote
 type FileOpts struct {
-	TimeFormat string `yaml:"timeFormat" env:"TEXTNOTE_FILENAME_TIME_FORMAT" env-description:"formatting string to form file names from timestamps"`
+	TimeFormat string `yaml:"timeFormat" env:"TEXTNOTE_FILE_TIME_FORMAT" env-description:"formatting string to form file names from timestamps"`
+	Ext        string `yaml:"ext" env:"TEXTNOTE_FILE_EXT" env-description:"extension for all files written"`
 }
 
 // ArchiveOpts are options for configuring archive files written by TextNote
 type ArchiveOpts struct {
+	FilePrefix               string `yaml:"filePrefix" env:"TEXTNOTE_ARCHIVE_FILE_PREFIX" env-description:"prefix attached to the file name of all archive files"`
 	HeaderPrefix             string `yaml:"headerPrefix" env:"TEXTNOTE_ARCHIVE_HEADER_PREFIX" env-description:"override header prefix for archive files"`
 	HeaderSuffix             string `yaml:"headerSuffix" env:"TEXTNOTE_ARCHIVE_HEADER_SUFFIX" env-description:"override header suffix for archive files"`
 	SectionContentPrefix     string `yaml:"sectionContentPrefix" env:"TEXTNOTE_ARCHIVE_SECTION_CONTENT_PREFIX" env-description:"prefix to attach to section content date"`
@@ -81,8 +85,10 @@ func getDefaultOpts() Opts {
 		},
 		File: FileOpts{
 			TimeFormat: "2006-01-02",
+			Ext:        "txt",
 		},
 		Archive: ArchiveOpts{
+			FilePrefix:               "archive-",
 			HeaderPrefix:             "ARCHIVE ",
 			HeaderSuffix:             "",
 			SectionContentPrefix:     "[",
@@ -123,7 +129,12 @@ func LoadOrCreate() (Opts, error) {
 
 	opts.AppDir = appDir
 
-	return opts, err
+	err = ValidateConfig(opts)
+	if err != nil {
+		return opts, errors.Wrapf(err, "configuration error in [%s]", configFileName)
+	}
+
+	return opts, nil
 }
 
 // EnsureAppDir validates that the application directory exists or is created
@@ -143,5 +154,48 @@ func EnsureAppDir() error {
 	if !finfo.IsDir() {
 		return fmt.Errorf("[%s=%s] must be a directory", envAppDir, appDir)
 	}
+	return nil
+}
+
+// ValidateConfig returns an error if the specified options are misconfigured
+func ValidateConfig(opts Opts) error {
+	// validate at least one section
+	if len(opts.Section.Names) == 0 {
+		return errors.New("must include at least one section")
+	}
+
+	// validate section names are unique
+	uniq := map[string]struct{}{}
+	for _, name := range opts.Section.Names {
+		uniq[name] = struct{}{}
+	}
+	if len(uniq) != len(opts.Section.Names) {
+		return errors.New("section names must be unique")
+	}
+
+	// validate file archive prefix: this is needed for determining if a file is an archive
+	if opts.Archive.FilePrefix == "" || strings.ReplaceAll(opts.Archive.FilePrefix, " ", "") == "" {
+		return errors.New("file prefix for archives must not be empty")
+	}
+
+	// validate header time format
+	t := time.Now()
+	_, err := time.Parse(opts.Header.TimeFormat, t.Format(opts.Header.TimeFormat))
+	if err != nil {
+		return errors.New("invalid header time format")
+	}
+	_, err = time.Parse(opts.File.TimeFormat, t.Format(opts.File.TimeFormat))
+	if err != nil {
+		return errors.New("invalid file time format")
+	}
+	_, err = time.Parse(opts.Archive.SectionContentTimeFormat, t.Format(opts.Archive.SectionContentTimeFormat))
+	if err != nil {
+		return errors.New("invalid archive section content time format")
+	}
+	_, err = time.Parse(opts.Archive.MonthTimeFormat, t.Format(opts.Archive.MonthTimeFormat))
+	if err != nil {
+		return errors.New("invalid archive month time format")
+	}
+
 	return nil
 }

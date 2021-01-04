@@ -11,18 +11,30 @@ import (
 )
 
 func TestArchiveGetFilePath(t *testing.T) {
-	t.Run("get file path", func(t *testing.T) {
+	t.Run("get file path with extension", func(t *testing.T) {
 		opts := templatetest.GetOpts()
+		opts.File.Ext = "txt"
 		template := NewMonthArchiveTemplate(opts, templatetest.Date)
 		filePath := template.GetFilePath()
 		require.True(t, strings.HasPrefix(filePath, opts.AppDir))
-		require.True(t, strings.HasSuffix(filePath, fileExt))
+		require.True(t, strings.HasSuffix(filePath, ".txt"))
 		require.Equal(t,
-			ArchiveFilePrefix+templatetest.Date.Format(opts.Archive.MonthTimeFormat),
-			stripPrefixSuffix(filePath,
-				fmt.Sprintf("%s/", opts.AppDir),
-				fmt.Sprintf(".%s", fileExt),
-			))
+			opts.Archive.FilePrefix+templatetest.Date.Format(opts.Archive.MonthTimeFormat),
+			stripPrefixSuffix(filePath, fmt.Sprintf("%s/", opts.AppDir), ".txt"),
+		)
+	})
+
+	t.Run("get file path without extension", func(t *testing.T) {
+		opts := templatetest.GetOpts()
+		opts.File.Ext = ""
+		template := NewMonthArchiveTemplate(opts, templatetest.Date)
+		filePath := template.GetFilePath()
+		require.True(t, strings.HasPrefix(filePath, opts.AppDir))
+		require.False(t, strings.HasSuffix(filePath, "."))
+		require.Equal(t,
+			opts.Archive.FilePrefix+templatetest.Date.Format(opts.Archive.MonthTimeFormat),
+			stripPrefixSuffix(filePath, fmt.Sprintf("%s/", opts.AppDir), ""),
+		)
 	})
 }
 

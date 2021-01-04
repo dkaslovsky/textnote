@@ -39,7 +39,7 @@ type fileInfo interface {
 
 // Add adds a file to the archive
 func (a *Archiver) Add(f fileInfo) error {
-	if shouldSkip(f) {
+	if a.shouldSkip(f) {
 		return nil
 	}
 
@@ -96,10 +96,10 @@ func (a *Archiver) Write() error {
 	return nil
 }
 
-func shouldSkip(f fileInfo) bool {
+func (a *Archiver) shouldSkip(f fileInfo) bool {
 	switch {
 	// skip archive files
-	case strings.HasPrefix(f.Name(), template.ArchiveFilePrefix):
+	case strings.HasPrefix(f.Name(), a.opts.Archive.FilePrefix):
 		return true
 	// skip hidden files
 	case strings.HasPrefix(f.Name(), "."):

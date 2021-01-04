@@ -12,9 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ArchiveFilePrefix is the prefix attached to the file name of all archive files
-const ArchiveFilePrefix = "archive-"
-
 // MonthArchiveTemplate contains the structure of a TextNote month archive
 type MonthArchiveTemplate struct {
 	*Template
@@ -35,8 +32,11 @@ func (t *MonthArchiveTemplate) Write(w io.Writer) error {
 
 // GetFilePath generates a full path for a file based on the template date
 func (t *MonthArchiveTemplate) GetFilePath() string {
-	fileName := fmt.Sprintf("%s%s.%s", ArchiveFilePrefix, t.date.Format(t.opts.Archive.MonthTimeFormat), fileExt)
-	return filepath.Join(t.opts.AppDir, fileName)
+	name := t.opts.Archive.FilePrefix + t.date.Format(t.opts.Archive.MonthTimeFormat)
+	if t.opts.File.Ext != "" {
+		name = fmt.Sprintf("%s.%s", name, t.opts.File.Ext)
+	}
+	return filepath.Join(t.opts.AppDir, name)
 }
 
 // ArchiveSectionContents concatenates the contents of the specified section from a source Template and

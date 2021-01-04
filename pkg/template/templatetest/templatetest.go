@@ -3,6 +3,7 @@ package templatetest
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/dkaslovsky/TextNote/pkg/config"
@@ -13,7 +14,7 @@ var Date = time.Date(2020, 12, 20, 1, 1, 1, 1, time.UTC)
 
 // GetOpts returns a configuration struct for tests - changing these values will affect some tests
 func GetOpts() config.Opts {
-	return config.Opts{
+	opts := config.Opts{
 		Header: config.HeaderOpts{
 			Prefix:           "-^-",
 			Suffix:           "-v-",
@@ -32,8 +33,10 @@ func GetOpts() config.Opts {
 		},
 		File: config.FileOpts{
 			TimeFormat: "2006-01-02",
+			Ext:        "txt",
 		},
 		Archive: config.ArchiveOpts{
+			FilePrefix:               "archive-",
 			HeaderPrefix:             "ARCHIVEPREFIX ",
 			HeaderSuffix:             " ARCHIVESUFFIX",
 			SectionContentPrefix:     "[",
@@ -43,6 +46,12 @@ func GetOpts() config.Opts {
 		},
 		AppDir: "my/app/dir",
 	}
+
+	err := config.ValidateConfig(opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return opts
 }
 
 // MakeItemHeader is a helper to construct a header property of a contentItem struct

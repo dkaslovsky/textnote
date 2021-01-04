@@ -7,7 +7,6 @@ import (
 
 	"github.com/dkaslovsky/TextNote/pkg/archive"
 	"github.com/dkaslovsky/TextNote/pkg/config"
-	"github.com/dkaslovsky/TextNote/pkg/template"
 	"github.com/spf13/cobra"
 )
 
@@ -74,7 +73,7 @@ func generateFileNames(opts config.Opts, now time.Time) []fakeFileInfo {
 		start = start.AddDate(0, 0, 1)
 	}
 
-	archive := fakeFileInfo{template.ArchiveFilePrefix + ffi[2].name, false}
+	archive := fakeFileInfo{opts.Archive.FilePrefix + ffi[2].name, false}
 	ffi = append(ffi, archive)
 	dir := fakeFileInfo{"somedir", true}
 	ffi = append(ffi, dir)
