@@ -407,6 +407,63 @@ text4
 					}),
 			},
 		},
+		"section with single item header": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+[2020-12-18]
+text1a
+  text1b
+
+
+_p_TestSection2_q_
+_p_TestSection3_q_
+`,
+			expectedSections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "[2020-12-18]",
+						text:   "text1a\n  text1b\n\n\n",
+					},
+				),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
+		"section with multiple item headers": {
+			text: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+[2020-12-16]
+text1a
+  text1b
+
+
+[2020-12-17]
+text1c
+[2020-12-18]
+_p_TestSection2_q_
+_p_TestSection3_q_
+`,
+			expectedSections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "[2020-12-16]",
+						text:   "text1a\n  text1b\n\n",
+					},
+					contentItem{
+						header: "[2020-12-17]",
+						text:   "text1c",
+					},
+					contentItem{
+						header: "[2020-12-18]",
+						text:   "",
+					},
+				),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+		},
 	}
 
 	for name, test := range tests {
