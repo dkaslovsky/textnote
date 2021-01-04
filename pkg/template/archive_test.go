@@ -247,3 +247,225 @@ func TestArchiveSectionContentsFail(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestArchiveString(t *testing.T) {
+	type testCase struct {
+		sections []*section
+		expected string
+	}
+
+	tests := map[string]testCase{
+		"empty template": {
+			sections: []*section{},
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+`,
+		},
+		"single empty section": {
+			sections: []*section{
+				newSection("TestSection1"),
+			},
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+
+
+
+`,
+		},
+		"single section": {
+			sections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "[2020-12-19]",
+						text:   "text",
+					},
+				),
+			},
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-19]
+text
+
+
+
+`,
+		},
+		"single section with multiline text": {
+			sections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "[2020-12-19]",
+						text:   "text1\ntext2\n\n text3text4\n- text5\n\n  -text6\n\n",
+					},
+				),
+			},
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-19]
+text1
+text2
+ text3text4
+- text5
+  -text6
+
+
+
+`,
+		},
+		"single section with multiple contents": {
+			sections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "[2020-12-18]",
+						text:   "text1\n",
+					},
+					contentItem{
+						header: "[2020-12-19]",
+						text:   "text2\n",
+					},
+				),
+			},
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-18]
+text1
+[2020-12-19]
+text2
+
+
+
+`,
+		},
+		"multiple empty sections": {
+			sections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+		},
+		"multiple sections with only first populated": {
+			sections: []*section{
+				newSection("TestSection1",
+					contentItem{
+						header: "[2020-12-18]",
+						text:   "text",
+					},
+				),
+				newSection("TestSection2"),
+				newSection("TestSection3"),
+			},
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-18]
+text
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+		},
+		"multiple sections with only middle populated": {
+			sections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2",
+					contentItem{
+						header: "[2020-12-18]",
+						text:   "text",
+					},
+				),
+				newSection("TestSection3"),
+			},
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+
+
+
+_p_TestSection2_q_
+[2020-12-18]
+text
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+		},
+		"multiple sections with only last populated": {
+			sections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3",
+					contentItem{
+						header: "[2020-12-18]",
+						text:   "text",
+					},
+				),
+			},
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+[2020-12-18]
+text
+
+
+
+`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			opts := templatetest.GetOpts()
+			names := []string{}
+			for _, section := range test.sections {
+				names = append(names, section.name)
+			}
+			opts.Section.Names = names
+
+			template := NewMonthArchiveTemplate(opts, templatetest.Date)
+			for i, section := range test.sections {
+				template.sections[i] = section
+			}
+
+			require.Equal(t, test.expected, template.string())
+		})
+	}
+}
