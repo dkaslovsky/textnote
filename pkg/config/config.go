@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/pkg/errors"
@@ -176,25 +175,6 @@ func ValidateConfig(opts Opts) error {
 	// validate file archive prefix: this is needed for determining if a file is an archive
 	if opts.Archive.FilePrefix == "" || strings.ReplaceAll(opts.Archive.FilePrefix, " ", "") == "" {
 		return errors.New("file prefix for archives must not be empty")
-	}
-
-	// validate header time format
-	t := time.Now()
-	_, err := time.Parse(opts.Header.TimeFormat, t.Format(opts.Header.TimeFormat))
-	if err != nil {
-		return errors.New("invalid header time format")
-	}
-	_, err = time.Parse(opts.File.TimeFormat, t.Format(opts.File.TimeFormat))
-	if err != nil {
-		return errors.New("invalid file time format")
-	}
-	_, err = time.Parse(opts.Archive.SectionContentTimeFormat, t.Format(opts.Archive.SectionContentTimeFormat))
-	if err != nil {
-		return errors.New("invalid archive section content time format")
-	}
-	_, err = time.Parse(opts.Archive.MonthTimeFormat, t.Format(opts.Archive.MonthTimeFormat))
-	if err != nil {
-		return errors.New("invalid archive month time format")
 	}
 
 	return nil

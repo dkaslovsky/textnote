@@ -38,11 +38,4 @@ func TestValidateConfig(t *testing.T) {
 		err := ValidateConfig(opts)
 		require.Error(t, err)
 	})
-
-	// t.Run("invalid header time format", func(t *testing.T) {
-	// 	opts := getDefaultOpts()
-	// 	opts.Header.TimeFormat = "xyz"
-	// 	err := ValidateConfig(opts)
-	// 	require.Error(t, err)
-	// })
 }
