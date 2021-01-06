@@ -12,8 +12,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const weekHours = 24 * 7
-
 // Archiver consolidates TextNotes into archive files
 type Archiver struct {
 	opts config.Opts
@@ -39,7 +37,7 @@ type fileInfo interface {
 
 // Add adds a file to the archive
 func (a *Archiver) Add(f fileInfo) error {
-	if a.shouldSkip(f) {
+	if a.shouldNotArchive(f) {
 		return nil
 	}
 
@@ -49,7 +47,7 @@ func (a *Archiver) Add(f fileInfo) error {
 	}
 
 	// recent files are not archived
-	if a.date.Sub(fileDate).Hours() <= weekHours {
+	if a.date.Sub(fileDate).Hours() <= float64(a.opts.Archive.AfterDays*24) {
 		return nil
 	}
 
@@ -74,7 +72,7 @@ func (a *Archiver) Add(f fileInfo) error {
 	return nil
 }
 
-func (a *Archiver) Write() error {
+func (a *Archiver) Write(write func(file.ReadWriteable) error) error {
 	for _, t := range a.Months {
 		if file.Exists(t) {
 			existing := template.NewMonthArchiveTemplate(a.opts, t.GetDate())
@@ -88,7 +86,7 @@ func (a *Archiver) Write() error {
 			}
 		}
 
-		err := file.Overwrite(t)
+		err := write(t)
 		if err != nil {
 			return errors.Wrapf(err, "failed to write archive file [%s]", t.GetFilePath())
 		}
@@ -96,7 +94,7 @@ func (a *Archiver) Write() error {
 	return nil
 }
 
-func (a *Archiver) shouldSkip(f fileInfo) bool {
+func (a *Archiver) shouldNotArchive(f fileInfo) bool {
 	switch {
 	// skip archive files
 	case strings.HasPrefix(f.Name(), a.opts.Archive.FilePrefix):
