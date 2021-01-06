@@ -46,9 +46,9 @@ func (t *Template) GetDate() time.Time {
 	return t.date
 }
 
-// GetFileStartLine returns the first line of content of the first Section (used when opening with Vim)
-func (t *Template) GetFileStartLine() int {
-	return t.opts.Header.TrailingNewlines + 3
+// GetFileCursorLine returns the line at which to place the cursor when opening the template
+func (t *Template) GetFileCursorLine() int {
+	return t.opts.File.CursorLine
 }
 
 // GetFilePath generates a full path for a file based on the template date

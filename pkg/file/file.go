@@ -12,7 +12,12 @@ type ReadWriteable interface {
 	Load(io.Reader) error
 	Write(io.Writer) error
 	GetFilePath() string
-	GetFileStartLine() int
+}
+
+// Openable is the interface for opening a file
+type Openable interface {
+	GetFilePath() string
+	GetFileCursorLine() int
 }
 
 // Exists evaluates if a file exists
@@ -56,9 +61,9 @@ func WriteIfNotExists(rw ReadWriteable) error {
 }
 
 // OpenInEditor opens a template in Vim
-func OpenInEditor(rw ReadWriteable) error {
-	lineArg := fmt.Sprintf("+%d", rw.GetFileStartLine())
-	cmd := exec.Command("vim", lineArg, rw.GetFilePath())
+func OpenInEditor(o Openable) error {
+	lineArg := fmt.Sprintf("+%d", o.GetFileCursorLine())
+	cmd := exec.Command("vim", lineArg, o.GetFilePath())
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr

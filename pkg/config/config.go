@@ -49,8 +49,9 @@ type SectionOpts struct {
 
 // FileOpts are options for configuring files written by TextNote
 type FileOpts struct {
-	TimeFormat string `yaml:"timeFormat" env:"TEXTNOTE_FILE_TIME_FORMAT" env-description:"formatting string to form file names from timestamps"`
 	Ext        string `yaml:"ext" env:"TEXTNOTE_FILE_EXT" env-description:"extension for all files written"`
+	TimeFormat string `yaml:"timeFormat" env:"TEXTNOTE_FILE_TIME_FORMAT" env-description:"formatting string to form file names from timestamps"`
+	CursorLine int    `yaml:"cursorLine" env:"TEXTNOTE_FILE_CURSOR_LINE" env-description:"line to place cursor when opening"`
 }
 
 // ArchiveOpts are options for configuring archive files written by TextNote
@@ -83,8 +84,9 @@ func getDefaultOpts() Opts {
 			},
 		},
 		File: FileOpts{
-			TimeFormat: "2006-01-02",
 			Ext:        "txt",
+			TimeFormat: "2006-01-02",
+			CursorLine: 4,
 		},
 		Archive: ArchiveOpts{
 			FilePrefix:               "archive-",
@@ -175,6 +177,11 @@ func ValidateConfig(opts Opts) error {
 	// validate file archive prefix: this is needed for determining if a file is an archive
 	if opts.Archive.FilePrefix == "" || strings.ReplaceAll(opts.Archive.FilePrefix, " ", "") == "" {
 		return errors.New("file prefix for archives must not be empty")
+	}
+
+	// validate the file cursor line is not negative
+	if opts.File.CursorLine < 0 {
+		return errors.New("cursor line must not be negative")
 	}
 
 	return nil
