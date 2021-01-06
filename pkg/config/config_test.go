@@ -57,6 +57,27 @@ func TestValidateConfig(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("archive after days is negative", func(t *testing.T) {
+		opts := getDefaultOpts()
+		opts.Archive.AfterDays = -1
+		err := ValidateConfig(opts)
+		require.Error(t, err)
+	})
+
+	t.Run("archive after days is zero", func(t *testing.T) {
+		opts := getDefaultOpts()
+		opts.Archive.AfterDays = 0
+		err := ValidateConfig(opts)
+		require.Error(t, err)
+	})
+
+	t.Run("archive after days is one", func(t *testing.T) {
+		opts := getDefaultOpts()
+		opts.Archive.AfterDays = 1
+		err := ValidateConfig(opts)
+		require.NoError(t, err)
+	})
+
 	t.Run("file cursor line is negative", func(t *testing.T) {
 		opts := getDefaultOpts()
 		opts.File.CursorLine = -2

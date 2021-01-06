@@ -56,6 +56,7 @@ type FileOpts struct {
 
 // ArchiveOpts are options for configuring archive files written by TextNote
 type ArchiveOpts struct {
+	AfterDays                int    `yaml:"afterDays" env:"TEXTNOTE_ARCHIVE_AFTER_DAYS" env-description:"number of days after which to archive a file"`
 	FilePrefix               string `yaml:"filePrefix" env:"TEXTNOTE_ARCHIVE_FILE_PREFIX" env-description:"prefix attached to the file name of all archive files"`
 	HeaderPrefix             string `yaml:"headerPrefix" env:"TEXTNOTE_ARCHIVE_HEADER_PREFIX" env-description:"override header prefix for archive files"`
 	HeaderSuffix             string `yaml:"headerSuffix" env:"TEXTNOTE_ARCHIVE_HEADER_SUFFIX" env-description:"override header suffix for archive files"`
@@ -89,6 +90,7 @@ func getDefaultOpts() Opts {
 			CursorLine: 4,
 		},
 		Archive: ArchiveOpts{
+			AfterDays:                14,
 			FilePrefix:               "archive-",
 			HeaderPrefix:             "ARCHIVE ",
 			HeaderSuffix:             "",
@@ -177,6 +179,11 @@ func ValidateConfig(opts Opts) error {
 	// validate file archive prefix: this is needed for determining if a file is an archive
 	if opts.Archive.FilePrefix == "" || strings.ReplaceAll(opts.Archive.FilePrefix, " ", "") == "" {
 		return errors.New("file prefix for archives must not be empty")
+	}
+
+	// validate archive after days is at least 1
+	if opts.Archive.AfterDays < 1 {
+		return errors.New("archive after days must be greater than or equal to 1")
 	}
 
 	// validate the file cursor line is not negative

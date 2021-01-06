@@ -37,6 +37,7 @@ func GetOpts() config.Opts {
 			CursorLine: 1,
 		},
 		Archive: config.ArchiveOpts{
+			AfterDays:                7,
 			FilePrefix:               "archive-",
 			HeaderPrefix:             "ARCHIVEPREFIX ",
 			HeaderSuffix:             " ARCHIVESUFFIX",
