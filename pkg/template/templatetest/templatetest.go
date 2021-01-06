@@ -32,8 +32,9 @@ func GetOpts() config.Opts {
 			},
 		},
 		File: config.FileOpts{
-			TimeFormat: "2006-01-02",
 			Ext:        "txt",
+			TimeFormat: "2006-01-02",
+			CursorLine: 1,
 		},
 		Archive: config.ArchiveOpts{
 			FilePrefix:               "archive-",
