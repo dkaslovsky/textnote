@@ -9,6 +9,7 @@ import (
 	"github.com/dkaslovsky/TextNote/pkg/file"
 	"github.com/dkaslovsky/TextNote/pkg/template"
 	"github.com/dkaslovsky/TextNote/pkg/template/templatetest"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,29 +26,38 @@ func (t testFileInfo) IsDir() bool {
 	return t.isDir
 }
 
-type testWriter struct {
+type testReadWriter struct {
 	written string
+	exists  bool
 }
 
-func newTestWriter() *testWriter {
-	return &testWriter{
+func newTestReadWriter(exists bool) *testReadWriter {
+	return &testReadWriter{
 		written: "",
+		exists:  exists,
 	}
 }
 
-func (w *testWriter) write(rw file.ReadWriteable) error {
+func (trw *testReadWriter) Read(rwable file.ReadWriteable) error {
+	return nil
+}
+
+func (trw *testReadWriter) Overwrite(rwable file.ReadWriteable) error {
 	buf := new(bytes.Buffer)
-	err := rw.Write(buf)
+	err := rwable.Write(buf)
 	if err != nil {
 		return err
 	}
-	w.written = buf.String()
+	trw.written = buf.String()
 	return nil
+}
+
+func (trw *testReadWriter) Exists(rwable file.ReadWriteable) bool {
+	return trw.exists
 }
 
 func TestWrite(t *testing.T) {
 	type testCase struct {
-		key          string
 		text         string
 		exists       bool
 		existingText string
@@ -56,7 +66,6 @@ func TestWrite(t *testing.T) {
 
 	tests := map[string]testCase{
 		"write to new archive": {
-			key: "Dec2020",
 			text: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
 
 _p_TestSection1_q_
@@ -65,19 +74,13 @@ text1a
 [2020-12-19]
 text1b
 
-
-
 _p_TestSection2_q_
-
-
 
 _p_TestSection3_q_
 [2020-12-18]
 text3a
 [2020-12-19]
 text3b
-
-
 
 `,
 			exists: false,
@@ -110,25 +113,25 @@ text3b
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			opts := templatetest.GetOpts()
+			date := templatetest.Date
+			key := date.Format(opts.Archive.MonthTimeFormat)
 
-			template := template.NewMonthArchiveTemplate(opts, templatetest.Date)
+			template := template.NewMonthArchiveTemplate(opts, date)
 			err := template.Load(strings.NewReader(test.text))
 			require.NoError(t, err)
 
-			a := NewArchiver(opts, templatetest.Date)
-			a.Months[test.key] = template
+			trw := newTestReadWriter(test.exists)
+			a := NewArchiver(opts, trw, date)
+			a.Months[key] = template
 
-			w := newTestWriter()
-			err = a.Write(w.write, func(file.ReadWriteable) bool {
-				return test.exists
-			})
+			err = a.Write()
 			require.NoError(t, err)
-			require.Equal(t, test.expected, w.written)
+			require.Equal(t, test.expected, trw.written)
 		})
 	}
 }
 
-func TestShouldNotArchive(t *testing.T) {
+func TestShouldArchive(t *testing.T) {
 	type testCase struct {
 		file     testFileInfo
 		expected bool
@@ -140,35 +143,35 @@ func TestShouldNotArchive(t *testing.T) {
 				name:  "archive-Dec2020",
 				isDir: false,
 			},
-			expected: true,
+			expected: false,
 		},
 		"directory": {
 			file: testFileInfo{
 				name:  "somedir",
 				isDir: true,
 			},
-			expected: true,
+			expected: false,
 		},
 		"hidden file": {
 			file: testFileInfo{
 				name:  ".config",
 				isDir: false,
 			},
-			expected: true,
+			expected: false,
 		},
 		"template file": {
 			file: testFileInfo{
 				name:  "2020-12-29",
 				isDir: false,
 			},
-			expected: false,
+			expected: true,
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			a := NewArchiver(templatetest.GetOpts(), templatetest.Date)
-			require.Equal(t, test.expected, a.shouldNotArchive(test.file))
+			opts := templatetest.GetOpts()
+			require.Equal(t, test.expected, ShouldArchive(test.file, opts.Archive.FilePrefix))
 		})
 	}
 }
