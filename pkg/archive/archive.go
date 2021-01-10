@@ -16,15 +16,17 @@ import (
 type Archiver struct {
 	opts config.Opts
 	date time.Time
+	rw   file.ReadWriter
 
 	Months map[string]*template.MonthArchiveTemplate
 }
 
 // NewArchiver constructs a new Archiver
-func NewArchiver(opts config.Opts, date time.Time) *Archiver {
+func NewArchiver(opts config.Opts, date time.Time, rw file.ReadWriter) *Archiver {
 	return &Archiver{
 		opts: opts,
 		date: date,
+		rw:   rw,
 
 		Months: map[string]*template.MonthArchiveTemplate{},
 	}
@@ -52,7 +54,7 @@ func (a *Archiver) Add(f fileInfo) error {
 	}
 
 	t := template.NewTemplate(a.opts, fileDate)
-	err = file.Read(t)
+	err = a.rw.Read(t)
 	if err != nil {
 		return errors.Wrapf(err, "cannot add unreadable file [%s] to archive", f.Name())
 	}
@@ -72,11 +74,11 @@ func (a *Archiver) Add(f fileInfo) error {
 	return nil
 }
 
-func (a *Archiver) Write(write func(file.ReadWriteable) error, exists func(file.ReadWriteable) bool) error {
+func (a *Archiver) Write() error {
 	for _, t := range a.Months {
-		if exists(t) {
+		if a.rw.Exists(t) {
 			existing := template.NewMonthArchiveTemplate(a.opts, t.GetDate())
-			err := file.Read(existing)
+			err := a.rw.Read(existing)
 			if err != nil {
 				return errors.Wrapf(err, "unable to open existing archive file [%s]", existing.GetFilePath())
 			}
@@ -86,7 +88,7 @@ func (a *Archiver) Write(write func(file.ReadWriteable) error, exists func(file.
 			}
 		}
 
-		err := write(t)
+		err := a.rw.Overwrite(t)
 		if err != nil {
 			return errors.Wrapf(err, "failed to write archive file [%s]", t.GetFilePath())
 		}

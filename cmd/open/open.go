@@ -23,26 +23,30 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 }
 
 func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time) error {
+	rw := file.NewReadWriter()
+
 	t := template.NewTemplate(templateOpts, date)
 
-	// write and open file if no further operations (copy/move)
+	// open file if no further operations (copy/move)
 	if len(cmdOpts.Copy) == 0 {
-		err := file.WriteIfNotExists(t)
-		if err != nil {
-			return err
+		if !rw.Exists(t) {
+			err := rw.Overwrite(t)
+			if err != nil {
+				return err
+			}
 		}
-		return file.OpenInEditor(t)
+		return file.OpenInVim(t)
 	}
 
 	// load target and source files
-	if file.Exists(t) {
-		err := file.Read(t)
+	if rw.Exists(t) {
+		err := rw.Read(t)
 		if err != nil {
 			return errors.Wrap(err, "cannot load template file")
 		}
 	}
 	src := template.NewTemplate(templateOpts, date.Add(-24*time.Hour))
-	err := file.Read(src)
+	err := rw.Read(src)
 	if err != nil {
 		return errors.Wrap(err, "cannot read source file for copy")
 	}
@@ -57,25 +61,26 @@ func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time) error
 		if err != nil {
 			return errors.Wrap(err, "failed to remove section content from source file")
 		}
-		err = file.Overwrite(src)
+		err = rw.Overwrite(src)
 		if err != nil {
 			return errors.Wrap(err, "failed to save changes to source file")
 		}
 	}
 
-	err = file.Overwrite(t)
+	err = rw.Overwrite(t)
 	if err != nil {
 		return errors.Wrap(err, "failed to write file")
 	}
-	return file.OpenInEditor(t)
+	return file.OpenInVim(t)
 }
 
 func open(templateOpts config.Opts, date time.Time) error {
+	rw := file.NewReadWriter()
 	t := template.NewTemplate(templateOpts, date)
-	if !file.Exists(t) {
+	if !rw.Exists(t) {
 		return fmt.Errorf("file [%s] for template does not exist", t.GetFilePath())
 	}
-	return file.OpenInEditor(t)
+	return file.OpenInVim(t)
 }
 
 func copySections(src *template.Template, tgt *template.Template, sectionNames []string) error {
