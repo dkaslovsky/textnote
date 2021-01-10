@@ -95,9 +95,42 @@ func TestAdd(t *testing.T) {
 				name:  "2020-12-13.txt",
 				isDir: false,
 			},
-			templateText: ``,
+			templateText: `-^-[Sun] 13 Dec 2020-v-
+
+_p_TestSection1_q_
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
 			expected: map[string]string{
-				"Dec2020": ``,
+				"Dec2020": `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-13]
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
 			},
 		},
 		"add template from current month": {
@@ -105,9 +138,42 @@ func TestAdd(t *testing.T) {
 				name:  "2020-12-01.txt",
 				isDir: false,
 			},
-			templateText: ``,
+			templateText: `-^-[Tue] 01 Dec 2020-v-
+
+_p_TestSection1_q_
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
 			expected: map[string]string{
-				"Dec2020": ``,
+				"Dec2020": `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-01]
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
 			},
 		},
 		"add template from different month": {
@@ -115,22 +181,219 @@ func TestAdd(t *testing.T) {
 				name:  "2020-11-01.txt",
 				isDir: false,
 			},
-			templateText: ``,
+			templateText: `-^-[Sun] 01 Nov 2020-v-
+
+_p_TestSection1_q_
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
 			expected: map[string]string{
-				"Nov2020": ``,
+				"Nov2020": `ARCHIVEPREFIX Nov2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-11-01]
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
 			},
 		},
 		"add template from different year": {
 			file: testFileInfo{
-				name:  "2019-11-01.txt",
+				name:  "2019-11-02.txt",
 				isDir: false,
 			},
-			templateText: ``,
+			templateText: `-^-[Sat] 02 Nov 2019-v-
+
+_p_TestSection1_q_
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
 			expected: map[string]string{
-				"Nov2019": ``,
+				"Nov2019": `ARCHIVEPREFIX Nov2019 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2019-11-02]
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
 			},
 		},
-		// "add template to existing archive": {},
+		"add template with earlier date to existing archive": {
+			file: testFileInfo{
+				name:  "2020-12-01.txt",
+				isDir: false,
+			},
+			templateText: `-^-[Tue] 01 Dec 2020-v-
+
+_p_TestSection1_q_
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+			existing: map[string]string{
+				"Dec2020": `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-02]
+existingText1
+  existingText2
+existingText3
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+			},
+			expected: map[string]string{
+				"Dec2020": `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-01]
+text1
+  text2
+[2020-12-02]
+existingText1
+  existingText2
+existingText3
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+			},
+		},
+		"add template with later date to existing archive": {
+			file: testFileInfo{
+				name:  "2020-12-02.txt",
+				isDir: false,
+			},
+			templateText: `-^-[Wed] 02 Dec 2020-v-
+
+_p_TestSection1_q_
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+			existing: map[string]string{
+				"Dec2020": `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-01]
+existingText1
+  existingText2
+existingText3
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+			},
+			expected: map[string]string{
+				"Dec2020": `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-01]
+existingText1
+  existingText2
+existingText3
+[2020-12-02]
+text1
+  text2
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+			},
+		},
 	}
 
 	for name, test := range tests {
@@ -154,16 +417,12 @@ func TestAdd(t *testing.T) {
 
 			require.Equal(t, len(test.expected), len(a.Months))
 			for key, expectedText := range test.expected {
-				date, err := parseFileName(test.file.Name(), opts.File.TimeFormat)
-				require.NoError(t, err)
-
-				expectedMonthArchive := template.NewMonthArchiveTemplate(opts, date)
-				err = expectedMonthArchive.Load(strings.NewReader(expectedText))
-				require.NoError(t, err)
-
+				buf := new(bytes.Buffer)
 				monthArchive, found := a.Months[key]
 				require.True(t, found)
-				require.Equal(t, expectedMonthArchive, monthArchive)
+				err := monthArchive.Write(buf)
+				require.NoError(t, err)
+				require.Equal(t, expectedText, buf.String())
 			}
 		})
 	}
