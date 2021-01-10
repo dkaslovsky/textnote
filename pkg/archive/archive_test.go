@@ -13,6 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//
+// mocks
+//
+
 type testFileInfo struct {
 	name  string
 	isDir bool
@@ -59,6 +63,10 @@ func (trw *testReadWriter) Exists(rwable file.ReadWriteable) bool {
 	return trw.exists
 }
 
+//
+// Tests
+//
+
 func TestWrite(t *testing.T) {
 	type testCase struct {
 		text         string
@@ -68,6 +76,69 @@ func TestWrite(t *testing.T) {
 	}
 
 	tests := map[string]testCase{
+		"write with empty archive in archiver to new archive": {
+			exists: false,
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+
+
+
+`,
+		},
+		"write with empty archive in archiver to existing archive": {
+			exists: true,
+			existingText: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-15]
+existingText1a
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+[2020-12-15]
+existingText3a
+[2020-12-22]
+existingText3b
+
+
+
+`,
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-15]
+existingText1a
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+[2020-12-15]
+existingText3a
+[2020-12-22]
+existingText3b
+
+
+
+`,
+		},
 		"write to new archive": {
 			text: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
 
