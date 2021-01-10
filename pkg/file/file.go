@@ -17,7 +17,7 @@ type ReadWriteable interface {
 // ReadWriteExecuter is the interface for executing file operations
 type ReadWriteExecuter interface {
 	Read(ReadWriteable) error
-	Overwirte(ReadWriteable) error
+	Overwrite(ReadWriteable) error
 	Exists(ReadWriteable) bool
 }
 

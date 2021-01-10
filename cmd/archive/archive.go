@@ -27,16 +27,20 @@ func CreateArchiveCmd() *cobra.Command {
 			now := time.Now().AddDate(0, 2, -6)
 			files := generateFileNames(opts, now)
 
-			archiver := archive.NewArchiver(opts, now)
+			archiver := archive.NewArchiver(opts, file.NewReadWriter(), now)
 			for _, f := range files {
+				if !archive.ShouldArchive(f, opts.Archive.FilePrefix) {
+					log.Printf("file [%s] will not be archived", f.Name())
+					continue
+				}
 				err := archiver.Add(f)
 				if err != nil {
-					log.Printf("skipping file from archive: %s", err)
+					log.Printf("file [%s] will not be archived: %s", f.Name(), err)
 					continue
 				}
 			}
 
-			err = archiver.Write(file.Overwrite, file.Exists)
+			err = archiver.Write()
 			if err != nil {
 				return err
 			}

@@ -15,18 +15,18 @@ import (
 // Archiver consolidates TextNotes into archive files
 type Archiver struct {
 	opts config.Opts
+	rw   file.ReadWriteExecuter
 	date time.Time
-	rw   file.ReadWriter
 
 	Months map[string]*template.MonthArchiveTemplate
 }
 
 // NewArchiver constructs a new Archiver
-func NewArchiver(opts config.Opts, date time.Time, rw file.ReadWriter) *Archiver {
+func NewArchiver(opts config.Opts, rw file.ReadWriteExecuter, date time.Time) *Archiver {
 	return &Archiver{
 		opts: opts,
-		date: date,
 		rw:   rw,
+		date: date,
 
 		Months: map[string]*template.MonthArchiveTemplate{},
 	}
@@ -39,10 +39,6 @@ type fileInfo interface {
 
 // Add adds a file to the archive
 func (a *Archiver) Add(f fileInfo) error {
-	if a.shouldNotArchive(f) {
-		return nil
-	}
-
 	fileDate, err := parseFileName(f.Name(), a.opts.File.TimeFormat)
 	if err != nil {
 		return fmt.Errorf("cannot add unparsable file name [%s] to archive", f.Name())
@@ -96,19 +92,20 @@ func (a *Archiver) Write() error {
 	return nil
 }
 
-func (a *Archiver) shouldNotArchive(f fileInfo) bool {
+// ShouldArchive determines whether a file should be included in an archive
+func ShouldArchive(f fileInfo, archivePrefix string) bool {
 	switch {
 	// skip archive files
-	case strings.HasPrefix(f.Name(), a.opts.Archive.FilePrefix):
-		return true
+	case strings.HasPrefix(f.Name(), archivePrefix):
+		return false
 	// skip hidden files
 	case strings.HasPrefix(f.Name(), "."):
-		return true
+		return false
 	// skip directories
 	case f.IsDir():
-		return true
-	default:
 		return false
+	default:
+		return true
 	}
 }
 
