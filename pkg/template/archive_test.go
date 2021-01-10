@@ -10,6 +10,35 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestNewMonthArchiveTemplate(t *testing.T) {
+	type testCase struct {
+		date     time.Time
+		expected time.Time
+	}
+
+	tests := map[string]testCase{
+		"first of the month": {
+			date:     time.Date(2020, 12, 1, 2, 3, 4, 5, time.UTC),
+			expected: time.Date(2020, 12, 1, 0, 0, 0, 0, time.UTC),
+		},
+		"not first of the month": {
+			date:     time.Date(2020, 12, 15, 2, 3, 4, 5, time.UTC),
+			expected: time.Date(2020, 12, 1, 0, 0, 0, 0, time.UTC),
+		},
+		"non UTC location": {
+			date:     time.Date(2020, 12, 15, 2, 3, 4, 5, time.FixedZone("UTC-8", -8*60*60)),
+			expected: time.Date(2020, 12, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			m := NewMonthArchiveTemplate(templatetest.GetOpts(), test.date)
+			require.Equal(t, test.expected, m.date)
+		})
+	}
+}
+
 func TestArchiveGetFilePath(t *testing.T) {
 	t.Run("get file path with extension", func(t *testing.T) {
 		opts := templatetest.GetOpts()

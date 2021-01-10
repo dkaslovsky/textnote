@@ -19,8 +19,9 @@ type MonthArchiveTemplate struct {
 
 // NewMonthArchiveTemplate constructs a new MonthArchiveTemplate
 func NewMonthArchiveTemplate(opts config.Opts, date time.Time) *MonthArchiveTemplate {
+	monthDate := time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, date.Location())
 	return &MonthArchiveTemplate{
-		NewTemplate(opts, date),
+		NewTemplate(opts, monthDate),
 	}
 }
 
