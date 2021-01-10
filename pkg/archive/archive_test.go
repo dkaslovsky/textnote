@@ -67,6 +67,108 @@ func (trw *testReadWriter) Exists(rwable file.ReadWriteable) bool {
 // Tests
 //
 
+func TestAdd(t *testing.T) {
+	type testCase struct {
+		file         testFileInfo
+		templateText string
+		existing     map[string]string
+		expected     map[string]string
+	}
+
+	tests := map[string]testCase{
+		"add template that should not be archived": {
+			file: testFileInfo{
+				name:  "2020-12-20.txt",
+				isDir: false,
+			},
+			expected: map[string]string{},
+		},
+		"add template from last day that should not be archived": {
+			file: testFileInfo{
+				name:  "2020-12-14.txt",
+				isDir: false,
+			},
+			expected: map[string]string{},
+		},
+		"add template from first day that should be archived": {
+			file: testFileInfo{
+				name:  "2020-12-13.txt",
+				isDir: false,
+			},
+			templateText: ``,
+			expected: map[string]string{
+				"Dec2020": ``,
+			},
+		},
+		"add template from current month": {
+			file: testFileInfo{
+				name:  "2020-12-01.txt",
+				isDir: false,
+			},
+			templateText: ``,
+			expected: map[string]string{
+				"Dec2020": ``,
+			},
+		},
+		"add template from different month": {
+			file: testFileInfo{
+				name:  "2020-11-01.txt",
+				isDir: false,
+			},
+			templateText: ``,
+			expected: map[string]string{
+				"Nov2020": ``,
+			},
+		},
+		"add template from different year": {
+			file: testFileInfo{
+				name:  "2019-11-01.txt",
+				isDir: false,
+			},
+			templateText: ``,
+			expected: map[string]string{
+				"Nov2019": ``,
+			},
+		},
+		// "add template to existing archive": {},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			opts := templatetest.GetOpts()
+			trw := newTestReadWriter(true, test.templateText)
+			a := NewArchiver(opts, trw, templatetest.Date)
+			for key, text := range test.existing {
+				date, err := parseFileName(key, opts.Archive.MonthTimeFormat)
+				require.NoError(t, err)
+
+				m := template.NewMonthArchiveTemplate(opts, date)
+				err = m.Load(strings.NewReader(text))
+				require.NoError(t, err)
+
+				a.Months[key] = m
+			}
+
+			err := a.Add(test.file)
+			require.NoError(t, err)
+
+			require.Equal(t, len(test.expected), len(a.Months))
+			for key, expectedText := range test.expected {
+				date, err := parseFileName(test.file.Name(), opts.File.TimeFormat)
+				require.NoError(t, err)
+
+				expectedMonthArchive := template.NewMonthArchiveTemplate(opts, date)
+				err = expectedMonthArchive.Load(strings.NewReader(expectedText))
+				require.NoError(t, err)
+
+				monthArchive, found := a.Months[key]
+				require.True(t, found)
+				require.Equal(t, expectedMonthArchive, monthArchive)
+			}
+		})
+	}
+}
+
 func TestWrite(t *testing.T) {
 	type testCase struct {
 		text         string
