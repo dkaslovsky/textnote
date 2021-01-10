@@ -27,19 +27,22 @@ func (t testFileInfo) IsDir() bool {
 }
 
 type testReadWriter struct {
-	written string
 	exists  bool
+	toRead  string
+	written string
 }
 
-func newTestReadWriter(exists bool) *testReadWriter {
+func newTestReadWriter(exists bool, toRead string) *testReadWriter {
 	return &testReadWriter{
-		written: "",
 		exists:  exists,
+		toRead:  toRead,
+		written: "",
 	}
 }
 
 func (trw *testReadWriter) Read(rwable file.ReadWriteable) error {
-	return nil
+	r := strings.NewReader(trw.toRead)
+	return rwable.Load(r)
 }
 
 func (trw *testReadWriter) Overwrite(rwable file.ReadWriteable) error {
@@ -108,6 +111,76 @@ text3b
 
 `,
 		},
+		"write to existing archive": {
+			text: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-17]
+text1a
+[2020-12-19]
+text1b
+
+_p_TestSection2_q_
+
+_p_TestSection3_q_
+[2020-12-18]
+text3a
+[2020-12-19]
+text3b
+
+`,
+			exists: true,
+			existingText: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-15]
+existingText1a
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+[2020-12-15]
+existingText3a
+[2020-12-22]
+existingText3b
+
+
+
+`,
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-15]
+existingText1a
+[2020-12-17]
+text1a
+[2020-12-19]
+text1b
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+[2020-12-15]
+existingText3a
+[2020-12-18]
+text3a
+[2020-12-19]
+text3b
+[2020-12-22]
+existingText3b
+
+
+
+`,
+		},
 	}
 
 	for name, test := range tests {
@@ -120,7 +193,7 @@ text3b
 			err := template.Load(strings.NewReader(test.text))
 			require.NoError(t, err)
 
-			trw := newTestReadWriter(test.exists)
+			trw := newTestReadWriter(test.exists, test.existingText)
 			a := NewArchiver(opts, trw, date)
 			a.Months[key] = template
 
