@@ -7,6 +7,7 @@ import (
 
 	"github.com/dkaslovsky/TextNote/pkg/archive"
 	"github.com/dkaslovsky/TextNote/pkg/config"
+	"github.com/dkaslovsky/TextNote/pkg/file"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +36,7 @@ func CreateArchiveCmd() *cobra.Command {
 				}
 			}
 
-			err = archiver.Write()
+			err = archiver.Write(file.Overwrite, file.Exists)
 			if err != nil {
 				return err
 			}

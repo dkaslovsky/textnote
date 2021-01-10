@@ -72,9 +72,9 @@ func (a *Archiver) Add(f fileInfo) error {
 	return nil
 }
 
-func (a *Archiver) Write(write func(file.ReadWriteable) error) error {
+func (a *Archiver) Write(write func(file.ReadWriteable) error, exists func(file.ReadWriteable) bool) error {
 	for _, t := range a.Months {
-		if file.Exists(t) {
+		if exists(t) {
 			existing := template.NewMonthArchiveTemplate(a.opts, t.GetDate())
 			err := file.Read(existing)
 			if err != nil {

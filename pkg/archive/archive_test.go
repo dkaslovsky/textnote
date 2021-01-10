@@ -1,11 +1,14 @@
 package archive
 
 import (
+	"bytes"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/dkaslovsky/TextNote/pkg/file"
+	"github.com/dkaslovsky/TextNote/pkg/template"
 	"github.com/dkaslovsky/TextNote/pkg/template/templatetest"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,6 +23,109 @@ func (t testFileInfo) Name() string {
 
 func (t testFileInfo) IsDir() bool {
 	return t.isDir
+}
+
+type testWriter struct {
+	written string
+}
+
+func newTestWriter() *testWriter {
+	return &testWriter{
+		written: "",
+	}
+}
+
+func (w *testWriter) write(rw file.ReadWriteable) error {
+	buf := new(bytes.Buffer)
+	err := rw.Write(buf)
+	if err != nil {
+		return err
+	}
+	w.written = buf.String()
+	return nil
+}
+
+func TestWrite(t *testing.T) {
+	type testCase struct {
+		key          string
+		text         string
+		exists       bool
+		existingText string
+		expected     string
+	}
+
+	tests := map[string]testCase{
+		"write to new archive": {
+			key: "Dec2020",
+			text: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-17]
+text1a
+[2020-12-19]
+text1b
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+[2020-12-18]
+text3a
+[2020-12-19]
+text3b
+
+
+
+`,
+			exists: false,
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+[2020-12-17]
+text1a
+[2020-12-19]
+text1b
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+[2020-12-18]
+text3a
+[2020-12-19]
+text3b
+
+
+
+`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			opts := templatetest.GetOpts()
+
+			template := template.NewMonthArchiveTemplate(opts, templatetest.Date)
+			err := template.Load(strings.NewReader(test.text))
+			require.NoError(t, err)
+
+			a := NewArchiver(opts, templatetest.Date)
+			a.Months[test.key] = template
+
+			w := newTestWriter()
+			err = a.Write(w.write, func(file.ReadWriteable) bool {
+				return test.exists
+			})
+			require.NoError(t, err)
+			require.Equal(t, test.expected, w.written)
+		})
+	}
 }
 
 func TestShouldNotArchive(t *testing.T) {
