@@ -490,6 +490,47 @@ text
 
 `,
 		},
+		"sections with out of order items should be sorted": {
+			sections: []*section{
+				newSection("TestSection1"),
+				newSection("TestSection2"),
+				newSection("TestSection3",
+					contentItem{
+						header: "[2020-12-18]",
+						text:   "text 2020-12-18",
+					},
+					contentItem{
+						header: "[2020-12-16]",
+						text:   "text 2020-12-16",
+					},
+					contentItem{
+						header: "[2020-12-17]",
+						text:   "text 2020-12-17",
+					},
+				),
+			},
+			expected: `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
+
+_p_TestSection1_q_
+
+
+
+_p_TestSection2_q_
+
+
+
+_p_TestSection3_q_
+[2020-12-16]
+text 2020-12-16
+[2020-12-17]
+text 2020-12-17
+[2020-12-18]
+text 2020-12-18
+
+
+
+`,
+		},
 	}
 
 	for name, test := range tests {
