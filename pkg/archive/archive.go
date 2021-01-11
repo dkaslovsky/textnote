@@ -12,17 +12,24 @@ import (
 	"github.com/pkg/errors"
 )
 
+// readWriter is the interface for executing file operations
+type readWriter interface {
+	Read(file.ReadWriteable) error
+	Overwrite(file.ReadWriteable) error
+	Exists(file.ReadWriteable) bool
+}
+
 // Archiver consolidates TextNotes into archive files
 type Archiver struct {
 	opts config.Opts
-	rw   file.ReadWriteExecuter
+	rw   readWriter
 	date time.Time
 
 	Months map[string]*template.MonthArchiveTemplate
 }
 
 // NewArchiver constructs a new Archiver
-func NewArchiver(opts config.Opts, rw file.ReadWriteExecuter, date time.Time) *Archiver {
+func NewArchiver(opts config.Opts, rw readWriter, date time.Time) *Archiver {
 	return &Archiver{
 		opts: opts,
 		rw:   rw,

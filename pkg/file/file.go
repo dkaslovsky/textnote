@@ -14,13 +14,6 @@ type ReadWriteable interface {
 	GetFilePath() string
 }
 
-// ReadWriteExecuter is the interface for executing file operations
-type ReadWriteExecuter interface {
-	Read(ReadWriteable) error
-	Overwrite(ReadWriteable) error
-	Exists(ReadWriteable) bool
-}
-
 // ReadWriter executes file operations
 type ReadWriter struct{}
 
