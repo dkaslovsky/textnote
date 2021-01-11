@@ -1,8 +1,10 @@
 package archive
 
 import (
-	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/dkaslovsky/TextNote/pkg/archive"
@@ -11,8 +13,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type commandOptions struct {
+	Delete  bool
+	NoWrite bool
+}
+
 // CreateArchiveCmd creates the today subcommand
 func CreateArchiveCmd() *cobra.Command {
+	cmdOpts := commandOptions{}
 	cmd := &cobra.Command{
 		Use:   "archive",
 		Short: "organize an archive of notes",
@@ -23,11 +31,15 @@ func CreateArchiveCmd() *cobra.Command {
 				return err
 			}
 
-			// fake now and files for now
-			now := time.Now().AddDate(0, 2, -6)
-			files := generateFileNames(opts, now)
+			archiver := archive.NewArchiver(opts, file.NewReadWriter(), time.Now())
 
-			archiver := archive.NewArchiver(opts, file.NewReadWriter(), now)
+			files, err := ioutil.ReadDir(opts.AppDir)
+			if err != nil {
+				return err
+			}
+
+			// add files to archiver
+			archived := []string{}
 			for _, f := range files {
 				if !archive.ShouldArchive(f, opts.Archive.FilePrefix) {
 					log.Printf("file [%s] will not be archived", f.Name())
@@ -38,49 +50,37 @@ func CreateArchiveCmd() *cobra.Command {
 					log.Printf("file [%s] will not be archived: %s", f.Name(), err)
 					continue
 				}
+				archived = append(archived, f.Name())
 			}
 
-			err = archiver.Write()
-			if err != nil {
-				return err
+			// write archive files
+			if !cmdOpts.NoWrite {
+				err = archiver.Write()
+				if err != nil {
+					return err
+				}
 			}
+
+			// delete individual archived files
+			if cmdOpts.Delete {
+				for _, f := range archived {
+					err = os.Remove(filepath.Join(opts.AppDir, f))
+					if err != nil {
+						log.Printf("unable to remove file [%s]: %s", f, err)
+						continue
+					}
+				}
+			}
+
 			return nil
 		},
 	}
+	attachOpts(cmd, &cmdOpts)
 	return cmd
 }
 
-// fake it...
-type fakeFileInfo struct {
-	name  string
-	isDir bool
-}
-
-func (ffi fakeFileInfo) Name() string {
-	return ffi.name
-}
-
-func (ffi fakeFileInfo) IsDir() bool {
-	return ffi.isDir
-}
-
-func generateFileNames(opts config.Opts, now time.Time) []fakeFileInfo {
-	ffi := []fakeFileInfo{}
-	ffi = append(ffi, fakeFileInfo{".config", false})
-
-	end := now
-	start := end.AddDate(0, -2, 2)
-	for end.After(start) {
-		tm := start.Format(opts.File.TimeFormat)
-		name := fmt.Sprintf("%s.txt", tm)
-		fi := fakeFileInfo{name, false}
-		ffi = append(ffi, fi)
-		start = start.AddDate(0, 0, 1)
-	}
-
-	archive := fakeFileInfo{opts.Archive.FilePrefix + ffi[2].name, false}
-	ffi = append(ffi, archive)
-	dir := fakeFileInfo{"somedir", true}
-	ffi = append(ffi, dir)
-	return ffi
+func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
+	flags := cmd.Flags()
+	flags.BoolVarP(&cmdOpts.Delete, "delete", "d", false, "delete individual files after archiving")
+	flags.BoolVarP(&cmdOpts.NoWrite, "nowrite", "n", false, "disable writing archive file (helpful for deleting previously archived files)")
 }
