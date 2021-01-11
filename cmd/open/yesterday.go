@@ -18,6 +18,7 @@ func CreateYesterdayCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			date := time.Now().Add(-24 * time.Hour)
 			return open(opts, date)
 		},

@@ -24,6 +24,7 @@ func Run() error {
 		open.CreateTodayCmd(),
 		open.CreateTomorrowCmd(),
 		open.CreateYesterdayCmd(),
+		open.CreateNextCmd(),
 		archive.CreateArchiveCmd(),
 	)
 

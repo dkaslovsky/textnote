@@ -22,7 +22,7 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags.BoolVarP(&cmdOpts.Delete, "delete", "d", false, "delete previous day's section after copy (no-op without copy)")
 }
 
-func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time) error {
+func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time, copyDate time.Time) error {
 	rw := file.NewReadWriter()
 
 	t := template.NewTemplate(templateOpts, date)
@@ -45,7 +45,7 @@ func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time) error
 			return errors.Wrap(err, "cannot load template file")
 		}
 	}
-	src := template.NewTemplate(templateOpts, date.Add(-24*time.Hour))
+	src := template.NewTemplate(templateOpts, copyDate)
 	err := rw.Read(src)
 	if err != nil {
 		return errors.Wrap(err, "cannot read source file for copy")
