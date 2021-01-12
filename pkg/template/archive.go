@@ -110,3 +110,18 @@ func (t *MonthArchiveTemplate) makeContentHeader(date time.Time) string {
 		t.opts.Archive.SectionContentSuffix,
 	)
 }
+
+// isArchiveItemHeader evaluates if a line matches the pattern of a dated header in a section of an archive
+func isArchiveItemHeader(line string, prefix string, suffix string, format string) bool {
+	if !strings.HasPrefix(line, prefix) {
+		return false
+	}
+	if !strings.HasSuffix(line, suffix) {
+		return false
+	}
+	_, err := time.Parse(format, stripPrefixSuffix(line, prefix, suffix))
+	if err != nil {
+		return false
+	}
+	return true
+}
