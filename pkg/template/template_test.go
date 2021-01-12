@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dkaslovsky/TextNote/pkg/config"
-	"github.com/dkaslovsky/TextNote/pkg/template/templatetest"
+	"github.com/dkaslovsky/textnote/pkg/config"
+	"github.com/dkaslovsky/textnote/pkg/template/templatetest"
 	"github.com/stretchr/testify/require"
 )
 

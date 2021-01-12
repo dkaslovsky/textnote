@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dkaslovsky/TextNote/pkg/config"
-	"github.com/dkaslovsky/TextNote/pkg/file"
-	"github.com/dkaslovsky/TextNote/pkg/template"
+	"github.com/dkaslovsky/textnote/pkg/config"
+	"github.com/dkaslovsky/textnote/pkg/file"
+	"github.com/dkaslovsky/textnote/pkg/template"
 	"github.com/pkg/errors"
 )
 

@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dkaslovsky/TextNote/pkg/file"
-	"github.com/dkaslovsky/TextNote/pkg/template"
-	"github.com/dkaslovsky/TextNote/pkg/template/templatetest"
+	"github.com/dkaslovsky/textnote/pkg/file"
+	"github.com/dkaslovsky/textnote/pkg/template"
+	"github.com/dkaslovsky/textnote/pkg/template/templatetest"
 
 	"github.com/stretchr/testify/require"
 )

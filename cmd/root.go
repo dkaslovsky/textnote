@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/dkaslovsky/TextNote/cmd/archive"
-	"github.com/dkaslovsky/TextNote/cmd/open"
-	"github.com/dkaslovsky/TextNote/pkg/config"
+	"github.com/dkaslovsky/textnote/cmd/archive"
+	"github.com/dkaslovsky/textnote/cmd/open"
+	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/spf13/cobra"
 )
 

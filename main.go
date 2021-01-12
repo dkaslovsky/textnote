@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/dkaslovsky/TextNote/cmd"
-	"github.com/dkaslovsky/TextNote/pkg/config"
+	"github.com/dkaslovsky/textnote/cmd"
+	"github.com/dkaslovsky/textnote/pkg/config"
 )
 
 func main() {

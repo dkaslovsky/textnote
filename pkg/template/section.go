@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dkaslovsky/TextNote/pkg/config"
+	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/pkg/errors"
 )
 

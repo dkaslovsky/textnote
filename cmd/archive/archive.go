@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dkaslovsky/TextNote/pkg/archive"
-	"github.com/dkaslovsky/TextNote/pkg/config"
-	"github.com/dkaslovsky/TextNote/pkg/file"
+	"github.com/dkaslovsky/textnote/pkg/archive"
+	"github.com/dkaslovsky/textnote/pkg/config"
+	"github.com/dkaslovsky/textnote/pkg/file"
 	"github.com/spf13/cobra"
 )
 

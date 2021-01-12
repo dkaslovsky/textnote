@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dkaslovsky/TextNote/pkg/template/templatetest"
+	"github.com/dkaslovsky/textnote/pkg/template/templatetest"
 	"github.com/stretchr/testify/require"
 )
 

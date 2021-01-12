@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/dkaslovsky/TextNote/pkg/config"
+	"github.com/dkaslovsky/textnote/pkg/config"
 )
 
 // Date is a fixed date - changing this value will affect some tests

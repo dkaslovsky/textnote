@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dkaslovsky/TextNote/pkg/config"
+	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/spf13/cobra"
 )
 
