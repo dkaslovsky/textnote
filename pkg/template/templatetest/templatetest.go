@@ -46,10 +46,9 @@ func GetOpts() config.Opts {
 			SectionContentTimeFormat: "2006-01-02",
 			MonthTimeFormat:          "Jan2006",
 		},
-		AppDir: "my/app/dir",
 	}
 
-	err := config.ValidateConfig(opts)
+	err := config.ValidateOpts(opts)
 	if err != nil {
 		log.Fatal(err)
 	}

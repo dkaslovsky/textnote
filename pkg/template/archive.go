@@ -37,7 +37,7 @@ func (t *MonthArchiveTemplate) GetFilePath() string {
 	if t.opts.File.Ext != "" {
 		name = fmt.Sprintf("%s.%s", name, t.opts.File.Ext)
 	}
-	return filepath.Join(t.opts.AppDir, name)
+	return filepath.Join(config.AppDir, name)
 }
 
 // ArchiveSectionContents concatenates the contents of the specified section from a source Template and

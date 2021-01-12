@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dkaslovsky/TextNote/pkg/config"
 	"github.com/dkaslovsky/TextNote/pkg/template/templatetest"
 	"github.com/stretchr/testify/require"
 )
@@ -45,11 +46,11 @@ func TestArchiveGetFilePath(t *testing.T) {
 		opts.File.Ext = "txt"
 		template := NewMonthArchiveTemplate(opts, templatetest.Date)
 		filePath := template.GetFilePath()
-		require.True(t, strings.HasPrefix(filePath, opts.AppDir))
+		require.True(t, strings.HasPrefix(filePath, config.AppDir))
 		require.True(t, strings.HasSuffix(filePath, ".txt"))
 		require.Equal(t,
 			opts.Archive.FilePrefix+templatetest.Date.Format(opts.Archive.MonthTimeFormat),
-			stripPrefixSuffix(filePath, fmt.Sprintf("%s/", opts.AppDir), ".txt"),
+			stripPrefixSuffix(filePath, fmt.Sprintf("%s/", config.AppDir), ".txt"),
 		)
 	})
 
@@ -58,11 +59,11 @@ func TestArchiveGetFilePath(t *testing.T) {
 		opts.File.Ext = ""
 		template := NewMonthArchiveTemplate(opts, templatetest.Date)
 		filePath := template.GetFilePath()
-		require.True(t, strings.HasPrefix(filePath, opts.AppDir))
+		require.True(t, strings.HasPrefix(filePath, config.AppDir))
 		require.False(t, strings.HasSuffix(filePath, "."))
 		require.Equal(t,
 			opts.Archive.FilePrefix+templatetest.Date.Format(opts.Archive.MonthTimeFormat),
-			stripPrefixSuffix(filePath, fmt.Sprintf("%s/", opts.AppDir), ""),
+			stripPrefixSuffix(filePath, fmt.Sprintf("%s/", config.AppDir), ""),
 		)
 	})
 }

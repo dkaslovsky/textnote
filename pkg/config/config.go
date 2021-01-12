@@ -18,13 +18,11 @@ const (
 	configFileName = ".config.yml"
 )
 
-var (
-	appDir = os.Getenv(envAppDir)
-)
+// AppDir is the directory in which the application stores its files
+var AppDir = os.Getenv(envAppDir)
 
 // Opts are options that configure the application
 type Opts struct {
-	AppDir  string      `yaml:"appdir,omitempty"`
 	Header  HeaderOpts  `yaml:"header"`
 	Section SectionOpts `yaml:"section"`
 	File    FileOpts    `yaml:"file"`
@@ -104,35 +102,33 @@ func getDefaultOpts() Opts {
 
 // LoadOrCreate loads a config file or creates it using defaults
 func LoadOrCreate() (Opts, error) {
-	opts := Opts{}
-
-	if appDir == "" {
-		return opts, fmt.Errorf("environment variable [%s] is not set", envAppDir)
+	err := EnsureAppDir()
+	if err != nil {
+		return Opts{}, err
 	}
 
-	configPath := filepath.Join(appDir, configFileName)
-	_, err := os.Stat(configPath)
+	configPath := filepath.Join(AppDir, configFileName)
+	_, err = os.Stat(configPath)
 	if os.IsNotExist(err) {
 		defaults := getDefaultOpts()
 		yml, err := yaml.Marshal(defaults)
 		if err != nil {
-			return opts, errors.Wrap(err, "unable to generate config file")
+			return Opts{}, errors.Wrap(err, "unable to generate config file")
 		}
 		err = ioutil.WriteFile(configPath, yml, 0644)
 		if err != nil {
-			return opts, errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
+			return Opts{}, errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
 		}
 		log.Printf("created default configuration file: [%s]", configPath)
 	}
 
+	opts := Opts{}
 	err = cleanenv.ReadConfig(configPath, &opts)
 	if err != nil {
 		return opts, errors.Wrap(err, "unable to read config file")
 	}
 
-	opts.AppDir = appDir
-
-	err = ValidateConfig(opts)
+	err = ValidateOpts(opts)
 	if err != nil {
 		return opts, errors.Wrapf(err, "configuration error in [%s]", configFileName)
 	}
@@ -142,26 +138,28 @@ func LoadOrCreate() (Opts, error) {
 
 // EnsureAppDir validates that the application directory exists or is created
 func EnsureAppDir() error {
-	if appDir == "" {
+	if AppDir == "" {
 		return fmt.Errorf("required environment variable [%s] is not set", envAppDir)
 	}
-	finfo, err := os.Stat(appDir)
+
+	finfo, err := os.Stat(AppDir)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(appDir, 0755)
+		err := os.MkdirAll(AppDir, 0755)
 		if err != nil {
 			return err
 		}
-		log.Printf("created directory [%s]", appDir)
+		log.Printf("created directory [%s]", AppDir)
 		return nil
 	}
+
 	if !finfo.IsDir() {
-		return fmt.Errorf("[%s=%s] must be a directory", envAppDir, appDir)
+		return fmt.Errorf("[%s=%s] must be a directory", envAppDir, AppDir)
 	}
 	return nil
 }
 
-// ValidateConfig returns an error if the specified options are misconfigured
-func ValidateConfig(opts Opts) error {
+// ValidateOpts returns an error if the specified options are misconfigured
+func ValidateOpts(opts Opts) error {
 	// validate at least one section
 	if len(opts.Section.Names) == 0 {
 		return errors.New("must include at least one section")

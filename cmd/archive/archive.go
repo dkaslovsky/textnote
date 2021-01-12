@@ -33,7 +33,7 @@ func CreateArchiveCmd() *cobra.Command {
 
 			archiver := archive.NewArchiver(opts, file.NewReadWriter(), time.Now())
 
-			files, err := ioutil.ReadDir(opts.AppDir)
+			files, err := ioutil.ReadDir(config.AppDir)
 			if err != nil {
 				return err
 			}
@@ -64,7 +64,7 @@ func CreateArchiveCmd() *cobra.Command {
 			// delete individual archived files
 			if cmdOpts.Delete {
 				for _, f := range archived {
-					err = os.Remove(filepath.Join(opts.AppDir, f))
+					err = os.Remove(filepath.Join(config.AppDir, f))
 					if err != nil {
 						log.Printf("unable to remove file [%s]: %s", f, err)
 						continue
