@@ -191,3 +191,13 @@ func ValidateOpts(opts Opts) error {
 
 	return nil
 }
+
+// DescribeEnvVars returns a description string for environment variables used to configure the application
+func DescribeEnvVars() string {
+	header := ""
+	description, err := cleanenv.GetDescription(&Opts{}, &header)
+	if err != nil {
+		return ""
+	}
+	return description
+}

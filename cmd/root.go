@@ -1,17 +1,22 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/dkaslovsky/TextNote/cmd/archive"
 	"github.com/dkaslovsky/TextNote/cmd/open"
+	"github.com/dkaslovsky/TextNote/pkg/config"
 	"github.com/spf13/cobra"
 )
+
+var appName = "textnote"
 
 // Run executes the CLI
 func Run() error {
 	cmd := &cobra.Command{
-		Use:           "textnote",
+		Use:           appName,
 		Short:         "open today's note",
-		Long:          "open a text based note template for today",
+		Long:          "open a note template for today",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -27,6 +32,18 @@ func Run() error {
 		open.CreateNextCmd(),
 		archive.CreateArchiveCmd(),
 	)
+
+	// custom help message
+	defaultHelpFunc := cmd.HelpFunc()
+	cmd.SetHelpFunc(func(cmd *cobra.Command, s []string) {
+		defaultHelpFunc(cmd, s)
+		if cmd.Name() == appName {
+			description := config.DescribeEnvVars()
+			if description != "" {
+				fmt.Printf("\nOverride configuration using environment variables:%s", description)
+			}
+		}
+	})
 
 	return cmd.Execute()
 }
