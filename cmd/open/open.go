@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// commandOptions are the standard options for the package's commands
 type commandOptions struct {
 	Copy   []string
 	Delete bool
@@ -24,7 +25,6 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 
 func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time, copyDate time.Time) error {
 	rw := file.NewReadWriter()
-
 	t := template.NewTemplate(templateOpts, date)
 
 	// open file if no further operations (copy/move)
@@ -38,19 +38,20 @@ func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time, copyD
 		return file.OpenInVim(t)
 	}
 
-	// load target and source files
+	// load template contents if it exists
 	if rw.Exists(t) {
 		err := rw.Read(t)
 		if err != nil {
 			return errors.Wrap(err, "cannot load template file")
 		}
 	}
+	// load source for copy
 	src := template.NewTemplate(templateOpts, copyDate)
 	err := rw.Read(src)
 	if err != nil {
 		return errors.Wrap(err, "cannot read source file for copy")
 	}
-
+	// copy from source to template
 	err = copySections(src, t, cmdOpts.Copy)
 	if err != nil {
 		return err

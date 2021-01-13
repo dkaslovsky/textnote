@@ -37,11 +37,11 @@ func Run() error {
 	defaultHelpFunc := cmd.HelpFunc()
 	cmd.SetHelpFunc(func(cmd *cobra.Command, s []string) {
 		defaultHelpFunc(cmd, s)
-		if cmd.Name() == appName {
-			description := config.DescribeEnvVars()
-			if description != "" {
-				fmt.Printf("\nOverride configuration using environment variables:%s", description)
-			}
+		if cmd.Name() != appName {
+			return
+		}
+		if description := config.DescribeEnvVars(); description != "" {
+			fmt.Printf("\nOverride configuration using environment variables:%s", description)
 		}
 	})
 

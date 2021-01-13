@@ -12,7 +12,7 @@ func CreateYesterdayCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "yesterday",
 		Short: "open yesterday's note",
-		Long:  "open a text based note template from yesterday",
+		Long:  "open a note template for yesterday",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts, err := config.LoadOrCreate()
 			if err != nil {

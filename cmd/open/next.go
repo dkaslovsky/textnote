@@ -26,14 +26,15 @@ func CreateNextCmd() *cobra.Command {
 				return err
 			}
 
+			// ensure a meaningful day has been specified
 			if nextCmdOpts.Weekday < 0 || nextCmdOpts.Weekday > 6 {
 				return fmt.Errorf("invalid day of the week [%d], must be in range [0, 6]", nextCmdOpts.Weekday)
 			}
-			targetDay := time.Weekday(nextCmdOpts.Weekday)
 
+			targetDay := time.Weekday(nextCmdOpts.Weekday)
 			copyDate := time.Now()
 			date := time.Now()
-
+			// find next date for specified day of the week
 			if date.Weekday() == targetDay {
 				date = date.Add(24 * time.Hour)
 			}
@@ -50,6 +51,6 @@ func CreateNextCmd() *cobra.Command {
 
 func attachNextOpts(cmd *cobra.Command, nextCmdOpts *nextCommandOptions) {
 	flags := cmd.Flags()
-	flags.IntVarP(&nextCmdOpts.Weekday, "weekday", "w", 1, "day of the week to open (0=Sunday, 1=Monday, ...")
+	flags.IntVarP(&nextCmdOpts.Weekday, "weekday", "w", 1, "day of the week to open (0=Sunday, 1=Monday, ...)")
 	attachOpts(cmd, &nextCmdOpts.CmdOpts)
 }
