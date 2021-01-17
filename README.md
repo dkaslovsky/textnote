@@ -1,2 +1,2 @@
-# TextNote
-Lightweight, text-based note taking and todo organizer for the command line
+# textnote
+Simple tool for creating and organizing daily notes on the command line
