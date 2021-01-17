@@ -103,7 +103,6 @@ func (t *Template) Load(r io.Reader) error {
 		return errors.Wrap(err, "cannot parse sections")
 	}
 	sectionBoundaries := sectionNameRegex.FindAllStringSubmatchIndex(sectionText, -1)
-	fmt.Println(sectionBoundaries)
 	numSections := len(sectionBoundaries)
 
 	// extract sections from sectionText
