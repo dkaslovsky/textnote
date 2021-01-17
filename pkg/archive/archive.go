@@ -12,19 +12,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-// readWriter is the interface for executing file operations
-type readWriter interface {
-	Read(file.ReadWriteable) error
-	Overwrite(file.ReadWriteable) error
-	Exists(file.ReadWriteable) bool
-}
-
 // Archiver consolidates TextNotes into archive files
 type Archiver struct {
 	opts config.Opts
 	rw   readWriter
+	// timestamp used to calculate whether a file is old enough to be archived, usually time.Now()
 	date time.Time
 
+	// archive templates by month keyed by formatted month timestamp
 	Months map[string]*template.MonthArchiveTemplate
 }
 
@@ -39,6 +34,14 @@ func NewArchiver(opts config.Opts, rw readWriter, date time.Time) *Archiver {
 	}
 }
 
+// readWriter is the interface for executing file operations
+type readWriter interface {
+	Read(file.ReadWriteable) error
+	Overwrite(file.ReadWriteable) error
+	Exists(file.ReadWriteable) bool
+}
+
+// fileInfo is the interface for adding a file to the Archvier
 type fileInfo interface {
 	Name() string
 	IsDir() bool

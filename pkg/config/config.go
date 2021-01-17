@@ -102,27 +102,30 @@ func getDefaultOpts() Opts {
 
 // LoadOrCreate loads a config file or creates it using defaults
 func LoadOrCreate() (Opts, error) {
+	opts := Opts{}
+
 	err := EnsureAppDir()
 	if err != nil {
-		return Opts{}, err
+		return opts, err
 	}
 
+	// write config file using defaults if it dies not exist
 	configPath := filepath.Join(AppDir, configFileName)
 	_, err = os.Stat(configPath)
 	if os.IsNotExist(err) {
 		defaults := getDefaultOpts()
 		yml, err := yaml.Marshal(defaults)
 		if err != nil {
-			return Opts{}, errors.Wrap(err, "unable to generate config file")
+			return opts, errors.Wrap(err, "unable to generate config file")
 		}
 		err = ioutil.WriteFile(configPath, yml, 0644)
 		if err != nil {
-			return Opts{}, errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
+			return opts, errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
 		}
 		log.Printf("created default configuration file: [%s]", configPath)
 	}
 
-	opts := Opts{}
+	// parse config file allowing environment variable overrides
 	err = cleanenv.ReadConfig(configPath, &opts)
 	if err != nil {
 		return opts, errors.Wrap(err, "unable to read config file")

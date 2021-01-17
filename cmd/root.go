@@ -33,7 +33,7 @@ func Run() error {
 		archive.CreateArchiveCmd(),
 	)
 
-	// custom help message
+	// set custom help message for the root command
 	defaultHelpFunc := cmd.HelpFunc()
 	cmd.SetHelpFunc(func(cmd *cobra.Command, s []string) {
 		defaultHelpFunc(cmd, s)

@@ -54,7 +54,7 @@ func (rw *ReadWriter) Exists(rwable ReadWriteable) bool {
 	return !os.IsNotExist(err)
 }
 
-// Openable is the interface for opening a file
+// Openable is the interface for which a file is opened
 type Openable interface {
 	GetFilePath() string
 	GetFileCursorLine() int
