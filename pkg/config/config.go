@@ -29,7 +29,7 @@ type Opts struct {
 	Archive ArchiveOpts `yaml:"archive"`
 }
 
-// HeaderOpts are options for configuring the header of TextNote
+// HeaderOpts are options for configuring the header of a note
 type HeaderOpts struct {
 	Prefix           string `yaml:"prefix" env:"TEXTNOTE_HEADER_PREFIX" env-description:"prefix to attach to header"`
 	Suffix           string `yaml:"suffix" env:"TEXTNOTE_HEADER_SUFFIX" env-description:"suffix to attach to header"`
@@ -37,7 +37,7 @@ type HeaderOpts struct {
 	TimeFormat       string `yaml:"timeFormat" env:"TEXTNOTE_HEADER_TIME_FORMAT" env-description:"formatting string to form headers from timestamps"`
 }
 
-// SectionOpts are options for configuring sections of TextNote
+// SectionOpts are options for configuring sections of a note
 type SectionOpts struct {
 	Prefix           string   `yaml:"prefix" env:"TEXTNOTE_SECTION_PREFIX" env-description:"prefix to attach to section names"`
 	Suffix           string   `yaml:"suffix" env:"TEXTNOTE_SECTION_SUFFIX" env-description:"suffix to attach to section names"`
@@ -45,14 +45,14 @@ type SectionOpts struct {
 	Names            []string `yaml:"names" env:"TEXTNOTE_SECTION_NAMES" env-description:"section names"`
 }
 
-// FileOpts are options for configuring files written by TextNote
+// FileOpts are options for configuring file outputs
 type FileOpts struct {
 	Ext        string `yaml:"ext" env:"TEXTNOTE_FILE_EXT" env-description:"extension for all files written"`
 	TimeFormat string `yaml:"timeFormat" env:"TEXTNOTE_FILE_TIME_FORMAT" env-description:"formatting string to form file names from timestamps"`
 	CursorLine int    `yaml:"cursorLine" env:"TEXTNOTE_FILE_CURSOR_LINE" env-description:"line to place cursor when opening"`
 }
 
-// ArchiveOpts are options for configuring archive files written by TextNote
+// ArchiveOpts are options for configuring note archives
 type ArchiveOpts struct {
 	AfterDays                int    `yaml:"afterDays" env:"TEXTNOTE_ARCHIVE_AFTER_DAYS" env-description:"number of days after which to archive a file"`
 	FilePrefix               string `yaml:"filePrefix" env:"TEXTNOTE_ARCHIVE_FILE_PREFIX" env-description:"prefix attached to the file name of all archive files"`

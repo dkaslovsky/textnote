@@ -2,6 +2,7 @@ package archive
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"strings"
 	"time"
@@ -12,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Archiver consolidates TextNotes into archive files
+// Archiver consolidates templates into archives
 type Archiver struct {
 	opts config.Opts
 	rw   readWriter
@@ -98,6 +99,7 @@ func (a *Archiver) Write() error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to write archive file [%s]", t.GetFilePath())
 		}
+		log.Printf("wrote archive file [%s]", t.GetFilePath())
 	}
 	return nil
 }
