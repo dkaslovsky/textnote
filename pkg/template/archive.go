@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// MonthArchiveTemplate contains the structure of a TextNote month archive
+// MonthArchiveTemplate contains the structure of a month archive
 type MonthArchiveTemplate struct {
 	*Template
 }
@@ -26,6 +26,7 @@ func NewMonthArchiveTemplate(opts config.Opts, date time.Time) *MonthArchiveTemp
 }
 
 // Write writes the template
+// This function is needed to ensure the string() method of the MonthArchiveTemplate is called
 func (t *MonthArchiveTemplate) Write(w io.Writer) error {
 	_, err := w.Write([]byte(t.string()))
 	return err
@@ -33,15 +34,18 @@ func (t *MonthArchiveTemplate) Write(w io.Writer) error {
 
 // GetFilePath generates a full path for a file based on the template date
 func (t *MonthArchiveTemplate) GetFilePath() string {
-	name := t.opts.Archive.FilePrefix + t.date.Format(t.opts.Archive.MonthTimeFormat)
-	if t.opts.File.Ext != "" {
-		name = fmt.Sprintf("%s.%s", name, t.opts.File.Ext)
+	name := filepath.Join(
+		config.AppDir,
+		t.opts.Archive.FilePrefix+t.date.Format(t.opts.Archive.MonthTimeFormat),
+	)
+	if t.opts.File.Ext == "" {
+		return name
 	}
-	return filepath.Join(config.AppDir, name)
+	return fmt.Sprintf("%s.%s", name, t.opts.File.Ext)
 }
 
-// ArchiveSectionContents concatenates the contents of the specified section from a source Template and
-// appends to the contents of the receiver's section with a header corresponding to the source template's date
+// ArchiveSectionContents concatenates the contents of the specified section from a source template and
+// appends to the contents of the receiver's section with a header derived from the source template's date
 func (t *MonthArchiveTemplate) ArchiveSectionContents(src *Template, sectionName string) error {
 	tgtSec, err := t.getSection(sectionName)
 	if err != nil {
@@ -69,7 +73,7 @@ func (t *MonthArchiveTemplate) ArchiveSectionContents(src *Template, sectionName
 }
 
 // Merge merges a source MonthArchiveTemplate into the receiver
-// This is a convenience function that iterates and calls for all sections in the receiver
+// This is a convenience function that iterates and copies all sections in the receiver
 func (t *MonthArchiveTemplate) Merge(src *MonthArchiveTemplate) error {
 	for sectionName := range t.sectionIdx {
 		err := t.CopySectionContents(src, sectionName)

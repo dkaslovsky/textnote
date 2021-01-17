@@ -100,6 +100,8 @@ func parseSectionContents(lines []string, prefix string, suffix string, format s
 	}
 
 	for _, line := range lines[1:] {
+		// if the line is a header it indicates new contents, so "flush" (append) the current
+		// header/body and start tracking the new contents
 		if isArchiveItemHeader(line, prefix, suffix, format) {
 			contents = append(contents, contentItem{
 				header: header,
@@ -141,7 +143,6 @@ func isEmptyContents(contents []contentItem) bool {
 	if len(contents) == 0 {
 		return true
 	}
-
 	for _, content := range contents {
 		// do not include trailing newlines as content for empty section
 		strippedTxt := strings.Replace(content.text, "\n", "", -1)

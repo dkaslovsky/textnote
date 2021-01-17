@@ -12,12 +12,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Template contains the structure of a TextNote
+// Template contains the structure of a note
 type Template struct {
 	opts       config.Opts
 	date       time.Time
 	sections   []*section
-	sectionIdx map[string]int
+	sectionIdx map[string]int // map of section name to index in sections slice
 }
 
 // NewTemplate constructs a new Template
@@ -28,9 +28,9 @@ func NewTemplate(opts config.Opts, date time.Time) *Template {
 		sections:   []*section{},
 		sectionIdx: map[string]int{},
 	}
-	for i, sectionName := range opts.Section.Names {
+	for idx, sectionName := range opts.Section.Names {
 		t.sections = append(t.sections, newSection(sectionName))
-		t.sectionIdx[sectionName] = i
+		t.sectionIdx[sectionName] = idx
 	}
 	return t
 }
@@ -54,12 +54,13 @@ func (t *Template) GetFileCursorLine() int {
 // GetFilePath generates a full path for a file based on the template date
 func (t *Template) GetFilePath() string {
 	name := filepath.Join(config.AppDir, t.date.Format(t.opts.File.TimeFormat))
-	if t.opts.File.Ext != "" {
-		name = fmt.Sprintf("%s.%s", name, t.opts.File.Ext)
+	if t.opts.File.Ext == "" {
+		return name
 	}
-	return name
+	return fmt.Sprintf("%s.%s", name, t.opts.File.Ext)
 }
 
+// sectionGettable is the interface for getting a section
 type sectionGettable interface {
 	getSection(string) (*section, error)
 }
@@ -89,7 +90,7 @@ func (t *Template) DeleteSectionContents(sectionName string) error {
 	return nil
 }
 
-// Load populates a Template from the contents of a TextNote
+// Load populates a Template from the contents of a reader
 func (t *Template) Load(r io.Reader) error {
 	raw, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -97,23 +98,26 @@ func (t *Template) Load(r io.Reader) error {
 	}
 	sectionText := string(raw)
 
-	// extract sections from sectionText
 	sectionNameRegex, err := getSectionNameRegex(t.opts.Section.Prefix, t.opts.Section.Suffix)
 	if err != nil {
 		return errors.Wrap(err, "cannot parse sections")
 	}
-	matchIdx := sectionNameRegex.FindAllStringSubmatchIndex(sectionText, -1)
-	for i, idx := range matchIdx {
-		// get start and end indices for each section
-		var start, end int
-		start = idx[0]
-		if i+1 < len(matchIdx) {
-			end = matchIdx[i+1][0]
+	sectionBoundaries := sectionNameRegex.FindAllStringSubmatchIndex(sectionText, -1)
+	fmt.Println(sectionBoundaries)
+	numSections := len(sectionBoundaries)
+
+	// extract sections from sectionText
+	for i, idxs := range sectionBoundaries {
+		var curSecEnd int
+		// end of current section is marked by the beginning of the next section
+		// if current section is not the last section
+		if i != numSections-1 {
+			curSecEnd = sectionBoundaries[i+1][0]
 		} else {
-			end = len(sectionText)
+			curSecEnd = len(sectionText)
 		}
 
-		section, err := parseSection(sectionText[start:end], t.opts)
+		section, err := parseSection(sectionText[idxs[0]:curSecEnd], t.opts)
 		if err != nil {
 			return errors.Wrap(err, "failed to parse section while reading textnote")
 		}
@@ -151,10 +155,10 @@ func (t *Template) makeHeader() string {
 	)
 }
 
-func (t *Template) getSection(name string) (sec *section, err error) {
+func (t *Template) getSection(name string) (*section, error) {
 	idx, found := t.sectionIdx[name]
 	if !found {
-		return sec, fmt.Errorf("section [%s] not found", name)
+		return &section{}, fmt.Errorf("section [%s] not found", name)
 	}
 	return t.sections[idx], nil
 }

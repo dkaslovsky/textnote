@@ -16,8 +16,7 @@ import (
 type Archiver struct {
 	opts config.Opts
 	rw   readWriter
-	// timestamp used to calculate whether a file is old enough to be archived, usually time.Now()
-	date time.Time
+	date time.Time // timestamp for calculating if a file is old enough to be archived
 
 	// archive templates by month keyed by formatted month timestamp
 	Months map[string]*template.MonthArchiveTemplate
@@ -80,6 +79,7 @@ func (a *Archiver) Add(f fileInfo) error {
 	return nil
 }
 
+// Write writes all of the archive templates stored in the Archiver
 func (a *Archiver) Write() error {
 	for _, t := range a.Months {
 		if a.rw.Exists(t) {

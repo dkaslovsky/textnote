@@ -20,8 +20,8 @@ func CreateTomorrowCmd() *cobra.Command {
 				return err
 			}
 
-			date := time.Now().Add(24 * time.Hour)
-			copyDate := date.Add(-24 * time.Hour)
+			copyDate := time.Now()
+			date := copyDate.Add(24 * time.Hour)
 			return run(opts, cmdOpts, date, copyDate)
 		},
 	}
