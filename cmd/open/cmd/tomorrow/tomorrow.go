@@ -1,19 +1,20 @@
-package open
+package tomorrow
 
 import (
 	"time"
 
+	"github.com/dkaslovsky/textnote/cmd/open"
 	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/spf13/cobra"
 )
 
 // CreateTomorrowCmd creates the tomorrow subcommand
 func CreateTomorrowCmd() *cobra.Command {
-	cmdOpts := commandOptions{}
+	cmdOpts := open.CommandOptions{}
 	cmd := &cobra.Command{
-		Use:   "tomorrow",
+		Use:   open.MakeUse("tomorrow"),
 		Short: "open tomorrow's note",
-		Long:  "open a note template for tomorrow",
+		Long:  open.MakeLong("open a note template for tomorrow"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts, err := config.LoadOrCreate()
 			if err != nil {
@@ -22,9 +23,9 @@ func CreateTomorrowCmd() *cobra.Command {
 
 			copyDate := time.Now()
 			date := copyDate.Add(24 * time.Hour)
-			return run(opts, cmdOpts, date, copyDate)
+			return open.Run(opts, cmdOpts, args, date, copyDate)
 		},
 	}
-	attachOpts(cmd, &cmdOpts)
+	open.AttachOpts(cmd, &cmdOpts)
 	return cmd
 }

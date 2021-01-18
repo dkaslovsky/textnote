@@ -4,7 +4,10 @@ import (
 	"fmt"
 
 	"github.com/dkaslovsky/textnote/cmd/archive"
-	"github.com/dkaslovsky/textnote/cmd/open"
+	"github.com/dkaslovsky/textnote/cmd/open/cmd/next"
+	"github.com/dkaslovsky/textnote/cmd/open/cmd/today"
+	"github.com/dkaslovsky/textnote/cmd/open/cmd/tomorrow"
+	"github.com/dkaslovsky/textnote/cmd/open/cmd/yesterday"
 	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/spf13/cobra"
 )
@@ -15,21 +18,19 @@ var appName = "textnote"
 func Run() error {
 	cmd := &cobra.Command{
 		Use:           appName,
-		Short:         "open today's note",
-		Long:          "open a note template for today",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// run the today command with default options as the default application command
-			return open.CreateTodayCmd().Execute()
+			return today.CreateTodayCmd().Execute()
 		},
 	}
 
 	cmd.AddCommand(
-		open.CreateTodayCmd(),
-		open.CreateTomorrowCmd(),
-		open.CreateYesterdayCmd(),
-		open.CreateNextCmd(),
+		today.CreateTodayCmd(),
+		tomorrow.CreateTomorrowCmd(),
+		yesterday.CreateYesterdayCmd(),
+		next.CreateNextCmd(),
 		archive.CreateArchiveCmd(),
 	)
 

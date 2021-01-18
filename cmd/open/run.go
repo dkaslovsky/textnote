@@ -8,27 +8,15 @@ import (
 	"github.com/dkaslovsky/textnote/pkg/file"
 	"github.com/dkaslovsky/textnote/pkg/template"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
-// commandOptions are the standard options for the package's commands
-type commandOptions struct {
-	Copy   []string
-	Delete bool
-}
-
-func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
-	flags := cmd.Flags()
-	flags.StringSliceVarP(&cmdOpts.Copy, "copy", "c", []string{}, "section names to copy")
-	flags.BoolVarP(&cmdOpts.Delete, "delete", "d", false, "delete previous day's section after copy (no-op without copy)")
-}
-
-func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time, copyDate time.Time) error {
+// Run executes the workflow for creating/opening a note
+func Run(templateOpts config.Opts, cmdOpts CommandOptions, sections []string, date time.Time, copyDate time.Time) error {
 	rw := file.NewReadWriter()
 	t := template.NewTemplate(templateOpts, date)
 
 	// open file if no further operations (copy/move)
-	if len(cmdOpts.Copy) == 0 {
+	if !cmdOpts.Copy {
 		if !rw.Exists(t) {
 			err := rw.Overwrite(t)
 			if err != nil {
@@ -36,6 +24,10 @@ func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time, copyD
 			}
 		}
 		return file.OpenInVim(t)
+	}
+
+	if len(sections) == 0 {
+		sections = templateOpts.Section.Names
 	}
 
 	// load template contents if it exists
@@ -52,13 +44,13 @@ func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time, copyD
 		return errors.Wrap(err, "cannot read source file for copy")
 	}
 	// copy from source to template
-	err = copySections(src, t, cmdOpts.Copy)
+	err = copySections(src, t, sections)
 	if err != nil {
 		return err
 	}
 
 	if cmdOpts.Delete {
-		err = deleteSections(src, cmdOpts.Copy)
+		err = deleteSections(src, sections)
 		if err != nil {
 			return errors.Wrap(err, "failed to remove section content from source file")
 		}
@@ -71,15 +63,6 @@ func run(templateOpts config.Opts, cmdOpts commandOptions, date time.Time, copyD
 	err = rw.Overwrite(t)
 	if err != nil {
 		return errors.Wrap(err, "failed to write file")
-	}
-	return file.OpenInVim(t)
-}
-
-func open(templateOpts config.Opts, date time.Time) error {
-	rw := file.NewReadWriter()
-	t := template.NewTemplate(templateOpts, date)
-	if !rw.Exists(t) {
-		return fmt.Errorf("file [%s] for template does not exist", t.GetFilePath())
 	}
 	return file.OpenInVim(t)
 }
