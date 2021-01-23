@@ -32,6 +32,7 @@ func CreateOpenCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			applyDefaults(opts, &cmdOpts)
 			return run(opts, cmdOpts)
 		},
 	}
@@ -46,14 +47,12 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags.StringVarP(&cmdOpts.copyDate, "copyDate", "c", "", "date of note for copying sections (defaults to yesterday)")
 	flags.StringSliceVarP(&cmdOpts.sections, "section", "s", []string{}, "section to copy")
 	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete sections after copy")
-	applyDefaults(cmdOpts)
 }
 
-func applyDefaults(cmdOpts *commandOptions) {
+func applyDefaults(templateOpts config.Opts, cmdOpts *commandOptions) {
 	now := time.Now()
-
 	if cmdOpts.format == "" {
-		cmdOpts.format = "2006-01-02" // TODO: add to config
+		cmdOpts.format = templateOpts.Cli.TimeFormat
 	}
 	if cmdOpts.date == "" {
 		cmdOpts.date = now.Format(cmdOpts.format)
