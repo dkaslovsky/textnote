@@ -14,8 +14,8 @@ import (
 type commandOptions struct {
 	format    string
 	date      string
-	copyDate  string
 	yesterday bool
+	copyDate  string
 	sections  []string
 	delete    bool
 }
@@ -44,6 +44,7 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags := cmd.Flags()
 	flags.StringVarP(&cmdOpts.format, "format", "f", "", "override for time format to parse date flags specified in configuration")
 	flags.StringVarP(&cmdOpts.date, "date", "d", "", "date for note to be opened (defaults to today)")
+	flags.BoolVarP(&cmdOpts.yesterday, "yesterday", "y", false, "use yesterday's date for note (ignored if date is specified)")
 	flags.StringVarP(&cmdOpts.copyDate, "copyDate", "c", "", "date of note for copying sections (defaults to yesterday)")
 	flags.StringSliceVarP(&cmdOpts.sections, "section", "s", []string{}, "section to copy")
 	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete sections after copy")
@@ -55,7 +56,11 @@ func applyDefaults(templateOpts config.Opts, cmdOpts *commandOptions) {
 		cmdOpts.format = templateOpts.Cli.TimeFormat
 	}
 	if cmdOpts.date == "" {
-		cmdOpts.date = now.Format(cmdOpts.format)
+		if cmdOpts.yesterday {
+			cmdOpts.date = now.Add(-24 * time.Hour).Format(cmdOpts.format)
+		} else {
+			cmdOpts.date = now.Format(cmdOpts.format)
+		}
 	}
 	if cmdOpts.copyDate == "" {
 		cmdOpts.copyDate = now.Add(-24 * time.Hour).Format(cmdOpts.format)
