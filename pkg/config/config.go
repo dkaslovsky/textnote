@@ -27,6 +27,7 @@ type Opts struct {
 	Section SectionOpts `yaml:"section"`
 	File    FileOpts    `yaml:"file"`
 	Archive ArchiveOpts `yaml:"archive"`
+	Cli     CliOpts     `yaml:"cli"`
 }
 
 // HeaderOpts are options for configuring the header of a note
@@ -64,6 +65,11 @@ type ArchiveOpts struct {
 	MonthTimeFormat          string `yaml:"monthTimeFormat" env:"TEXTNOTE_ARCHIVE_MONTH_TIME_FORMAT" env-description:"formatting string for month archive timestamps"`
 }
 
+// CliOpts are options for configuring the CLI
+type CliOpts struct {
+	TimeFormat string `yaml:"timeFormat" env:"TEXTNOTE_CLI_TIME_FORMAT" env-description:"formatting string for timestamp CLI flags"`
+}
+
 func getDefaultOpts() Opts {
 	return Opts{
 		Header: HeaderOpts{
@@ -96,6 +102,9 @@ func getDefaultOpts() Opts {
 			SectionContentSuffix:     "]",
 			SectionContentTimeFormat: "2006-01-02",
 			MonthTimeFormat:          "Jan2006",
+		},
+		Cli: CliOpts{
+			TimeFormat: "2006-01-02",
 		},
 	}
 }

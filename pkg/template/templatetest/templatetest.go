@@ -46,6 +46,9 @@ func GetOpts() config.Opts {
 			SectionContentTimeFormat: "2006-01-02",
 			MonthTimeFormat:          "Jan2006",
 		},
+		Cli: config.CliOpts{
+			TimeFormat: "2006-01-02",
+		},
 	}
 
 	err := config.ValidateOpts(opts)
