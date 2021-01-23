@@ -3,11 +3,9 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/dkaslovsky/textnote/cmd/open"
+
 	"github.com/dkaslovsky/textnote/cmd/archive"
-	"github.com/dkaslovsky/textnote/cmd/open/cmd/next"
-	"github.com/dkaslovsky/textnote/cmd/open/cmd/today"
-	"github.com/dkaslovsky/textnote/cmd/open/cmd/tomorrow"
-	"github.com/dkaslovsky/textnote/cmd/open/cmd/yesterday"
 	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/spf13/cobra"
 )
@@ -21,16 +19,13 @@ func Run() error {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// run the today command with default options as the default application command
-			return today.CreateTodayCmd().Execute()
+			// run the open command with default options as the default application command
+			return open.CreateOpenCmd().Execute()
 		},
 	}
 
 	cmd.AddCommand(
-		today.CreateTodayCmd(),
-		tomorrow.CreateTomorrowCmd(),
-		yesterday.CreateYesterdayCmd(),
-		next.CreateNextCmd(),
+		open.CreateOpenCmd(),
 		archive.CreateArchiveCmd(),
 	)
 
