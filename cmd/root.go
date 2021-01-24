@@ -16,6 +16,7 @@ var appName = "textnote"
 func Run() error {
 	cmd := &cobra.Command{
 		Use:           appName,
+		Long:          fmt.Sprintf("Name:\n  %s - a simple tool for creating and organizing daily notes on the command line", appName),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
