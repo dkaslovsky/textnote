@@ -10,14 +10,14 @@ textnote intentionally facilitates only the management (creation, opening, organ
 
 Key features include
 - configurable, sectioned note template
-- copy/move functionality to bring content forward to the next day's note (for those to-do items that didn't quite get done...)
-- simple archive command to consolidate daily notes into monthly archive files
+- easily bring content forward to the next day's note (for those to-dos that didn't quite get done...)
+- simple command to consolidate daily notes into monthly archive files
 - create or open today's note with a single, default command
 
 Currently, Vim is the only supported text editor.
 
 ## Quick Start
-1. [Install](##Iinstallation) textnote
+1. [Install](#installation) textnote
 2. Set a single environment variable `TEXTNOTE_DIR` to specify the directory for textnote's files
 3. Start writing notes for today with a single command
 ```
@@ -35,7 +35,7 @@ and can of course be built from source by cloning the repository and running `go
 ## Configuration
 While textnote is intended to be extremely lightweight, it is also designed to be configurable.
 In particular, the template (sections, headers, date formats, and whitespace) for generating notes can be customized as desired.
-Configuration is read from the `$TEXTNOTE_DIR/.config.yml` file and individual configuration parameters can be overridden with [environment variables](#environment_variable_overrides).
+Configuration is read from the `$TEXTNOTE_DIR/.config.yml` file and individual configuration parameters can be overridden with [environment variables](#environment-variable-overrides).
 
 ### Defaults
 The default configuration file is automatically written the first time textnote is run:
