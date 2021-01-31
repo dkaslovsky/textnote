@@ -3,6 +3,7 @@ Simple tool for creating and organizing daily notes on the command line
 
 [![Build Status](https://travis-ci.com/dkaslovsky/textnote.svg?branch=main)](https://travis-ci.com/dkaslovsky/textnote.svg?branch=main)
 [![Coverage Status](https://coveralls.io/repos/github/dkaslovsky/textnote/badge.svg?branch=main)](https://coveralls.io/github/dkaslovsky/textnote?branch=main)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dkaslovsky/textnote)](https://goreportcard.com/report/github.com/dkaslovsky/textnote)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dkaslovsky/textnote/blob/main/LICENSE)
 
 ## Overview
