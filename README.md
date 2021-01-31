@@ -1,6 +1,8 @@
 # textnote
 Simple tool for creating and organizing daily notes on the command line
 
+[![Build Status](https://travis-ci.com/dkaslovsky/textnote.svg?branch=main)](https://travis-ci.com/dkaslovsky/textnote.svg?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/dkaslovsky/textnote/badge.svg?branch=main)](https://coveralls.io/github/dkaslovsky/textnote?branch=main)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dkaslovsky/textnote/blob/main/LICENSE)
 
 ## Overview
@@ -117,7 +119,7 @@ Flags:
 
 
 ## **archive**
-The `archive` consolidates all daily notes into month archives, gathering together the contents for each section of a month in chronological order and labeled by the original date.
+The `archive` command consolidates all daily notes into month archives, gathering together the contents for each section of a month in chronological order, labeled by the original date.
 Only notes older than a number of days specified in the configuration are archived.
 
 Running the archive command
@@ -125,7 +127,7 @@ Running the archive command
 $ textnote archive
 ```
 generates an archive file for every month for which a note exists.
-For example, an archive of the January 2021 notes, assumning the default configuration, will have the form
+For example, an archive of the January 2021 notes, assuming the default configuration, will have the form
 ```
 ARCHIVE Jan2021
 
@@ -160,8 +162,8 @@ To delete the individual note files and retain only the generated archives, run 
 ```
 $ textnote archive -x
 ```
-This is the intended mode of operation as it is desirable to cleanup notes into archives but must be intentionally enabled with `-x` for safety.
-To cleanup *after* archives have been generated, rerun the `archive` command with the `-x` flag as well as the `-n` flag to prevent duplicating the archive content:
+This is the intended mode of operation, as it is desirable to "clean up" notes into archives, but must be intentionally enabled with `-x` for safety.
+To "clean up" *after* archives have been generated, rerun the `archive` command with the `-x` flag as well as the `-n` flag to prevent duplicating the archive content:
 ```
 $ textnote archive -x -n
 ```
@@ -220,7 +222,7 @@ cli:
 ```
 
 ### Environment Variable Overrides
-Any configuration paramter can be overridden by setting a corresponding environment variable.
+Any configuration parameter can be overridden by setting a corresponding environment variable.
 Note that setting an environment variable does not change the value specified in the configuration file.
 The full list of environment variables is listed below and is always available by running `textnote --help`:
 ```
