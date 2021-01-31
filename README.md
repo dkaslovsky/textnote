@@ -36,8 +36,87 @@ $ go get -u github.com/dkaslovsky/textnote
 Build from source by cloning this repository and running `go build`
 
 ## Usage
-### open
-### archive
+textnote is intentionally simple to use and supports two commands: `open` for creating/opening notes and `archive` for consolidating notes into monthly archive files.
+
+### **open**
+The `open` command will open a specified note in an editor, creating it first if it does not exist.
+
+Opening or creating a note for the current day is the default action.
+Simply run the root command to open or create a note for the current day:
+```
+$ textnote
+```
+which, using the default configuration and assuming today is 2021-01-24, will create and open an empty note template:
+```
+[Sun] 24 Jan 2021
+
+___TODO___
+
+
+
+___DONE___
+
+
+
+___NOTES___
+
+
+
+```
+To open a note for a specific date other than the current day, specify the date with the `-d` flag:
+```
+$ textnote open -d 2020-12-22
+```
+where the date format is specified in the configuration or by passing a Golang time format through the `-f` flag:
+```
+$ textnote open -d "Dec 12 2020" -f "Jan 02 2006"
+```
+For convenience, yesterday's note can be opened by passing the `-y` flag:
+```
+$ textnote open -y
+```
+
+Sections from previous notes can be copied or moved into a current note.
+Each section to be copied is specified in separate `-s` flags.
+The previous day's note is used as the source by default and a specified date for a source note can be provided through the `-c` flag.
+For example,
+```
+$ textnote open -s TODO -s NOTES
+```
+will create today's note with the "TODO" and "NOTES" sections copied from yesterday's note, while
+```
+$ textnote open -c 2021-01-17 -s NOTES
+```
+creates today's note with the "NOTES" section copied from the 2021-01-17 note.
+
+To move instead of copy, add the `-x` flag to any copy command.
+For example,
+```
+$ textnote open -c 2021-01-17 -s NOTES -x
+```
+moves the "NOTES" section contents from the 2021-01-17 note into the note for today.
+
+The flag options are summarized by the command's help:
+```
+$ textnote open -h
+
+open or create a note template
+
+Usage:
+  textnote open [flags]
+
+Flags:
+  -c, --copyDate string   date of note for copying sections (defaults to yesterday)
+  -d, --date string       date for note to be opened (defaults to today)
+  -x, --delete            delete sections after copy
+  -f, --format string     override for time format to parse date flags specified in configuration
+  -h, --help              help for open
+  -s, --section strings   section to copy
+  -y, --yesterday         use yesterday's date for note (ignored if date is specified)
+```
+
+
+## **archive**
 
 ## Configuration
 While textnote is intended to be extremely lightweight, it is also designed to be highly configurable.
