@@ -117,6 +117,69 @@ Flags:
 
 
 ## **archive**
+The `archive` consolidates all daily notes into month archives, gathering together the contents for each section of a month in chronological order and labeled by the original date.
+Only notes older than a number of days specified in the configuration are archived.
+
+Running the archive command
+```
+$ textnote archive
+```
+generates an archive file for every month for which a note exists.
+For example, an archive of the January 2021 notes, assumning the default configuration, will have the form
+```
+ARCHIVE Jan2021
+
+___TODO___
+[2021-01-03]
+...
+[2021-01-04]
+...
+
+
+
+___DONE___
+[2021-01-03]
+...
+[2021-01-04]
+...
+[2021-01-06]
+...
+
+
+___NOTES___
+[2021-01-06]
+...
+
+
+
+```
+with ellipses representing the notes' contents.
+
+By default, the `archive` command is non-destructive: it will create archive files and leave all archived notes in place.
+To delete the individual note files and retain only the generated archives, run the command with the `-x` flag:
+```
+$ textnote archive -x
+```
+This is the intended mode of operation as it is desirable to cleanup notes into archives but must be intentionally enabled with `-x` for safety.
+To cleanup *after* archives have been generated, rerun the `archive` command with the `-x` flag as well as the `-n` flag to prevent duplicating the archive content:
+```
+$ textnote archive -x -n
+```
+
+The flag options are summarized by the command's help:
+```
+$ textnote archive -h
+
+organize notes into time-based archive groups
+
+Usage:
+  textnote archive [flags]
+
+Flags:
+  -x, --delete    delete individual files after archiving
+  -h, --help      help for archive
+  -n, --nowrite   disable writing archive file (helpful for deleting previously archived files)
+```
 
 ## Configuration
 While textnote is intended to be extremely lightweight, it is also designed to be highly configurable.
@@ -154,52 +217,6 @@ archive:
   monthTimeFormat: Jan2006                # Golang format for month archive file and header dates
 cli:
   timeFormat: "2006-01-02"                # Golang format for CLI date input
-```
-
-The default configuration produces the following note template:
-```
-[Sun] 24 Jan 2021
-
-___TODO___
-
-
-
-___DONE___
-
-
-
-___NOTES___
-
-
-
-```
-and the following archive template (ellipses added to represent content):
-```
-ARCHIVE Jan2021
-
-___TODO___
-[2021-01-03]
-...
-[2021-01-04]
-...
-
-
-
-___DONE___
-[2021-01-03]
-...
-[2021-01-04]
-...
-[2021-01-06]
-...
-
-
-___NOTES___
-[2021-01-06]
-...
-
-
-
 ```
 
 ### Environment Variable Overrides
