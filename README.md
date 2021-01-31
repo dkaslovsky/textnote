@@ -4,20 +4,23 @@ Simple tool for creating and organizing daily notes on the command line
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dkaslovsky/textnote/blob/main/LICENSE)
 
 ## Overview
-textnote is a command line tool built to quickly create and manage dated, plain text notes.
+textnote is a command line tool for quickly creating and managing dated, plain text notes.
 It is designed for ease of use in order to encourage the practice of daily, organized note taking.
 textnote intentionally facilitates only the management (creation, opening, organizing, and consolidated archiving) of notes, following the philosophy that notes are best written in a text editor and not via a CLI.
 
-Key features include
-- configurable, sectioned note template
-- easily bring content forward to the next day's note (for those to-dos that didn't quite get done...)
-- simple command to consolidate daily notes into monthly archive files
-- create or open today's note with a single, default command
+Key features:
+- Configurable, sectioned note template
+- Easily bring content forward to the next day's note (for those to-dos that didn't quite get done...)
+- Simple command to consolidate daily notes into monthly archive files
+- Create and open today's note with the default `textnote` command
+
+All note files are stored locally on the file system in a single directory.
+Notes can easily be synced to a remote server or cloud service if so desired by ensuring the application directory is remotely synced.
 
 Currently, Vim is the only supported text editor.
 
 ## Quick Start
-1. [Install](#installation) textnote
+1. Install textnote (see [Installation](#installation))
 2. Set a single environment variable `TEXTNOTE_DIR` to specify the directory for textnote's files
 3. Start writing notes for today with a single command
 ```
@@ -26,14 +29,18 @@ $ textnote
 That's it! The directory specified by `TEXTNOTE_DIR` and the default configuration file will be automatically created.
 
 ## Installation
-textnote can be installed using Go's built in tooling:
+textnote can be installed using Go's built-in tooling:
 ```
 $ go get -u github.com/dkaslovsky/textnote
 ```
-and can of course be built from source by cloning the repository and running `go build`
+Build from source by cloning this repository and running `go build`
+
+## Usage
+### open
+### archive
 
 ## Configuration
-While textnote is intended to be extremely lightweight, it is also designed to be configurable.
+While textnote is intended to be extremely lightweight, it is also designed to be highly configurable.
 In particular, the template (sections, headers, date formats, and whitespace) for generating notes can be customized as desired.
 Configuration is read from the `$TEXTNOTE_DIR/.config.yml` file and individual configuration parameters can be overridden with [environment variables](#environment-variable-overrides).
 
@@ -70,7 +77,7 @@ cli:
   timeFormat: "2006-01-02"                # Golang format for CLI date input
 ```
 
-The default configuration produces the following note template
+The default configuration produces the following note template:
 ```
 [Sun] 24 Jan 2021
 
@@ -87,7 +94,7 @@ ___NOTES___
 
 
 ```
-and the following archive template (ellipses added to represent content)
+and the following archive template (ellipses added to represent content):
 ```
 ARCHIVE Jan2021
 
@@ -119,8 +126,7 @@ ___NOTES___
 ### Environment Variable Overrides
 Any configuration paramter can be overridden by setting a corresponding environment variable.
 Note that setting an environment variable does not change the value specified in the configuration file.
-The environment variables follow the convention of upper case, underscore separators, and are prefixed with "TEXTNOTE".
-The full list is always available from the CLI help `textnote --help`:
+The full list of environment variables is listed below and is always available by running `textnote --help`:
 ```
   TEXTNOTE_HEADER_PREFIX string
     	prefix to attach to header
@@ -163,7 +169,3 @@ The full list is always available from the CLI help `textnote --help`:
   TEXTNOTE_CLI_TIME_FORMAT string
     	formatting string for timestamp CLI flags
 ```
-
-## Usage
-### open
-### archive
