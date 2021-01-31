@@ -17,19 +17,6 @@ import (
 // mocks
 //
 
-type testFileInfo struct {
-	name  string
-	isDir bool
-}
-
-func (t testFileInfo) Name() string {
-	return t.name
-}
-
-func (t testFileInfo) IsDir() bool {
-	return t.isDir
-}
-
 type testReadWriter struct {
 	exists  bool
 	toRead  string
@@ -69,7 +56,7 @@ func (trw *testReadWriter) Exists(rwable file.ReadWriteable) bool {
 
 func TestAdd(t *testing.T) {
 	type testCase struct {
-		file         testFileInfo
+		fileName     string
 		templateText string
 		existing     map[string]string
 		expected     map[string]string
@@ -77,24 +64,15 @@ func TestAdd(t *testing.T) {
 
 	tests := map[string]testCase{
 		"add template that should not be archived": {
-			file: testFileInfo{
-				name:  "2020-12-20.txt",
-				isDir: false,
-			},
+			fileName: "2020-12-20.txt",
 			expected: map[string]string{},
 		},
 		"add template from last day that should not be archived": {
-			file: testFileInfo{
-				name:  "2020-12-14.txt",
-				isDir: false,
-			},
+			fileName: "2020-12-14.txt",
 			expected: map[string]string{},
 		},
 		"add template from first day that should be archived": {
-			file: testFileInfo{
-				name:  "2020-12-13.txt",
-				isDir: false,
-			},
+			fileName: "2020-12-13.txt",
 			templateText: `-^-[Sun] 13 Dec 2020-v-
 
 _p_TestSection1_q_
@@ -134,10 +112,7 @@ _p_TestSection3_q_
 			},
 		},
 		"add template from current month": {
-			file: testFileInfo{
-				name:  "2020-12-01.txt",
-				isDir: false,
-			},
+			fileName: "2020-12-01.txt",
 			templateText: `-^-[Tue] 01 Dec 2020-v-
 
 _p_TestSection1_q_
@@ -177,10 +152,7 @@ _p_TestSection3_q_
 			},
 		},
 		"add template from different month": {
-			file: testFileInfo{
-				name:  "2020-11-01.txt",
-				isDir: false,
-			},
+			fileName: "2020-11-01.txt",
 			templateText: `-^-[Sun] 01 Nov 2020-v-
 
 _p_TestSection1_q_
@@ -220,10 +192,7 @@ _p_TestSection3_q_
 			},
 		},
 		"add template from different year": {
-			file: testFileInfo{
-				name:  "2019-11-02.txt",
-				isDir: false,
-			},
+			fileName: "2019-11-02.txt",
 			templateText: `-^-[Sat] 02 Nov 2019-v-
 
 _p_TestSection1_q_
@@ -263,10 +232,7 @@ _p_TestSection3_q_
 			},
 		},
 		"add template with earlier date to existing archive": {
-			file: testFileInfo{
-				name:  "2020-12-01.txt",
-				isDir: false,
-			},
+			fileName: "2020-12-01.txt",
 			templateText: `-^-[Tue] 01 Dec 2020-v-
 
 _p_TestSection1_q_
@@ -329,10 +295,7 @@ _p_TestSection3_q_
 			},
 		},
 		"add template with later date to existing archive": {
-			file: testFileInfo{
-				name:  "2020-12-02.txt",
-				isDir: false,
-			},
+			fileName: "2020-12-02.txt",
 			templateText: `-^-[Wed] 02 Dec 2020-v-
 
 _p_TestSection1_q_
@@ -412,7 +375,7 @@ _p_TestSection3_q_
 				a.Months[key] = m
 			}
 
-			err := a.Add(test.file)
+			err := a.Add(test.fileName)
 			require.NoError(t, err)
 
 			require.Equal(t, len(test.expected), len(a.Months))
@@ -632,51 +595,6 @@ existingText3b
 			err = a.Write()
 			require.NoError(t, err)
 			require.Equal(t, test.expected, trw.written)
-		})
-	}
-}
-
-func TestShouldArchive(t *testing.T) {
-	type testCase struct {
-		file     testFileInfo
-		expected bool
-	}
-
-	tests := map[string]testCase{
-		"archive file": {
-			file: testFileInfo{
-				name:  "archive-Dec2020",
-				isDir: false,
-			},
-			expected: false,
-		},
-		"directory": {
-			file: testFileInfo{
-				name:  "somedir",
-				isDir: true,
-			},
-			expected: false,
-		},
-		"hidden file": {
-			file: testFileInfo{
-				name:  ".config",
-				isDir: false,
-			},
-			expected: false,
-		},
-		"template file": {
-			file: testFileInfo{
-				name:  "2020-12-29",
-				isDir: false,
-			},
-			expected: true,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			opts := templatetest.GetOpts()
-			require.Equal(t, test.expected, ShouldArchive(test.file, opts.Archive.FilePrefix))
 		})
 	}
 }

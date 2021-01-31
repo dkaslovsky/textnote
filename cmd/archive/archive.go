@@ -10,6 +10,7 @@ import (
 	"github.com/dkaslovsky/textnote/pkg/archive"
 	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/dkaslovsky/textnote/pkg/file"
+	"github.com/dkaslovsky/textnote/pkg/template"
 	"github.com/spf13/cobra"
 )
 
@@ -44,6 +45,7 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 }
 
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
+	archived := []string{}
 	archiver := archive.NewArchiver(templateOpts, file.NewReadWriter(), time.Now())
 
 	files, err := ioutil.ReadDir(config.AppDir)
@@ -51,18 +53,21 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 		return err
 	}
 
-	// add files to archiver
-	archived := []string{}
+	// add template files to archiver
 	for _, f := range files {
-		if !archive.ShouldArchive(f, templateOpts.Archive.FilePrefix) {
-			log.Printf("file [%s] will not be archived", f.Name())
+		if f.IsDir() {
 			continue
 		}
-		err := archiver.Add(f)
+		if !template.IsTemplateFile(f.Name(), templateOpts.File) {
+			continue
+		}
+
+		err := archiver.Add(f.Name())
 		if err != nil {
-			log.Printf("file [%s] will not be archived: %s", f.Name(), err)
+			log.Printf("skipping unarchivable file [%s]: %s", f.Name(), err)
 			continue
 		}
+
 		archived = append(archived, f.Name())
 	}
 

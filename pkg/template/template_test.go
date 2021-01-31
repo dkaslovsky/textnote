@@ -711,3 +711,76 @@ text
 		})
 	}
 }
+
+func TestIsTemplateFile(t *testing.T) {
+	type testCase struct {
+		fileName string
+		opts     config.FileOpts
+		expected bool
+	}
+
+	tests := map[string]testCase{
+		"parsable file name with extension": {
+			fileName: "2020-12-29.txt",
+			opts: config.FileOpts{
+				Ext:        "txt",
+				TimeFormat: "2006-01-02",
+			},
+			expected: true,
+		},
+		"parsable file name with no extension": {
+			fileName: "2020-12-29",
+			opts: config.FileOpts{
+				Ext:        "",
+				TimeFormat: "2006-01-02",
+			},
+			expected: true,
+		},
+		"unparsable file name with extension": {
+			fileName: "2020-Dec-29.txt",
+			opts: config.FileOpts{
+				Ext:        "txt",
+				TimeFormat: "2006-01-02",
+			},
+			expected: false,
+		},
+		"unparsable file name with no extension": {
+			fileName: "2020-Dec-29",
+			opts: config.FileOpts{
+				Ext:        "",
+				TimeFormat: "2006-01-02",
+			},
+			expected: false,
+		},
+		"parsable file name with mismatched extension": {
+			fileName: "2020-12-29.foo",
+			opts: config.FileOpts{
+				Ext:        "txt",
+				TimeFormat: "2006-01-02",
+			},
+			expected: false,
+		},
+		"parsable file name with malformed extension and populated config ext": {
+			fileName: "2020-12-29.",
+			opts: config.FileOpts{
+				Ext:        "txt",
+				TimeFormat: "2006-01-02",
+			},
+			expected: false,
+		},
+		"parsable file name with malformed extension and unpopulated config ext": {
+			fileName: "2020-12-29.",
+			opts: config.FileOpts{
+				Ext:        "",
+				TimeFormat: "2006-01-02",
+			},
+			expected: false,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, test.expected, IsTemplateFile(test.fileName, test.opts))
+		})
+	}
+}

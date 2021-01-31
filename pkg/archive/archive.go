@@ -1,7 +1,6 @@
 package archive
 
 import (
-	"fmt"
 	"log"
 	"path/filepath"
 	"strings"
@@ -41,17 +40,11 @@ type readWriter interface {
 	Exists(file.ReadWriteable) bool
 }
 
-// fileInfo is the interface for adding a file to the Archvier
-type fileInfo interface {
-	Name() string
-	IsDir() bool
-}
-
 // Add adds a file to the archive
-func (a *Archiver) Add(f fileInfo) error {
-	fileDate, err := parseFileName(f.Name(), a.opts.File.TimeFormat)
+func (a *Archiver) Add(fileName string) error {
+	fileDate, err := parseFileName(fileName, a.opts.File.TimeFormat)
 	if err != nil {
-		return fmt.Errorf("cannot add unparsable file name [%s] to archive", f.Name())
+		errors.Wrapf(err, "cannot add unparsable file name [%s] to archive", fileName)
 	}
 
 	// recent files are not archived
@@ -62,7 +55,7 @@ func (a *Archiver) Add(f fileInfo) error {
 	t := template.NewTemplate(a.opts, fileDate)
 	err = a.rw.Read(t)
 	if err != nil {
-		return errors.Wrapf(err, "cannot add unreadable file [%s] to archive", f.Name())
+		return errors.Wrapf(err, "cannot add unreadable file [%s] to archive", fileName)
 	}
 
 	monthKey := fileDate.Format(a.opts.Archive.MonthTimeFormat)
@@ -74,7 +67,7 @@ func (a *Archiver) Add(f fileInfo) error {
 	for _, section := range a.opts.Section.Names {
 		err := archive.ArchiveSectionContents(t, section)
 		if err != nil {
-			return errors.Wrapf(err, "cannot add contents from [%s] to archive", f.Name())
+			return errors.Wrapf(err, "cannot add contents from [%s] to archive", fileName)
 		}
 	}
 	return nil
@@ -102,23 +95,6 @@ func (a *Archiver) Write() error {
 		log.Printf("wrote archive file [%s]", t.GetFilePath())
 	}
 	return nil
-}
-
-// ShouldArchive determines whether a file should be included in an archive
-func ShouldArchive(f fileInfo, archivePrefix string) bool {
-	switch {
-	// skip archive files
-	case strings.HasPrefix(f.Name(), archivePrefix):
-		return false
-	// skip hidden files
-	case strings.HasPrefix(f.Name(), "."):
-		return false
-	// skip directories
-	case f.IsDir():
-		return false
-	default:
-		return true
-	}
 }
 
 func parseFileName(fileName string, format string) (time.Time, error) {

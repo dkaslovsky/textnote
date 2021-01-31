@@ -196,6 +196,11 @@ func ValidateOpts(opts Opts) error {
 		return errors.New("archive after days must be greater than or equal to 1")
 	}
 
+	// validate file extension does not contain leading dot
+	if strings.HasPrefix(opts.File.Ext, ".") {
+		return errors.New("file extension must not include leading dot")
+	}
+
 	// validate the file cursor line is not negative
 	if opts.File.CursorLine < 0 {
 		return errors.New("cursor line must not be negative")

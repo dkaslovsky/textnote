@@ -78,6 +78,27 @@ func TestValidateOpts(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("empty file extension should not error", func(t *testing.T) {
+		opts := getDefaultOpts()
+		opts.File.Ext = ""
+		err := ValidateOpts(opts)
+		require.NoError(t, err)
+	})
+
+	t.Run("file extension without dot should not error", func(t *testing.T) {
+		opts := getDefaultOpts()
+		opts.File.Ext = "txt"
+		err := ValidateOpts(opts)
+		require.NoError(t, err)
+	})
+
+	t.Run("file extension with leading dot should not error", func(t *testing.T) {
+		opts := getDefaultOpts()
+		opts.File.Ext = ".txt"
+		err := ValidateOpts(opts)
+		require.Error(t, err)
+	})
+
 	t.Run("file cursor line is negative", func(t *testing.T) {
 		opts := getDefaultOpts()
 		opts.File.CursorLine = -2
