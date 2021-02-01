@@ -10,13 +10,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var appName = "textnote"
-
 // Run executes the CLI
-func Run() error {
+func Run(name string, version string) error {
 	cmd := &cobra.Command{
-		Use:           appName,
-		Long:          fmt.Sprintf("Name:\n  %s - a simple tool for creating and organizing daily notes on the command line", appName),
+		Use:           name,
+		Long:          fmt.Sprintf("Name:\n  %s - a simple tool for creating and organizing daily notes on the command line", name),
+		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -34,7 +33,7 @@ func Run() error {
 	defaultHelpFunc := cmd.HelpFunc()
 	cmd.SetHelpFunc(func(cmd *cobra.Command, s []string) {
 		defaultHelpFunc(cmd, s)
-		if cmd.Name() != appName {
+		if cmd.Name() != name {
 			return
 		}
 		if description := config.DescribeEnvVars(); description != "" {

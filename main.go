@@ -7,13 +7,18 @@ import (
 	"github.com/dkaslovsky/textnote/pkg/config"
 )
 
+const (
+	appName    = "textnote"
+	appVersion = "undefined"
+)
+
 func main() {
 	err := config.EnsureAppDir()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = cmd.Run()
+	err = cmd.Run(appName, appVersion)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	envAppDir      = "TEXTNOTE_DIR"
-	configFileName = ".config.yml"
+	envAppDir = "TEXTNOTE_DIR"
+	fileName  = ".config.yml"
 )
 
 // AppDir is the directory in which the application stores its files
@@ -119,7 +119,7 @@ func LoadOrCreate() (Opts, error) {
 	}
 
 	// write config file using defaults if it dies not exist
-	configPath := filepath.Join(AppDir, configFileName)
+	configPath := filepath.Join(AppDir, fileName)
 	_, err = os.Stat(configPath)
 	if os.IsNotExist(err) {
 		defaults := getDefaultOpts()
@@ -142,7 +142,7 @@ func LoadOrCreate() (Opts, error) {
 
 	err = ValidateOpts(opts)
 	if err != nil {
-		return opts, errors.Wrapf(err, "configuration error in [%s]", configFileName)
+		return opts, errors.Wrapf(err, "configuration error in [%s]", fileName)
 	}
 
 	return opts, nil
