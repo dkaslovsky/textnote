@@ -162,18 +162,22 @@ func (t *Template) getSection(name string) (*section, error) {
 	return t.sections[idx], nil
 }
 
-// IsTemplateFile evaluates if a file name matches the convention for a template file
-func IsTemplateFile(fileName string, opts config.FileOpts) bool {
+// ParseTemplateFileName extracts a time.Time from a file name and returns an additional
+// bool indicating if name corresponds to a valid template file name
+func ParseTemplateFileName(fileName string, opts config.FileOpts) (t time.Time, ok bool) {
+	// ensure extension matches template file name convention
 	ext := filepath.Ext(fileName)
 	if ext == "." {
-		return false
+		return t, false
 	}
 	if strings.TrimPrefix(ext, ".") != opts.Ext {
-		return false
+		return t, false
 	}
+
 	baseName := strings.TrimSuffix(fileName, ext)
-	if _, err := time.Parse(opts.TimeFormat, baseName); err != nil {
-		return false
+	t, err := time.Parse(opts.TimeFormat, baseName)
+	if err != nil {
+		return t, false
 	}
-	return true
+	return t, true
 }

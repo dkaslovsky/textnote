@@ -58,11 +58,14 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 		if f.IsDir() {
 			continue
 		}
-		if !template.IsTemplateFile(f.Name(), templateOpts.File) {
+
+		// parse date from template file name, skipping non-template files
+		templateDate, ok := template.ParseTemplateFileName(f.Name(), templateOpts.File)
+		if !ok {
 			continue
 		}
 
-		err := archiver.Add(f.Name())
+		err := archiver.Add(templateDate)
 		if err != nil {
 			log.Printf("skipping unarchivable file [%s]: %s", f.Name(), err)
 			continue

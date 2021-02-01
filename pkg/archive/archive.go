@@ -2,8 +2,6 @@ package archive
 
 import (
 	"log"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
@@ -33,41 +31,29 @@ func NewArchiver(opts config.Opts, rw readWriter, date time.Time) *Archiver {
 	}
 }
 
-// readWriter is the interface for executing file operations
-type readWriter interface {
-	Read(file.ReadWriteable) error
-	Overwrite(file.ReadWriteable) error
-	Exists(file.ReadWriteable) bool
-}
-
-// Add adds a file to the archive
-func (a *Archiver) Add(fileName string) error {
-	fileDate, err := parseFileName(fileName, a.opts.File.TimeFormat)
-	if err != nil {
-		errors.Wrapf(err, "cannot add unparsable file name [%s] to archive", fileName)
-	}
-
+// Add adds a template corresponding to a date to the archive
+func (a *Archiver) Add(date time.Time) error {
 	// recent files are not archived
-	if a.date.Sub(fileDate).Hours() <= float64(a.opts.Archive.AfterDays*24) {
+	if a.date.Sub(date).Hours() <= float64(a.opts.Archive.AfterDays*24) {
 		return nil
 	}
 
-	t := template.NewTemplate(a.opts, fileDate)
-	err = a.rw.Read(t)
+	t := template.NewTemplate(a.opts, date)
+	err := a.rw.Read(t)
 	if err != nil {
-		return errors.Wrapf(err, "cannot add unreadable file [%s] to archive", fileName)
+		return errors.Wrapf(err, "cannot add unreadable file [%s] to archive", t.GetFilePath())
 	}
 
-	monthKey := fileDate.Format(a.opts.Archive.MonthTimeFormat)
+	monthKey := date.Format(a.opts.Archive.MonthTimeFormat)
 	if _, found := a.Months[monthKey]; !found {
-		a.Months[monthKey] = template.NewMonthArchiveTemplate(a.opts, fileDate)
+		a.Months[monthKey] = template.NewMonthArchiveTemplate(a.opts, date)
 	}
 
 	archive := a.Months[monthKey]
 	for _, section := range a.opts.Section.Names {
 		err := archive.ArchiveSectionContents(t, section)
 		if err != nil {
-			return errors.Wrapf(err, "cannot add contents from [%s] to archive", fileName)
+			return errors.Wrapf(err, "cannot add contents from [%s] to archive", t.GetFilePath())
 		}
 	}
 	return nil
@@ -97,7 +83,9 @@ func (a *Archiver) Write() error {
 	return nil
 }
 
-func parseFileName(fileName string, format string) (time.Time, error) {
-	name := strings.TrimSuffix(fileName, filepath.Ext(fileName))
-	return time.Parse(format, name)
+// readWriter is the interface for executing file operations
+type readWriter interface {
+	Read(file.ReadWriteable) error
+	Overwrite(file.ReadWriteable) error
+	Exists(file.ReadWriteable) bool
 }

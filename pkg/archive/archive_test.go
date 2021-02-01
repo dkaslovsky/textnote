@@ -56,7 +56,7 @@ func (trw *testReadWriter) Exists(rwable file.ReadWriteable) bool {
 
 func TestAdd(t *testing.T) {
 	type testCase struct {
-		fileName     string
+		date         time.Time
 		templateText string
 		existing     map[string]string
 		expected     map[string]string
@@ -64,15 +64,15 @@ func TestAdd(t *testing.T) {
 
 	tests := map[string]testCase{
 		"add template that should not be archived": {
-			fileName: "2020-12-20.txt",
+			date:     time.Date(2020, 12, 20, 0, 0, 0, 0, time.UTC),
 			expected: map[string]string{},
 		},
 		"add template from last day that should not be archived": {
-			fileName: "2020-12-14.txt",
+			date:     time.Date(2020, 12, 14, 0, 0, 0, 0, time.UTC),
 			expected: map[string]string{},
 		},
 		"add template from first day that should be archived": {
-			fileName: "2020-12-13.txt",
+			date: time.Date(2020, 12, 13, 0, 0, 0, 0, time.UTC),
 			templateText: `-^-[Sun] 13 Dec 2020-v-
 
 _p_TestSection1_q_
@@ -112,7 +112,7 @@ _p_TestSection3_q_
 			},
 		},
 		"add template from current month": {
-			fileName: "2020-12-01.txt",
+			date: time.Date(2020, 12, 1, 0, 0, 0, 0, time.UTC),
 			templateText: `-^-[Tue] 01 Dec 2020-v-
 
 _p_TestSection1_q_
@@ -152,7 +152,7 @@ _p_TestSection3_q_
 			},
 		},
 		"add template from different month": {
-			fileName: "2020-11-01.txt",
+			date: time.Date(2020, 11, 1, 0, 0, 0, 0, time.UTC),
 			templateText: `-^-[Sun] 01 Nov 2020-v-
 
 _p_TestSection1_q_
@@ -192,7 +192,7 @@ _p_TestSection3_q_
 			},
 		},
 		"add template from different year": {
-			fileName: "2019-11-02.txt",
+			date: time.Date(2019, 11, 2, 0, 0, 0, 0, time.UTC),
 			templateText: `-^-[Sat] 02 Nov 2019-v-
 
 _p_TestSection1_q_
@@ -232,7 +232,7 @@ _p_TestSection3_q_
 			},
 		},
 		"add template with earlier date to existing archive": {
-			fileName: "2020-12-01.txt",
+			date: time.Date(2020, 12, 1, 0, 0, 0, 0, time.UTC),
 			templateText: `-^-[Tue] 01 Dec 2020-v-
 
 _p_TestSection1_q_
@@ -295,7 +295,7 @@ _p_TestSection3_q_
 			},
 		},
 		"add template with later date to existing archive": {
-			fileName: "2020-12-02.txt",
+			date: time.Date(2020, 12, 2, 0, 0, 0, 0, time.UTC),
 			templateText: `-^-[Wed] 02 Dec 2020-v-
 
 _p_TestSection1_q_
@@ -365,17 +365,17 @@ _p_TestSection3_q_
 			trw := newTestReadWriter(true, test.templateText)
 			a := NewArchiver(opts, trw, templatetest.Date)
 			for key, text := range test.existing {
-				date, err := parseFileName(key, opts.Archive.MonthTimeFormat)
+				existingDate, err := time.Parse(opts.Archive.MonthTimeFormat, key)
 				require.NoError(t, err)
 
-				m := template.NewMonthArchiveTemplate(opts, date)
+				m := template.NewMonthArchiveTemplate(opts, existingDate)
 				err = m.Load(strings.NewReader(text))
 				require.NoError(t, err)
 
 				a.Months[key] = m
 			}
 
-			err := a.Add(test.fileName)
+			err := a.Add(test.date)
 			require.NoError(t, err)
 
 			require.Equal(t, len(test.expected), len(a.Months))
@@ -595,52 +595,6 @@ existingText3b
 			err = a.Write()
 			require.NoError(t, err)
 			require.Equal(t, test.expected, trw.written)
-		})
-	}
-}
-
-func TestParseFileName(t *testing.T) {
-	type testCase struct {
-		fileName  string
-		shouldErr bool
-		expected  time.Time
-	}
-
-	tests := map[string]testCase{
-		"parsable file name with extension": {
-			fileName:  "2020-12-29.txt",
-			shouldErr: false,
-			expected:  time.Date(2020, 12, 29, 0, 0, 0, 0, time.UTC),
-		},
-		"parsable file name with empty extension": {
-			fileName:  "2020-12-29.",
-			shouldErr: false,
-			expected:  time.Date(2020, 12, 29, 0, 0, 0, 0, time.UTC),
-		},
-		"parsable file name without extension": {
-			fileName:  "2020-12-29",
-			shouldErr: false,
-			expected:  time.Date(2020, 12, 29, 0, 0, 0, 0, time.UTC),
-		},
-		"non-parsable file name with extension": {
-			fileName:  "20201229.txt",
-			shouldErr: true,
-		},
-		"non-parsable file name with empty extension": {
-			fileName:  "20201229.",
-			shouldErr: true,
-		},
-		"non-parsable file name without extension": {
-			fileName:  "20201229",
-			shouldErr: true,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			date, err := parseFileName(test.fileName, "2006-01-02")
-			require.Equal(t, test.shouldErr, err != nil)
-			require.Equal(t, test.expected, date)
 		})
 	}
 }

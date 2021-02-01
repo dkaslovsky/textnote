@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/dkaslovsky/textnote/pkg/template/templatetest"
@@ -712,11 +713,12 @@ text
 	}
 }
 
-func TestIsTemplateFile(t *testing.T) {
+func TestParseTemplateFileName(t *testing.T) {
 	type testCase struct {
-		fileName string
-		opts     config.FileOpts
-		expected bool
+		fileName     string
+		opts         config.FileOpts
+		expectedTime time.Time
+		expectedOk   bool
 	}
 
 	tests := map[string]testCase{
@@ -726,7 +728,8 @@ func TestIsTemplateFile(t *testing.T) {
 				Ext:        "txt",
 				TimeFormat: "2006-01-02",
 			},
-			expected: true,
+			expectedTime: time.Date(2020, 12, 29, 0, 0, 0, 0, time.UTC),
+			expectedOk:   true,
 		},
 		"parsable file name with no extension": {
 			fileName: "2020-12-29",
@@ -734,23 +737,24 @@ func TestIsTemplateFile(t *testing.T) {
 				Ext:        "",
 				TimeFormat: "2006-01-02",
 			},
-			expected: true,
+			expectedTime: time.Date(2020, 12, 29, 0, 0, 0, 0, time.UTC),
+			expectedOk:   true,
 		},
 		"unparsable file name with extension": {
-			fileName: "2020-Dec-29.txt",
+			fileName: "2020Dec29.txt",
 			opts: config.FileOpts{
 				Ext:        "txt",
 				TimeFormat: "2006-01-02",
 			},
-			expected: false,
+			expectedOk: false,
 		},
 		"unparsable file name with no extension": {
-			fileName: "2020-Dec-29",
+			fileName: "2020Dec29",
 			opts: config.FileOpts{
 				Ext:        "",
 				TimeFormat: "2006-01-02",
 			},
-			expected: false,
+			expectedOk: false,
 		},
 		"parsable file name with mismatched extension": {
 			fileName: "2020-12-29.foo",
@@ -758,7 +762,7 @@ func TestIsTemplateFile(t *testing.T) {
 				Ext:        "txt",
 				TimeFormat: "2006-01-02",
 			},
-			expected: false,
+			expectedOk: false,
 		},
 		"parsable file name with malformed extension and populated config ext": {
 			fileName: "2020-12-29.",
@@ -766,7 +770,7 @@ func TestIsTemplateFile(t *testing.T) {
 				Ext:        "txt",
 				TimeFormat: "2006-01-02",
 			},
-			expected: false,
+			expectedOk: false,
 		},
 		"parsable file name with malformed extension and unpopulated config ext": {
 			fileName: "2020-12-29.",
@@ -774,13 +778,33 @@ func TestIsTemplateFile(t *testing.T) {
 				Ext:        "",
 				TimeFormat: "2006-01-02",
 			},
-			expected: false,
+			expectedOk: false,
+		},
+		"parsable file name with archive prefix": {
+			fileName: "archive-2020-12-29.txt",
+			opts: config.FileOpts{
+				Ext:        "txt",
+				TimeFormat: "2006-01-02",
+			},
+			expectedOk: false,
+		},
+		"archive file name convention": {
+			fileName: "archive-Dec2020.txt",
+			opts: config.FileOpts{
+				Ext:        "txt",
+				TimeFormat: "2006-01-02",
+			},
+			expectedOk: false,
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, test.expected, IsTemplateFile(test.fileName, test.opts))
+			parsedTime, ok := ParseTemplateFileName(test.fileName, test.opts)
+			require.Equal(t, test.expectedOk, ok)
+			if test.expectedOk {
+				require.Equal(t, test.expectedTime, parsedTime)
+			}
 		})
 	}
 }
