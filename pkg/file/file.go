@@ -61,6 +61,8 @@ type Openable interface {
 }
 
 // OpenInVim opens a template in Vim
+// Recommended to use Go >= v.1.15.7 due to call to exec.Command()
+// See: https://blog.golang.org/path-security
 func OpenInVim(o Openable) error {
 	lineArg := fmt.Sprintf("+%d", o.GetFileCursorLine())
 	cmd := exec.Command("vim", lineArg, o.GetFilePath())
