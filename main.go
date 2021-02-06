@@ -7,10 +7,9 @@ import (
 	"github.com/dkaslovsky/textnote/pkg/config"
 )
 
-const (
-	appName    = "textnote"
-	appVersion = "undefined"
-)
+const name = "textnote"
+
+var version string // set by build ldflags
 
 func main() {
 	err := config.EnsureAppDir()
@@ -18,7 +17,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = cmd.Run(appName, appVersion)
+	err = cmd.Run(name, version)
 	if err != nil {
 		log.Fatal(err)
 	}

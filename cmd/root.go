@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-
-	"github.com/dkaslovsky/textnote/cmd/open"
+	"strings"
 
 	"github.com/dkaslovsky/textnote/cmd/archive"
+	"github.com/dkaslovsky/textnote/cmd/open"
 	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,6 @@ func Run(name string, version string) error {
 	cmd := &cobra.Command{
 		Use:           name,
 		Long:          fmt.Sprintf("Name:\n  %s - a simple tool for creating and organizing daily notes on the command line", name),
-		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -29,6 +28,25 @@ func Run(name string, version string) error {
 		archive.CreateArchiveCmd(),
 	)
 
+	setVersion(cmd, version)
+	setHelp(cmd, name)
+
+	return cmd.Execute()
+}
+
+func setVersion(cmd *cobra.Command, version string) {
+	if version != "" {
+		cmd.Version = version
+		return
+	}
+
+	cmd.Version = "unavailable"
+	cmd.SetVersionTemplate(
+		fmt.Sprintf("%s: built from source", strings.TrimSuffix(cmd.VersionTemplate(), "\n")),
+	)
+}
+
+func setHelp(cmd *cobra.Command, name string) {
 	// set custom help message for the root command
 	defaultHelpFunc := cmd.HelpFunc()
 	cmd.SetHelpFunc(func(cmd *cobra.Command, s []string) {
@@ -40,6 +58,4 @@ func Run(name string, version string) error {
 			fmt.Printf("\nOverride configuration using environment variables:%s", description)
 		}
 	})
-
-	return cmd.Execute()
 }
