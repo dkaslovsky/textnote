@@ -24,8 +24,8 @@ func CreateArchiveCmd() *cobra.Command {
 	cmdOpts := commandOptions{}
 	cmd := &cobra.Command{
 		Use:   "archive",
-		Short: "organize an archive of notes",
-		Long:  "organize notes into time-based archive groups",
+		Short: "consolidate notes into archive files",
+		Long:  "consolidate notes into monthly archive files",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts, err := config.LoadOrCreate()
 			if err != nil {
