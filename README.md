@@ -32,11 +32,34 @@ $ textnote
 That's it! The directory specified by `TEXTNOTE_DIR` and the default configuration file will be automatically created.
 
 ## Installation
-textnote can be installed using Go's built-in tooling:
+### Releases
+The recommended installation method is downloading the latest released binary for your operating system.
+Download the appropriate binary from this repository's [releases](https://github.com/dkaslovsky/build-test/releases/latest) page or via `curl`:
+
+macOS
+```
+$ curl -OL https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_darwin_amd64
+```
+
+Linux
+```
+$ curl -OL https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_linux_amd64
+```
+
+Windows
+```
+$ curl -OL https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_windows_amd64
+```
+
+### Installing from source
+
+textnote can also be installed using Go's built-in tooling:
 ```
 $ go get -u github.com/dkaslovsky/textnote
 ```
-Build from source by cloning this repository and running `go build`
+Build from source by cloning this repository and running `go build`.
+
+It is recommended to build using Go 1.15.7 or greater to avoid a potential security issue when looking for the desired editor in the `$PATH` ([details](https://blog.golang.org/path-security)).
 
 ## Usage
 textnote is intentionally simple to use and supports two commands: `open` for creating/opening notes and `archive` for consolidating notes into monthly archive files.
@@ -173,7 +196,7 @@ The flag options are summarized by the command's help:
 ```
 $ textnote archive -h
 
-organize notes into time-based archive groups
+consolidate notes into monthly archive files
 
 Usage:
   textnote archive [flags]
