@@ -10,7 +10,7 @@ go:
 
 branches:
   except:
-  - /^(?i:dev)-.*$/
+  - /^(?i:dev)\/.*$/
 
 before_install:
   - go get github.com/modocache/gover
