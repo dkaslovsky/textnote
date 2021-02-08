@@ -34,7 +34,7 @@ That's it! The directory specified by `TEXTNOTE_DIR` and the default configurati
 ## Installation
 ### Releases
 The recommended installation method is downloading the latest released binary for your operating system.
-Download the appropriate binary from this repository's [releases](https://github.com/dkaslovsky/build-test/releases/latest) page or via `curl`:
+Download the appropriate binary from this repository's [releases](https://github.com/dkaslovsky/textnote/releases/latest) page or via `curl`:
 
 macOS
 ```
