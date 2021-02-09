@@ -89,36 +89,42 @@ ___NOTES___
 
 
 ```
-To open a note for a specific date other than the current day, specify the date with the `-d` flag:
+To open a note for a specific date other than the current day, specify the date with the `--date` flag:
 ```
-$ textnote open -d 2020-12-22
+$ textnote open --date 2020-12-22
 ```
-where the date format is specified in the configuration or by passing a Golang time format through the `-f` flag:
+where the date format is specified in the configuration.
+
+Alternatively, a note can be opened by specifying by the number of days prior to the current day using the `-d` flag. For example,
 ```
-$ textnote open -d "Dec 12 2020" -f "Jan 02 2006"
+$ textnote open -d 1
 ```
-For convenience, yesterday's note can be opened by passing the `-y` flag:
-```
-$ textnote open -y
-```
+opens yesterday's note.
 
 Sections from previous notes can be copied or moved into a current note.
-Each section to be copied is specified in separate `-s` flags.
-The previous day's note is used as the source by default and a specified date for a source note can be provided through the `-c` flag.
+Each section to be copied is specified in a separate `-s` flag.
+The previous day's note is used as the source by default and a specified date for a source note can be provided through the `--copy` flag.
 For example,
 ```
 $ textnote open -s TODO -s NOTES
 ```
 will create today's note with the "TODO" and "NOTES" sections copied from yesterday's note, while
 ```
-$ textnote open -c 2021-01-17 -s NOTES
+$ textnote open --copy 2021-01-17 -s TODO
 ```
-creates today's note with the "NOTES" section copied from the 2021-01-17 note.
+creates today's note with the "TODO" section copied from the 2021-01-17 note.
+The date format is again specified in the configuration.
+Use the `-c` flag to instead specify a source relative to the current day.
+For example,
+```
+$ textnote open -c 3 -s TODO
+```
+creates today's note with the "TODO" section copied from 3 days ago.
 
 To move instead of copy, add the `-x` flag to any copy command.
 For example,
 ```
-$ textnote open -c 2021-01-17 -s NOTES -x
+$ textnote open --copy 2021-01-17 -s NOTES -x
 ```
 moves the "NOTES" section contents from the 2021-01-17 note into the note for today.
 
@@ -132,13 +138,13 @@ Usage:
   textnote open [flags]
 
 Flags:
-  -c, --copyDate string   date of note for copying sections (defaults to yesterday)
-  -d, --date string       date for note to be opened (defaults to today)
+      --copy string       date of note for copying sections (defaults to yesterday)
+  -c, --copy-back uint    number of days back from today for copying from a note (ignored if copy flag is used)
+      --date string       date for note to be opened (defaults to today)
+  -d, --days-back uint    number of days back from today for opening a note (ignored if date flag is used)
   -x, --delete            delete sections after copy
-  -f, --format string     override for time format to parse date flags specified in configuration
   -h, --help              help for open
-  -s, --section strings   section to copy
-  -y, --yesterday         use yesterday's date for note (ignored if date is specified)
+  -s, --section strings   section to copy (defaults to none)
 ```
 
 
