@@ -7,13 +7,13 @@ Simple tool for creating and organizing daily notes on the command line
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dkaslovsky/textnote/blob/main/LICENSE)
 
 ## Overview
-textnote is a command line tool for quickly creating and managing dated, plain text notes.
-It is designed for ease of use in order to encourage the practice of daily, organized note taking.
+textnote is a command line tool for quickly creating and managing daily plain text notes.
+It is designed for ease of use to encourage the practice of daily, organized note taking.
 textnote intentionally facilitates only the management (creation, opening, organizing, and consolidated archiving) of notes, following the philosophy that notes are best written in a text editor and not via a CLI.
 
 Key features:
 - Configurable, sectioned note template
-- Easily bring content forward to the next day's note (for those to-dos that didn't quite get done...)
+- Easily bring content forward to the next day's note (for those to-dos that didn't quite get done today...)
 - Simple command to consolidate daily notes into monthly archive files
 - Create and open today's note with the default `textnote` command
 
@@ -29,7 +29,9 @@ Currently, Vim is the only supported text editor.
 ```
 $ textnote
 ```
-That's it! The directory specified by `TEXTNOTE_DIR` and the default configuration file will be automatically created.
+4. That's it!
+
+The directory specified by `TEXTNOTE_DIR` and the default configuration file will be automatically created.
 
 ## Installation
 ### Releases
@@ -65,7 +67,7 @@ It is recommended to build using Go 1.15.7 or greater to avoid a potential secur
 textnote is intentionally simple to use and supports two commands: `open` for creating/opening notes and `archive` for consolidating notes into monthly archive files.
 
 ### **open**
-The `open` command will open a specified note in an editor, creating it first if it does not exist.
+The `open` command will open a dated note in an editor, creating it first if it does not exist.
 
 Opening or creating a note for the current day is the default action.
 Simply run the root command to open or create a note for the current day:
@@ -95,7 +97,7 @@ $ textnote open --date 2020-12-22
 ```
 where the date format is specified in the configuration.
 
-Alternatively, a note can be opened by specifying by the number of days prior to the current day using the `-d` flag. For example,
+Alternatively, a note can be opened by passing the number of days prior to the current day using the `-d` flag. For example,
 ```
 $ textnote open -d 1
 ```
@@ -103,7 +105,7 @@ opens yesterday's note.
 
 Sections from previous notes can be copied or moved into a current note.
 Each section to be copied is specified in a separate `-s` flag.
-The previous day's note is used as the source by default and a specified date for a source note can be provided through the `--copy` flag.
+The previous day's note is used as the source by default and a specific date for a source note can be provided through the `--copy` flag.
 For example,
 ```
 $ textnote open -s TODO -s NOTES
@@ -113,8 +115,7 @@ will create today's note with the "TODO" and "NOTES" sections copied from yester
 $ textnote open --copy 2021-01-17 -s TODO
 ```
 creates today's note with the "TODO" section copied from the 2021-01-17 note.
-The date format is again specified in the configuration.
-Use the `-c` flag to instead specify a source relative to the current day.
+Use the `-c` flag to instead specify the source by the number of days back from the current day.
 For example,
 ```
 $ textnote open -c 3 -s TODO
@@ -127,6 +128,8 @@ For example,
 $ textnote open --copy 2021-01-17 -s NOTES -x
 ```
 moves the "NOTES" section contents from the 2021-01-17 note into the note for today.
+
+The `--date` and `--copy` (or `-d` and `-c`) flags can be used in combination if such a workflow is desired.
 
 The flag options are summarized by the command's help:
 ```
@@ -185,9 +188,9 @@ ___NOTES___
 
 
 ```
-with ellipses representing the notes' contents.
+with ellipses representing the daily notes' contents.
 
-By default, the `archive` command is non-destructive: it will create archive files and leave all archived notes in place.
+By default, the `archive` command is non-destructive: it will create archive files and leave all notes in place.
 To delete the individual note files and retain only the generated archives, run the command with the `-x` flag:
 ```
 $ textnote archive -x
@@ -216,6 +219,8 @@ Flags:
 ## Configuration
 While textnote is intended to be extremely lightweight, it is also designed to be highly configurable.
 In particular, the template (sections, headers, date formats, and whitespace) for generating notes can be customized as desired.
+One might wish to configure headers and section titles for markdown compatibility or change date formats to match regional convention.
+
 Configuration is read from the `$TEXTNOTE_DIR/.config.yml` file and individual configuration parameters can be overridden with [environment variables](#environment-variable-overrides).
 
 ### Defaults
