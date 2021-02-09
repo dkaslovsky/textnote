@@ -16,8 +16,10 @@ type Archiver struct {
 	rw   readWriter
 	date time.Time // timestamp for calculating if a file is old enough to be archived
 
-	// archive templates by month keyed by formatted month timestamp
-	Months map[string]*template.MonthArchiveTemplate
+	// monthArchives maintains a map of formatted month timestamp to the corresponding archive
+	monthArchives map[string]*template.MonthArchiveTemplate
+	// archivedFiles maintains the file names that have been archived
+	archivedFiles []string
 }
 
 // NewArchiver constructs a new Archiver
@@ -27,7 +29,8 @@ func NewArchiver(opts config.Opts, rw readWriter, date time.Time) *Archiver {
 		rw:   rw,
 		date: date,
 
-		Months: map[string]*template.MonthArchiveTemplate{},
+		monthArchives: map[string]*template.MonthArchiveTemplate{},
+		archivedFiles: []string{},
 	}
 }
 
@@ -45,23 +48,25 @@ func (a *Archiver) Add(date time.Time) error {
 	}
 
 	monthKey := date.Format(a.opts.Archive.MonthTimeFormat)
-	if _, found := a.Months[monthKey]; !found {
-		a.Months[monthKey] = template.NewMonthArchiveTemplate(a.opts, date)
+	if _, found := a.monthArchives[monthKey]; !found {
+		a.monthArchives[monthKey] = template.NewMonthArchiveTemplate(a.opts, date)
 	}
 
-	archive := a.Months[monthKey]
+	archive := a.monthArchives[monthKey]
 	for _, section := range a.opts.Section.Names {
 		err := archive.ArchiveSectionContents(t, section)
 		if err != nil {
 			return errors.Wrapf(err, "cannot add contents from [%s] to archive", t.GetFilePath())
 		}
 	}
+
+	a.archivedFiles = append(a.archivedFiles, t.GetFilePath())
 	return nil
 }
 
 // Write writes all of the archive templates stored in the Archiver
 func (a *Archiver) Write() error {
-	for _, t := range a.Months {
+	for _, t := range a.monthArchives {
 		if a.rw.Exists(t) {
 			existing := template.NewMonthArchiveTemplate(a.opts, t.GetDate())
 			err := a.rw.Read(existing)
@@ -81,6 +86,11 @@ func (a *Archiver) Write() error {
 		log.Printf("wrote archive file [%s]", t.GetFilePath())
 	}
 	return nil
+}
+
+// GetArchivedFiles returns the files that have been archived
+func (a *Archiver) GetArchivedFiles() []string {
+	return a.archivedFiles
 }
 
 // readWriter is the interface for executing file operations

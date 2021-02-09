@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/dkaslovsky/textnote/pkg/archive"
@@ -45,7 +44,6 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 }
 
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
-	archived := []string{}
 	archiver := archive.NewArchiver(templateOpts, file.NewReadWriter(), time.Now())
 
 	files, err := ioutil.ReadDir(config.AppDir)
@@ -70,8 +68,6 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 			log.Printf("skipping unarchivable file [%s]: %s", f.Name(), err)
 			continue
 		}
-
-		archived = append(archived, f.Name())
 	}
 
 	// write archive files
@@ -88,10 +84,10 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	}
 
 	// delete individual archived files
-	for _, f := range archived {
-		err = os.Remove(filepath.Join(config.AppDir, f))
+	for _, fileName := range archiver.GetArchivedFiles() {
+		err = os.Remove(fileName)
 		if err != nil {
-			log.Printf("unable to remove file [%s]: %s", f, err)
+			log.Printf("unable to remove file [%s]: %s", fileName, err)
 			continue
 		}
 	}

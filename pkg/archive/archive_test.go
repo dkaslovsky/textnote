@@ -372,16 +372,16 @@ _p_TestSection3_q_
 				err = m.Load(strings.NewReader(text))
 				require.NoError(t, err)
 
-				a.Months[key] = m
+				a.monthArchives[key] = m
 			}
 
 			err := a.Add(test.date)
 			require.NoError(t, err)
 
-			require.Equal(t, len(test.expected), len(a.Months))
+			require.Equal(t, len(test.expected), len(a.monthArchives))
 			for key, expectedText := range test.expected {
 				buf := new(bytes.Buffer)
-				monthArchive, found := a.Months[key]
+				monthArchive, found := a.monthArchives[key]
 				require.True(t, found)
 				err := monthArchive.Write(buf)
 				require.NoError(t, err)
@@ -590,7 +590,7 @@ existingText3b
 
 			trw := newTestReadWriter(test.exists, test.existingText)
 			a := NewArchiver(opts, trw, date)
-			a.Months[key] = template
+			a.monthArchives[key] = template
 
 			err = a.Write()
 			require.NoError(t, err)
