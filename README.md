@@ -291,3 +291,7 @@ The full list of environment variables is listed below and is always available b
   TEXTNOTE_CLI_TIME_FORMAT string
     	formatting string for timestamp CLI flags
 ```
+
+## License
+textnote is released under the [MIT License](https://github.com/dkaslovsky/textnote/blob/main/LICENSE).
+Dependency licenses are available in this repository's [CREDITS](./CREDITS) file.
