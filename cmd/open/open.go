@@ -12,12 +12,12 @@ import (
 )
 
 type commandOptions struct {
-	format    string
-	date      string
-	yesterday bool
-	copyDate  string
-	sections  []string
-	delete    bool
+	date         string
+	copyDate     string
+	daysBack     uint
+	copyDaysBack uint
+	sections     []string
+	delete       bool
 }
 
 // CreateOpenCmd creates the open subcommand
@@ -42,33 +42,37 @@ func CreateOpenCmd() *cobra.Command {
 
 func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags := cmd.Flags()
-	flags.StringVarP(&cmdOpts.format, "format", "f", "", "override for time format to parse date flags specified in configuration")
-	flags.StringVarP(&cmdOpts.date, "date", "d", "", "date for note to be opened (defaults to today)")
-	flags.BoolVarP(&cmdOpts.yesterday, "yesterday", "y", false, "use yesterday's date for note (ignored if date is specified)")
-	flags.StringVarP(&cmdOpts.copyDate, "copyDate", "c", "", "date of note for copying sections (defaults to yesterday)")
-	flags.StringSliceVarP(&cmdOpts.sections, "section", "s", []string{}, "section to copy")
+	flags.StringVar(&cmdOpts.date, "date", "", "date for note to be opened (defaults to today)")
+	flags.StringVar(&cmdOpts.copyDate, "copy", "", "date of note for copying sections (defaults to yesterday)")
+	flags.UintVarP(&cmdOpts.daysBack, "days-back", "d", 0, "number of days back from today for opening a note (ignored if date flag is used)")
+	flags.UintVarP(&cmdOpts.copyDaysBack, "copy-back", "c", 0, "number of days back from today for copying from a note (ignored if copy flag is used)")
+	flags.StringSliceVarP(&cmdOpts.sections, "section", "s", []string{}, "section to copy (defaults to none)")
 	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete sections after copy")
 }
 
 func applyDefaults(templateOpts config.Opts, cmdOpts *commandOptions) {
+	const day = 24 * time.Hour
 	now := time.Now()
-	if cmdOpts.format == "" {
-		cmdOpts.format = templateOpts.Cli.TimeFormat
-	}
 	if cmdOpts.date == "" {
-		if cmdOpts.yesterday {
-			cmdOpts.date = now.Add(-24 * time.Hour).Format(cmdOpts.format)
+		if cmdOpts.daysBack == 0 {
+			// default is today
+			cmdOpts.date = now.Format(templateOpts.Cli.TimeFormat)
 		} else {
-			cmdOpts.date = now.Format(cmdOpts.format)
+			cmdOpts.date = now.Add(-day * time.Duration(cmdOpts.daysBack)).Format(templateOpts.Cli.TimeFormat)
 		}
 	}
 	if cmdOpts.copyDate == "" {
-		cmdOpts.copyDate = now.Add(-24 * time.Hour).Format(cmdOpts.format)
+		if cmdOpts.copyDaysBack == 0 {
+			// default is yesterday
+			cmdOpts.copyDate = now.Add(-day).Format(templateOpts.Cli.TimeFormat)
+		} else {
+			cmdOpts.copyDate = now.Add(-day * time.Duration(cmdOpts.copyDaysBack)).Format(templateOpts.Cli.TimeFormat)
+		}
 	}
 }
 
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
-	date, err := time.Parse(cmdOpts.format, cmdOpts.date)
+	date, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.date)
 	if err != nil {
 		return errors.Wrapf(err, "cannot create note for malformed date [%s]", cmdOpts.date)
 	}
@@ -88,7 +92,7 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	}
 
 	// load source for copy
-	copyDate, err := time.Parse(cmdOpts.format, cmdOpts.copyDate)
+	copyDate, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.copyDate)
 	if err != nil {
 		return errors.Wrapf(err, "cannot copy note from malformed date [%s]", cmdOpts.copyDate)
 	}
