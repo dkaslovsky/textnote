@@ -16,6 +16,7 @@ type commandOptions struct {
 	copyDate     string
 	daysBack     uint
 	copyDaysBack uint
+	tomorrow     bool
 	sections     []string
 	delete       bool
 }
@@ -44,8 +45,9 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags := cmd.Flags()
 	flags.StringVar(&cmdOpts.date, "date", "", "date for note to be opened (defaults to today)")
 	flags.StringVar(&cmdOpts.copyDate, "copy", "", "date of note for copying sections (defaults to yesterday)")
-	flags.UintVarP(&cmdOpts.daysBack, "days-back", "d", 0, "number of days back from today for opening a note (ignored if date flag is used)")
+	flags.UintVarP(&cmdOpts.daysBack, "days-back", "d", 0, "number of days back from today for opening a note (ignored if date or tomorrow flags are used)")
 	flags.UintVarP(&cmdOpts.copyDaysBack, "copy-back", "c", 0, "number of days back from today for copying from a note (ignored if copy flag is used)")
+	flags.BoolVarP(&cmdOpts.tomorrow, "tomorrow", "t", false, "specify tomorrow as the date for note to be opened (ignored if date flag is used)")
 	flags.StringSliceVarP(&cmdOpts.sections, "section", "s", []string{}, "section to copy (defaults to none)")
 	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete sections after copy")
 }
@@ -53,20 +55,30 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 func applyDefaults(templateOpts config.Opts, cmdOpts *commandOptions) {
 	const day = 24 * time.Hour
 	now := time.Now()
+
 	if cmdOpts.date == "" {
-		if cmdOpts.daysBack == 0 {
+		if cmdOpts.tomorrow {
+			// set date as tomorrow
+			cmdOpts.date = now.Add(day).Format(templateOpts.Cli.TimeFormat)
+		} else if cmdOpts.daysBack != 0 {
+			// use daysBack if specified
+			cmdOpts.date = now.Add(-day * time.Duration(cmdOpts.daysBack)).Format(templateOpts.Cli.TimeFormat)
+		} else {
 			// default is today
 			cmdOpts.date = now.Format(templateOpts.Cli.TimeFormat)
-		} else {
-			cmdOpts.date = now.Add(-day * time.Duration(cmdOpts.daysBack)).Format(templateOpts.Cli.TimeFormat)
 		}
 	}
+
 	if cmdOpts.copyDate == "" {
-		if cmdOpts.copyDaysBack == 0 {
+		if cmdOpts.tomorrow {
+			// default to today if copying to tomorrow's note
+			cmdOpts.copyDate = now.Format(templateOpts.Cli.TimeFormat)
+		} else if cmdOpts.copyDaysBack != 0 {
+			// use copyDaysBack if specifed
+			cmdOpts.copyDate = now.Add(-day * time.Duration(cmdOpts.copyDaysBack)).Format(templateOpts.Cli.TimeFormat)
+		} else {
 			// default is yesterday
 			cmdOpts.copyDate = now.Add(-day).Format(templateOpts.Cli.TimeFormat)
-		} else {
-			cmdOpts.copyDate = now.Add(-day * time.Duration(cmdOpts.copyDaysBack)).Format(templateOpts.Cli.TimeFormat)
 		}
 	}
 }

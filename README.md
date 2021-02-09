@@ -131,6 +131,17 @@ moves the "NOTES" section contents from the 2021-01-17 note into the note for to
 
 The `--date` and `--copy` (or `-d` and `-c`) flags can be used in combination if such a workflow is desired.
 
+For convenience, the `-t` flag can be used to open tomorrow's note:
+```
+$ textnote open -t
+```
+in which case the copy source defaults to today.
+For example,
+```
+$ textnote open -t -s TODO
+```
+creates a note for tomorrow with a copy of today's "TODO" section contents.
+
 The flag options are summarized by the command's help:
 ```
 $ textnote open -h
@@ -144,10 +155,11 @@ Flags:
       --copy string       date of note for copying sections (defaults to yesterday)
   -c, --copy-back uint    number of days back from today for copying from a note (ignored if copy flag is used)
       --date string       date for note to be opened (defaults to today)
-  -d, --days-back uint    number of days back from today for opening a note (ignored if date flag is used)
+  -d, --days-back uint    number of days back from today for opening a note (ignored if date or tomorrow flags are used)
   -x, --delete            delete sections after copy
   -h, --help              help for open
   -s, --section strings   section to copy (defaults to none)
+  -t, --tomorrow          specify tomorrow as the date for note to be opened (ignored if date flag is used)
 ```
 
 
