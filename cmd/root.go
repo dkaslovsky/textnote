@@ -5,8 +5,9 @@ import (
 	"strings"
 
 	"github.com/dkaslovsky/textnote/cmd/archive"
+	"github.com/dkaslovsky/textnote/cmd/config"
 	"github.com/dkaslovsky/textnote/cmd/open"
-	"github.com/dkaslovsky/textnote/pkg/config"
+	pkgconf "github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/spf13/cobra"
 )
 
@@ -26,6 +27,7 @@ func Run(name string, version string) error {
 	cmd.AddCommand(
 		open.CreateOpenCmd(),
 		archive.CreateArchiveCmd(),
+		config.CreateConfigCmd(),
 	)
 
 	setVersion(cmd, version)
@@ -54,7 +56,7 @@ func setHelp(cmd *cobra.Command, name string) {
 		if cmd.Name() != name {
 			return
 		}
-		if description := config.DescribeEnvVars(); description != "" {
+		if description := pkgconf.DescribeEnvVars(); description != "" {
 			fmt.Printf("\nOverride configuration using environment variables:%s", description)
 		}
 	})

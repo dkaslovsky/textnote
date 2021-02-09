@@ -29,8 +29,6 @@ Currently, Vim is the only supported text editor.
 ```
 $ textnote
 ```
-4. That's it!
-
 The directory specified by `TEXTNOTE_DIR` and the default configuration file will be automatically created.
 
 ## Installation
@@ -234,6 +232,11 @@ In particular, the template (sections, headers, date formats, and whitespace) fo
 One might wish to configure headers and section titles for markdown compatibility or change date formats to match regional convention.
 
 Configuration is read from the `$TEXTNOTE_DIR/.config.yml` file and individual configuration parameters can be overridden with [environment variables](#environment-variable-overrides).
+
+The current configuration can be displayed by running the `config` command:
+```
+$ textnote config
+```
 
 ### Defaults
 The default configuration file is automatically written the first time textnote is run:
