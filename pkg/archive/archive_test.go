@@ -56,20 +56,23 @@ func (trw *testReadWriter) Exists(rwable file.ReadWriteable) bool {
 
 func TestAdd(t *testing.T) {
 	type testCase struct {
-		date         time.Time
-		templateText string
-		existing     map[string]string
-		expected     map[string]string
+		date             time.Time
+		templateText     string
+		existing         map[string]string
+		expectedArchives map[string]string
+		expectedFiles    []string
 	}
 
 	tests := map[string]testCase{
 		"add template that should not be archived": {
-			date:     time.Date(2020, 12, 20, 0, 0, 0, 0, time.UTC),
-			expected: map[string]string{},
+			date:             time.Date(2020, 12, 20, 0, 0, 0, 0, time.UTC),
+			expectedArchives: map[string]string{},
+			expectedFiles:    []string{},
 		},
 		"add template from last day that should not be archived": {
-			date:     time.Date(2020, 12, 14, 0, 0, 0, 0, time.UTC),
-			expected: map[string]string{},
+			date:             time.Date(2020, 12, 14, 0, 0, 0, 0, time.UTC),
+			expectedArchives: map[string]string{},
+			expectedFiles:    []string{},
 		},
 		"add template from first day that should be archived": {
 			date: time.Date(2020, 12, 13, 0, 0, 0, 0, time.UTC),
@@ -90,7 +93,7 @@ _p_TestSection3_q_
 
 
 `,
-			expected: map[string]string{
+			expectedArchives: map[string]string{
 				"Dec2020": `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
 
 _p_TestSection1_q_
@@ -110,6 +113,7 @@ _p_TestSection3_q_
 
 `,
 			},
+			expectedFiles: []string{},
 		},
 		"add template from current month": {
 			date: time.Date(2020, 12, 1, 0, 0, 0, 0, time.UTC),
@@ -130,7 +134,7 @@ _p_TestSection3_q_
 
 
 `,
-			expected: map[string]string{
+			expectedArchives: map[string]string{
 				"Dec2020": `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
 
 _p_TestSection1_q_
@@ -150,6 +154,7 @@ _p_TestSection3_q_
 
 `,
 			},
+			expectedFiles: []string{},
 		},
 		"add template from different month": {
 			date: time.Date(2020, 11, 1, 0, 0, 0, 0, time.UTC),
@@ -170,7 +175,7 @@ _p_TestSection3_q_
 
 
 `,
-			expected: map[string]string{
+			expectedArchives: map[string]string{
 				"Nov2020": `ARCHIVEPREFIX Nov2020 ARCHIVESUFFIX
 
 _p_TestSection1_q_
@@ -190,6 +195,7 @@ _p_TestSection3_q_
 
 `,
 			},
+			expectedFiles: []string{},
 		},
 		"add template from different year": {
 			date: time.Date(2019, 11, 2, 0, 0, 0, 0, time.UTC),
@@ -210,7 +216,7 @@ _p_TestSection3_q_
 
 
 `,
-			expected: map[string]string{
+			expectedArchives: map[string]string{
 				"Nov2019": `ARCHIVEPREFIX Nov2019 ARCHIVESUFFIX
 
 _p_TestSection1_q_
@@ -230,6 +236,7 @@ _p_TestSection3_q_
 
 `,
 			},
+			expectedFiles: []string{},
 		},
 		"add template with earlier date to existing archive": {
 			date: time.Date(2020, 12, 1, 0, 0, 0, 0, time.UTC),
@@ -269,7 +276,7 @@ _p_TestSection3_q_
 
 `,
 			},
-			expected: map[string]string{
+			expectedArchives: map[string]string{
 				"Dec2020": `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
 
 _p_TestSection1_q_
@@ -293,6 +300,7 @@ _p_TestSection3_q_
 
 `,
 			},
+			expectedFiles: []string{},
 		},
 		"add template with later date to existing archive": {
 			date: time.Date(2020, 12, 2, 0, 0, 0, 0, time.UTC),
@@ -332,7 +340,7 @@ _p_TestSection3_q_
 
 `,
 			},
-			expected: map[string]string{
+			expectedArchives: map[string]string{
 				"Dec2020": `ARCHIVEPREFIX Dec2020 ARCHIVESUFFIX
 
 _p_TestSection1_q_
@@ -356,6 +364,7 @@ _p_TestSection3_q_
 
 `,
 			},
+			expectedFiles: []string{},
 		},
 	}
 
@@ -378,8 +387,8 @@ _p_TestSection3_q_
 			err := a.Add(test.date)
 			require.NoError(t, err)
 
-			require.Equal(t, len(test.expected), len(a.monthArchives))
-			for key, expectedText := range test.expected {
+			require.Equal(t, len(test.expectedArchives), len(a.monthArchives))
+			for key, expectedText := range test.expectedArchives {
 				buf := new(bytes.Buffer)
 				monthArchive, found := a.monthArchives[key]
 				require.True(t, found)
@@ -387,6 +396,8 @@ _p_TestSection3_q_
 				require.NoError(t, err)
 				require.Equal(t, expectedText, buf.String())
 			}
+
+			require.ElementsMatch(t, test.expectedFiles, a.GetArchivedFiles())
 		})
 	}
 }
