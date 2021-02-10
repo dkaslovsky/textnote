@@ -17,8 +17,6 @@ before_install:
   - go get github.com/mattn/goveralls
 
 script:
-  - go test -v github.com/dkaslovsky/textnote/pkg/template -coverprofile=template.coverprofile
-  - go test -v github.com/dkaslovsky/textnote/pkg/archive -coverprofile=archive.coverprofile
-  - go test -v github.com/dkaslovsky/textnote/pkg/config -coverprofile=config.coverprofile
+  - go test -v github.com/dkaslovsky/textnote/... -coverprofile=all.coverprofile
   - gover
   - goveralls -race -coverprofile gover.coverprofile -service travis-ci
