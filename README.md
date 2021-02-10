@@ -38,17 +38,17 @@ Download the appropriate binary from this repository's [releases](https://github
 
 macOS
 ```
-$ curl -OL https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_darwin_amd64
+$ curl -o textnote -L https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_darwin_amd64
 ```
 
 Linux
 ```
-$ curl -OL https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_linux_amd64
+$ curl -o textnote -L https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_linux_amd64
 ```
 
 Windows
 ```
-$ curl -OL https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_windows_amd64
+$ curl -o textnote -L https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_windows_amd64
 ```
 
 ### Installing from source
