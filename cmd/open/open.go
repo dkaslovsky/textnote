@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const day = 24 * time.Hour
+
 type commandOptions struct {
 	date         string
 	copyDate     string
@@ -29,11 +31,13 @@ func CreateOpenCmd() *cobra.Command {
 		Short: "open a note",
 		Long:  "open or create a note template",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			now := time.Now()
 			opts, err := config.LoadOrCreate()
 			if err != nil {
 				return err
 			}
-			applyDefaults(opts, &cmdOpts)
+			setDateOpt(&cmdOpts, now, opts)
+			setCopyDateOpt(&cmdOpts, now, opts)
 			return run(opts, cmdOpts)
 		},
 	}
@@ -52,35 +56,40 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete sections after copy")
 }
 
-func applyDefaults(templateOpts config.Opts, cmdOpts *commandOptions) {
-	const day = 24 * time.Hour
-	now := time.Now()
-
-	if cmdOpts.date == "" {
-		if cmdOpts.tomorrow {
-			// set date as tomorrow
-			cmdOpts.date = now.Add(day).Format(templateOpts.Cli.TimeFormat)
-		} else if cmdOpts.daysBack != 0 {
-			// use daysBack if specified
-			cmdOpts.date = now.Add(-day * time.Duration(cmdOpts.daysBack)).Format(templateOpts.Cli.TimeFormat)
-		} else {
-			// default is today
-			cmdOpts.date = now.Format(templateOpts.Cli.TimeFormat)
-		}
+func setDateOpt(cmdOpts *commandOptions, now time.Time, templateOpts config.Opts) {
+	if cmdOpts.date != "" {
+		return
 	}
-
-	if cmdOpts.copyDate == "" {
-		if cmdOpts.tomorrow {
-			// default to today if copying to tomorrow's note
-			cmdOpts.copyDate = now.Format(templateOpts.Cli.TimeFormat)
-		} else if cmdOpts.copyDaysBack != 0 {
-			// use copyDaysBack if specifed
-			cmdOpts.copyDate = now.Add(-day * time.Duration(cmdOpts.copyDaysBack)).Format(templateOpts.Cli.TimeFormat)
-		} else {
-			// default is yesterday
-			cmdOpts.copyDate = now.Add(-day).Format(templateOpts.Cli.TimeFormat)
-		}
+	if cmdOpts.tomorrow {
+		// set date as tomorrow
+		cmdOpts.date = now.Add(day).Format(templateOpts.Cli.TimeFormat)
+		return
 	}
+	if cmdOpts.daysBack != 0 {
+		// use daysBack if specified
+		cmdOpts.date = now.Add(-day * time.Duration(cmdOpts.daysBack)).Format(templateOpts.Cli.TimeFormat)
+		return
+	}
+	// default is today
+	cmdOpts.date = now.Format(templateOpts.Cli.TimeFormat)
+}
+
+func setCopyDateOpt(cmdOpts *commandOptions, now time.Time, templateOpts config.Opts) {
+	if cmdOpts.copyDate != "" {
+		return
+	}
+	if cmdOpts.tomorrow {
+		// default to today if copying to tomorrow's note
+		cmdOpts.copyDate = now.Format(templateOpts.Cli.TimeFormat)
+		return
+	}
+	if cmdOpts.copyDaysBack != 0 {
+		// use copyDaysBack if specifed
+		cmdOpts.copyDate = now.Add(-day * time.Duration(cmdOpts.copyDaysBack)).Format(templateOpts.Cli.TimeFormat)
+		return
+	}
+	// default is yesterday
+	cmdOpts.copyDate = now.Add(-day).Format(templateOpts.Cli.TimeFormat)
 }
 
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
