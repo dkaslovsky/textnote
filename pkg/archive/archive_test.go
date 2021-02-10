@@ -2,10 +2,12 @@ package archive
 
 import (
 	"bytes"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/dkaslovsky/textnote/pkg/file"
 	"github.com/dkaslovsky/textnote/pkg/template"
 	"github.com/dkaslovsky/textnote/pkg/template/templatetest"
@@ -113,7 +115,9 @@ _p_TestSection3_q_
 
 `,
 			},
-			expectedFiles: []string{},
+			expectedFiles: []string{
+				"2020-12-13.txt",
+			},
 		},
 		"add template from current month": {
 			date: time.Date(2020, 12, 1, 0, 0, 0, 0, time.UTC),
@@ -154,7 +158,9 @@ _p_TestSection3_q_
 
 `,
 			},
-			expectedFiles: []string{},
+			expectedFiles: []string{
+				"2020-12-01.txt",
+			},
 		},
 		"add template from different month": {
 			date: time.Date(2020, 11, 1, 0, 0, 0, 0, time.UTC),
@@ -195,7 +201,9 @@ _p_TestSection3_q_
 
 `,
 			},
-			expectedFiles: []string{},
+			expectedFiles: []string{
+				"2020-11-01.txt",
+			},
 		},
 		"add template from different year": {
 			date: time.Date(2019, 11, 2, 0, 0, 0, 0, time.UTC),
@@ -236,7 +244,9 @@ _p_TestSection3_q_
 
 `,
 			},
-			expectedFiles: []string{},
+			expectedFiles: []string{
+				"2019-11-02.txt",
+			},
 		},
 		"add template with earlier date to existing archive": {
 			date: time.Date(2020, 12, 1, 0, 0, 0, 0, time.UTC),
@@ -300,7 +310,9 @@ _p_TestSection3_q_
 
 `,
 			},
-			expectedFiles: []string{},
+			expectedFiles: []string{
+				"2020-12-01.txt",
+			},
 		},
 		"add template with later date to existing archive": {
 			date: time.Date(2020, 12, 2, 0, 0, 0, 0, time.UTC),
@@ -364,7 +376,9 @@ _p_TestSection3_q_
 
 `,
 			},
-			expectedFiles: []string{},
+			expectedFiles: []string{
+				"2020-12-02.txt",
+			},
 		},
 	}
 
@@ -397,7 +411,12 @@ _p_TestSection3_q_
 				require.Equal(t, expectedText, buf.String())
 			}
 
-			require.ElementsMatch(t, test.expectedFiles, a.GetArchivedFiles())
+			expectedFilesWithFullPath := []string{}
+			for _, f := range test.expectedFiles {
+				fullPath := filepath.Join(config.AppDir, f)
+				expectedFilesWithFullPath = append(expectedFilesWithFullPath, fullPath)
+			}
+			require.ElementsMatch(t, expectedFilesWithFullPath, a.GetArchivedFiles())
 		})
 	}
 }
