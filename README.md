@@ -48,7 +48,7 @@ $ curl -o textnote -L https://github.com/dkaslovsky/textnote/releases/latest/dow
 
 Windows
 ```
-$ curl -o textnote -L https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_windows_amd64
+$ curl -o textnote -L https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_windows_amd64.exe
 ```
 
 ### Installing from source
