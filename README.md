@@ -62,7 +62,7 @@ Build from source by cloning this repository and running `go build`.
 It is recommended to build using Go 1.15.7 or greater to avoid a potential security issue when looking for the desired editor in the `$PATH` ([details](https://blog.golang.org/path-security)).
 
 ## Usage
-textnote is intentionally simple to use and supports two commands: `open` for creating/opening notes and `archive` for consolidating notes into monthly archive files.
+textnote is intentionally simple to use and supports two main commands: `open` for creating/opening notes and `archive` for consolidating notes into monthly archive files.
 
 ### **open**
 The `open` command will open a dated note in an editor, creating it first if it does not exist.
@@ -233,6 +233,10 @@ Flags:
   -n, --no-write   disable writing archive files (helpful for deleting previously archived files)
 ```
 
+### **Additional Functionality**
+textnote is designed for simplicity. 
+Because textnote writes files to a single directory on the local filesystem, most functionality outside of the scope described above can be easily accomplished using stanard command line tools (e.g., `grep` for search).
+
 ## Configuration
 While textnote is intended to be extremely lightweight, it is also designed to be highly configurable.
 In particular, the template (sections, headers, date formats, and whitespace) for generating notes can be customized as desired.
@@ -243,6 +247,10 @@ Configuration is read from the `$TEXTNOTE_DIR/.config.yml` file and individual c
 The current configuration can be displayed by running the `config` command:
 ```
 $ textnote config
+```
+The configuration file path is displayed by using the `-p` flag:
+```
+$ textnote config -p
 ```
 
 ### Defaults

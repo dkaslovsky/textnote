@@ -11,14 +11,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type commandOptions struct {
+	path bool
+}
+
 // CreateConfigCmd creates the config subcommand
 func CreateConfigCmd() *cobra.Command {
+	cmdOpts := commandOptions{}
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "show configuration",
 		Long:  "displays the application's configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			configPath := filepath.Join(config.AppDir, config.FileName)
+
+			if cmdOpts.path {
+				fmt.Printf("configuration file path: [%s]\n", configPath)
+				return nil
+			}
+
 			_, err := os.Stat(configPath)
 			if os.IsNotExist(err) {
 				return fmt.Errorf("cannot find configuration file [%s]", configPath)
@@ -35,5 +46,11 @@ func CreateConfigCmd() *cobra.Command {
 			return nil
 		},
 	}
+	attachOpts(cmd, &cmdOpts)
 	return cmd
+}
+
+func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
+	flags := cmd.Flags()
+	flags.BoolVarP(&cmdOpts.path, "path", "p", false, "print path to configuration file")
 }
