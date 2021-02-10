@@ -1,6 +1,7 @@
 package archive
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -16,6 +17,7 @@ import (
 type commandOptions struct {
 	delete  bool
 	noWrite bool
+	dryRun  bool
 }
 
 // CreateArchiveCmd creates the today subcommand
@@ -40,7 +42,8 @@ func CreateArchiveCmd() *cobra.Command {
 func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags := cmd.Flags()
 	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete individual files after archiving")
-	flags.BoolVarP(&cmdOpts.noWrite, "nowrite", "n", false, "disable writing archive file (helpful for deleting previously archived files)")
+	flags.BoolVarP(&cmdOpts.noWrite, "no-write", "n", false, "disable writing archive files (helpful for deleting previously archived files)")
+	flags.BoolVar(&cmdOpts.dryRun, "dry-run", false, "print file names to be deleted instead of performing deletes (other flags are ignored)")
 }
 
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
@@ -70,6 +73,16 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 		}
 	}
 
+	// print file names for dry-run
+	if cmdOpts.dryRun {
+		files := archiver.GetArchivedFiles()
+		fmt.Printf("running \"archive --delete\" will remove [%d] files\n", len(files))
+		for _, fileName := range files {
+			fmt.Printf("- %s\n", fileName)
+		}
+		return nil
+	}
+
 	// write archive files
 	if !cmdOpts.noWrite {
 		err = archiver.Write()
@@ -84,13 +97,16 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	}
 
 	// delete individual archived files
+	numDeleted := 0
 	for _, fileName := range archiver.GetArchivedFiles() {
 		err = os.Remove(fileName)
 		if err != nil {
 			log.Printf("unable to remove file [%s]: %s", fileName, err)
 			continue
 		}
+		numDeleted++
 	}
+	log.Printf("removed [%d] files after archiving", numDeleted)
 
 	return nil
 }

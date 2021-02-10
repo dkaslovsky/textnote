@@ -206,7 +206,13 @@ To delete the individual note files and retain only the generated archives, run 
 $ textnote archive -x
 ```
 This is the intended mode of operation, as it is desirable to "clean up" notes into archives, but must be intentionally enabled with `-x` for safety.
-To "clean up" *after* archives have been generated, rerun the `archive` command with the `-x` flag as well as the `-n` flag to prevent duplicating the archive content:
+Running with the `--dry-run` flag prints the file names to be deleted without performing any actions:
+```
+$ textnote archive --dry-run
+```
+
+If the `archive` command is run without the delete flag, archive files are written and the original notes are left in place.
+To "clean up" the original notes *after* archives have been generated, rerun the `archive` command with the `-x` flag as well as the `-n` flag to prevent duplicating the archive content:
 ```
 $ textnote archive -x -n
 ```
@@ -221,9 +227,10 @@ Usage:
   textnote archive [flags]
 
 Flags:
-  -x, --delete    delete individual files after archiving
-  -h, --help      help for archive
-  -n, --nowrite   disable writing archive file (helpful for deleting previously archived files)
+  -x, --delete     delete individual files after archiving
+      --dry-run    print file names to be deleted instead of performing deletes (other flags are ignored)
+  -h, --help       help for archive
+  -n, --no-write   disable writing archive files (helpful for deleting previously archived files)
 ```
 
 ## Configuration
