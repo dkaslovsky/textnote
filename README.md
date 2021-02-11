@@ -25,16 +25,28 @@ Currently, Vim is the only supported text editor.
 ## Quick Start
 1. Install textnote (see [Installation](#installation))
 2. Set a single environment variable `TEXTNOTE_DIR` to specify the directory for textnote's files
-3. Start writing notes for today with a single command
+
+That's it, textnote is ready to go!
+
+The directory specified by `TEXTNOTE_DIR` and the default configuration file will be automatically created the first time textnote is run.
+
+Start writing notes for today with a single command
 ```
 $ textnote
 ```
-The directory specified by `TEXTNOTE_DIR` and the default configuration file will be automatically created.
+
+To first configure textnote before creating notes, run
+```
+$ textnote config -p
+```
+and then edit the configuration file found at the displayed path.
 
 ## Installation
+textnote can be installed by downloading a prebuilt binary or by the `go get` command.
+
 ### Releases
-The recommended installation method is downloading the latest released binary for your operating system.
-Download the appropriate binary from this repository's [releases](https://github.com/dkaslovsky/textnote/releases/latest) page or via `curl`:
+The recommended installation method is downloading the latest released binary.
+Download the appropriate binary for your operating system from this repository's [releases](https://github.com/dkaslovsky/textnote/releases/latest) page or via `curl`:
 
 macOS
 ```
@@ -242,7 +254,11 @@ While textnote is intended to be extremely lightweight, it is also designed to b
 In particular, the template (sections, headers, date formats, and whitespace) for generating notes can be customized as desired.
 One might wish to configure headers and section titles for markdown compatibility or change date formats to match regional convention.
 
-Configuration is read from the `$TEXTNOTE_DIR/.config.yml` file and individual configuration parameters can be overridden with [environment variables](#environment-variable-overrides).
+Configuration is read from the `$TEXTNOTE_DIR/.config.yml` file.
+Changes to configuration parameters can be made by updating this file.
+Individual configuration parameters also can be overridden with [environment variables](#environment-variable-overrides).
+
+Importantly, if textnote's configuration is changed, notes created using a previous configuration might be incompatible with textnote's functionality.
 
 The current configuration can be displayed by running the `config` command:
 ```
