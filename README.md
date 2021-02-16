@@ -20,7 +20,8 @@ Key features:
 All note files are stored locally on the file system in a single directory.
 Notes can easily be synced to a remote server or cloud service if so desired by ensuring the application directory is remotely synced.
 
-Currently, Vim is the only supported text editor.
+textnote opens notes using the text editor specified by the environment variable `$EDITOR` and defaults to Vim if the environment variable is not set.
+See [Configuration](#configuration) for more details. 
 
 ## Quick Start
 1. Install textnote (see [Installation](#installation))
@@ -301,6 +302,14 @@ archive:
 cli:
   timeFormat: "2006-01-02"                # Golang format for CLI date input
 ```
+
+Currently, `file.cusorLine` will only be applied for the following editors:
+* vi/vim
+* emacs
+* neovim
+* nano
+
+All other editors will work but will not respect this congifuration parameter.
 
 ### Environment Variable Overrides
 Any configuration parameter can be overridden by setting a corresponding environment variable.
