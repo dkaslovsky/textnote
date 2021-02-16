@@ -180,11 +180,11 @@ func deleteSections(t *template.Template, sectionNames []string) error {
 }
 
 func openInEditor(t *template.Template, ed *editor.Editor) error {
-	if !ed.Supported {
-		log.Printf("Unsupported editor [%s] will be used with default arguments", ed.Cmd)
+	if t.GetFileCursorLine() > 0 && !ed.Supported {
+		log.Printf("Editor [%s] only supported with its default arguments, additional configuration ignored", ed.Cmd)
 	}
 	if ed.Default {
-		log.Printf("Environment variable [%s] not set, attempting to default to editor [%s]", editor.EnvEditor, ed.Cmd)
+		log.Printf("Environment variable [%s] not set, attempting to use default editor [%s]", editor.EnvEditor, ed.Cmd)
 	}
 	return file.Open(t, ed)
 }
