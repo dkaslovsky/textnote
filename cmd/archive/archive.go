@@ -24,9 +24,10 @@ type commandOptions struct {
 func CreateArchiveCmd() *cobra.Command {
 	cmdOpts := commandOptions{}
 	cmd := &cobra.Command{
-		Use:   "archive",
-		Short: "consolidate notes into archive files",
-		Long:  "consolidate notes into monthly archive files",
+		Use:          "archive",
+		Short:        "consolidate notes into archive files",
+		Long:         "consolidate notes into monthly archive files",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts, err := config.LoadOrCreate()
 			if err != nil {
