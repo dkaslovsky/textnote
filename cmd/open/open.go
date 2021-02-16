@@ -2,9 +2,12 @@ package open
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"time"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
+	"github.com/dkaslovsky/textnote/pkg/editor"
 	"github.com/dkaslovsky/textnote/pkg/file"
 	"github.com/dkaslovsky/textnote/pkg/template"
 	"github.com/pkg/errors"
@@ -27,9 +30,10 @@ type commandOptions struct {
 func CreateOpenCmd() *cobra.Command {
 	cmdOpts := commandOptions{}
 	cmd := &cobra.Command{
-		Use:   "open",
-		Short: "open a note",
-		Long:  "open or create a note template",
+		Use:          "open",
+		Short:        "open a note",
+		Long:         "open or create a note template",
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			now := time.Now()
 			opts, err := config.LoadOrCreate()
@@ -98,6 +102,8 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 		return errors.Wrapf(err, "cannot create note for malformed date [%s]", cmdOpts.date)
 	}
 
+	ed := editor.GetEditor(os.Getenv(editor.EnvEditor))
+
 	t := template.NewTemplate(templateOpts, date)
 	rw := file.NewReadWriter()
 
@@ -109,7 +115,7 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 				return err
 			}
 		}
-		return file.OpenInVim(t)
+		return openInEditor(t, ed)
 	}
 
 	// load source for copy
@@ -150,7 +156,7 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to write file")
 	}
-	return file.OpenInVim(t)
+	return openInEditor(t, ed)
 }
 
 func copySections(src *template.Template, tgt *template.Template, sectionNames []string) error {
@@ -171,4 +177,14 @@ func deleteSections(t *template.Template, sectionNames []string) error {
 		}
 	}
 	return nil
+}
+
+func openInEditor(t *template.Template, ed *editor.Editor) error {
+	if !ed.Supported {
+		log.Printf("Unsupported editor [%s] will be used with default arguments", ed.Cmd)
+	}
+	if ed.Default {
+		log.Printf("Environment variable [%s] not set, attempting to default to editor [%s]", editor.EnvEditor, ed.Cmd)
+	}
+	return file.Open(t, ed)
 }

@@ -1,7 +1,6 @@
 package file
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -60,12 +59,19 @@ type Openable interface {
 	GetFileCursorLine() int
 }
 
-// OpenInVim opens a template in Vim
-// Recommended to use Go >= v.1.15.7 due to call to exec.Command()
+// Editor is the interface for which an editor is opened
+type Editor interface {
+	GetCmd() string
+	GetArgsFunc() func(int) []string
+}
+
+// Open opens a template in an editor
+// NOTE: it is recommended to use Go >= v.1.15.7 due to call to exec.Command()
 // See: https://blog.golang.org/path-security
-func OpenInVim(o Openable) error {
-	lineArg := fmt.Sprintf("+%d", o.GetFileCursorLine())
-	cmd := exec.Command("vim", lineArg, o.GetFilePath())
+func Open(o Openable, ed Editor) error {
+	edArgs := append(ed.GetArgsFunc()(o.GetFileCursorLine()), o.GetFilePath())
+
+	cmd := exec.Command(ed.GetCmd(), edArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
