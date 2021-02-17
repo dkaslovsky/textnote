@@ -21,7 +21,7 @@ All note files are stored locally on the file system in a single directory.
 Notes can easily be synced to a remote server or cloud service if so desired by ensuring the application directory is remotely synced.
 
 textnote opens notes using the text editor specified by the environment variable `$EDITOR` and defaults to Vim if the environment variable is not set.
-See [Configuration](#configuration) for more details. 
+See the [Editor-Specific Configuration](#editor-specific-configuration) subsection for more details. 
 
 ## Quick Start
 1. Install textnote (see [Installation](#installation))
@@ -303,14 +303,6 @@ cli:
   timeFormat: "2006-01-02"                # Golang format for CLI date input
 ```
 
-Currently, `file.cusorLine` will only be applied for the following editors:
-* vi/vim
-* emacs
-* neovim
-* nano
-
-All other editors will work but will not respect this congifuration parameter.
-
 ### Environment Variable Overrides
 Any configuration parameter can be overridden by setting a corresponding environment variable.
 Note that setting an environment variable does not change the value specified in the configuration file.
@@ -357,6 +349,15 @@ The full list of environment variables is listed below and is always available b
   TEXTNOTE_CLI_TIME_FORMAT string
     	formatting string for timestamp CLI flags
 ```
+
+### Editor-Specific Configuration
+Currently, textnote supports the `file.cusorLine` and `TEXTNOTE_FILE_CURSOR_LINE` configuration for the following editors:
+* vi/vim
+* emacs
+* neovim
+* nano
+
+textnote will work with all other editors but will not respect this congifuration parameter.
 
 ## License
 textnote is released under the [MIT License](https://github.com/dkaslovsky/textnote/blob/main/LICENSE).
