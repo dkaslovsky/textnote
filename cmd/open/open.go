@@ -35,11 +35,11 @@ func CreateOpenCmd() *cobra.Command {
 		Long:         "open or create a note template",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			now := time.Now()
-			opts, err := config.LoadOrCreate()
+			opts, err := config.Load()
 			if err != nil {
 				return err
 			}
+			now := time.Now()
 			setDateOpt(&cmdOpts, now, opts)
 			setCopyDateOpt(&cmdOpts, now, opts)
 			return run(opts, cmdOpts)
@@ -88,7 +88,7 @@ func setCopyDateOpt(cmdOpts *commandOptions, now time.Time, templateOpts config.
 		return
 	}
 	if cmdOpts.copyDaysBack != 0 {
-		// use copyDaysBack if specifed
+		// use copyDaysBack if specified
 		cmdOpts.copyDate = now.Add(-day * time.Duration(cmdOpts.copyDaysBack)).Format(templateOpts.Cli.TimeFormat)
 		return
 	}
@@ -102,10 +102,9 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 		return errors.Wrapf(err, "cannot create note for malformed date [%s]", cmdOpts.date)
 	}
 
-	ed := editor.GetEditor(os.Getenv(editor.EnvEditor))
-
 	t := template.NewTemplate(templateOpts, date)
 	rw := file.NewReadWriter()
+	ed := editor.GetEditor(os.Getenv(editor.EnvEditor))
 
 	// open file if no sections to copy
 	if len(cmdOpts.sections) == 0 {

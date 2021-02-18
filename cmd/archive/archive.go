@@ -29,7 +29,7 @@ func CreateArchiveCmd() *cobra.Command {
 		Long:         "consolidate notes into monthly archive files",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts, err := config.LoadOrCreate()
+			opts, err := config.Load()
 			if err != nil {
 				return err
 			}

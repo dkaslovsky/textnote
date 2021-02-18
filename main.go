@@ -17,6 +17,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	err = config.CreateIfNotExists()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	err = cmd.Run(name, version)
 	if err != nil {
 		log.Fatal(err)

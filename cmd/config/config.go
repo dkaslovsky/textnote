@@ -23,11 +23,6 @@ func CreateConfigCmd() *cobra.Command {
 		Short: "show configuration",
 		Long:  "displays the application's configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := config.LoadOrCreate()
-			if err != nil {
-				return err
-			}
-
 			configPath := filepath.Join(config.AppDir, config.FileName)
 
 			if cmdOpts.path {
@@ -35,7 +30,7 @@ func CreateConfigCmd() *cobra.Command {
 				return nil
 			}
 
-			_, err = os.Stat(configPath)
+			_, err := os.Stat(configPath)
 			if os.IsNotExist(err) {
 				return fmt.Errorf("cannot find configuration file [%s]", configPath)
 			}

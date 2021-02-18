@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -20,8 +21,12 @@ const (
 	envAppDir = "TEXTNOTE_DIR"
 )
 
-// AppDir is the directory in which the application stores its files
-var AppDir = os.Getenv(envAppDir)
+var (
+	// AppDir is the directory in which the application stores its files
+	AppDir = os.Getenv(envAppDir)
+	// configPath is the path to the configuration file
+	configPath = filepath.Join(AppDir, FileName)
+)
 
 // Opts are options that configure the application
 type Opts struct {
@@ -111,35 +116,21 @@ func getDefaultOpts() Opts {
 	}
 }
 
-// LoadOrCreate loads a config file or creates it using defaults
-func LoadOrCreate() (Opts, error) {
+// Load loads the configuration from file and/or evironment
+func Load() (Opts, error) {
 	opts := Opts{}
 
-	err := EnsureAppDir()
-	if err != nil {
-		return opts, err
-	}
-
-	// write config file using defaults if it dies not exist
-	configPath := filepath.Join(AppDir, FileName)
-	_, err = os.Stat(configPath)
-	if os.IsNotExist(err) {
-		defaults := getDefaultOpts()
-		yml, err := yaml.Marshal(defaults)
-		if err != nil {
-			return opts, errors.Wrap(err, "unable to generate config file")
-		}
-		err = ioutil.WriteFile(configPath, yml, 0644)
-		if err != nil {
-			return opts, errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
-		}
-		log.Printf("created default configuration file: [%s]", configPath)
-	}
-
 	// parse config file allowing environment variable overrides
-	err = cleanenv.ReadConfig(configPath, &opts)
+	err := cleanenv.ReadConfig(configPath, &opts)
 	if err != nil {
 		return opts, errors.Wrap(err, "unable to read config file")
+	}
+
+	// overwrite defaults with opts from file/env
+	defaults := getDefaultOpts()
+	err = mergo.Merge(&opts, defaults)
+	if err != nil {
+		return opts, errors.Wrap(err, "unable to integrate configuration from file with defaults")
 	}
 
 	err = ValidateOpts(opts)
@@ -148,6 +139,24 @@ func LoadOrCreate() (Opts, error) {
 	}
 
 	return opts, nil
+}
+
+// CreateIfNotExists writes defaults to the configuration file if it does not already exist
+func CreateIfNotExists() error {
+	_, err := os.Stat(configPath)
+	if os.IsNotExist(err) {
+		defaults := getDefaultOpts()
+		yml, err := yaml.Marshal(defaults)
+		if err != nil {
+			return errors.Wrap(err, "unable to generate config file")
+		}
+		err = ioutil.WriteFile(configPath, yml, 0644)
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
+		}
+		log.Printf("created default configuration file: [%s]", configPath)
+	}
+	return nil
 }
 
 // EnsureAppDir validates that the application directory exists or is created
