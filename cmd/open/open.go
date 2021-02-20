@@ -185,5 +185,5 @@ func openInEditor(t *template.Template, ed *editor.Editor) error {
 	if ed.Default {
 		log.Printf("Environment variable [%s] not set, attempting to use default editor [%s]", editor.EnvEditor, ed.Cmd)
 	}
-	return file.Open(t, ed)
+	return ed.Open(t)
 }
