@@ -179,7 +179,7 @@ func deleteSections(t *template.Template, sectionNames []string) error {
 }
 
 func openInEditor(t *template.Template, ed *editor.Editor) error {
-	if t.GetFileCursorLine() > 0 && !ed.Supported {
+	if t.GetFileCursorLine() > 1 && !ed.Supported {
 		log.Printf("Editor [%s] only supported with its default arguments, additional configuration ignored", ed.Cmd)
 	}
 	if ed.Default {
