@@ -144,18 +144,21 @@ func Load() (Opts, error) {
 // CreateIfNotExists writes defaults to the configuration file if it does not already exist
 func CreateIfNotExists() error {
 	_, err := os.Stat(configPath)
-	if os.IsNotExist(err) {
-		defaults := getDefaultOpts()
-		yml, err := yaml.Marshal(defaults)
-		if err != nil {
-			return errors.Wrap(err, "unable to generate config file")
-		}
-		err = ioutil.WriteFile(configPath, yml, 0644)
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
-		}
-		log.Printf("created default configuration file: [%s]", configPath)
+	if !os.IsNotExist(err) {
+		// config file exists, nothing to do
+		return nil
 	}
+
+	defaults := getDefaultOpts()
+	yml, err := yaml.Marshal(defaults)
+	if err != nil {
+		return errors.Wrap(err, "unable to generate config file")
+	}
+	err = ioutil.WriteFile(configPath, yml, 0644)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
+	}
+	log.Printf("created default configuration file: [%s]", configPath)
 	return nil
 }
 
