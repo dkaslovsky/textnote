@@ -35,7 +35,7 @@ func (t *MonthArchiveTemplate) Write(w io.Writer) error {
 // GetFilePath generates a full path for a file based on the template date
 func (t *MonthArchiveTemplate) GetFilePath() string {
 	name := filepath.Join(
-		config.AppDir,
+		t.opts.AppDir,
 		t.opts.Archive.FilePrefix+t.date.Format(t.opts.Archive.MonthTimeFormat),
 	)
 	if t.opts.File.Ext == "" {

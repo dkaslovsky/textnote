@@ -50,7 +50,7 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	archiver := archive.NewArchiver(templateOpts, file.NewReadWriter(), time.Now())
 
-	files, err := ioutil.ReadDir(config.AppDir)
+	files, err := ioutil.ReadDir(templateOpts.AppDir)
 	if err != nil {
 		return err
 	}

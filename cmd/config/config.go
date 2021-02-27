@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/pkg/errors"
@@ -23,7 +22,7 @@ func CreateConfigCmd() *cobra.Command {
 		Short: "show configuration",
 		Long:  "displays the application's configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			configPath := filepath.Join(config.AppDir, config.FileName)
+			configPath := config.GetConfigFilePath()
 
 			if cmdOpts.path {
 				fmt.Printf("configuration file path: [%s]\n", configPath)

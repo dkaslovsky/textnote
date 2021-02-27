@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/dkaslovsky/textnote/pkg/template/templatetest"
 	"github.com/stretchr/testify/require"
 )
@@ -46,11 +45,11 @@ func TestArchiveGetFilePath(t *testing.T) {
 		opts.File.Ext = "txt"
 		template := NewMonthArchiveTemplate(opts, templatetest.Date)
 		filePath := template.GetFilePath()
-		require.True(t, strings.HasPrefix(filePath, config.AppDir))
+		require.True(t, strings.HasPrefix(filePath, opts.AppDir))
 		require.True(t, strings.HasSuffix(filePath, ".txt"))
 		require.Equal(t,
 			opts.Archive.FilePrefix+templatetest.Date.Format(opts.Archive.MonthTimeFormat),
-			stripPrefixSuffix(filePath, fmt.Sprintf("%s/", config.AppDir), ".txt"),
+			stripPrefixSuffix(filePath, fmt.Sprintf("%s/", opts.AppDir), ".txt"),
 		)
 	})
 
@@ -59,11 +58,11 @@ func TestArchiveGetFilePath(t *testing.T) {
 		opts.File.Ext = ""
 		template := NewMonthArchiveTemplate(opts, templatetest.Date)
 		filePath := template.GetFilePath()
-		require.True(t, strings.HasPrefix(filePath, config.AppDir))
+		require.True(t, strings.HasPrefix(filePath, opts.AppDir))
 		require.False(t, strings.HasSuffix(filePath, "."))
 		require.Equal(t,
 			opts.Archive.FilePrefix+templatetest.Date.Format(opts.Archive.MonthTimeFormat),
-			stripPrefixSuffix(filePath, fmt.Sprintf("%s/", config.AppDir), ""),
+			stripPrefixSuffix(filePath, fmt.Sprintf("%s/", opts.AppDir), ""),
 		)
 	})
 }
@@ -88,7 +87,7 @@ func TestArchiveSectionContents(t *testing.T) {
 		"archive empty contents into populated section": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "existingText1",
 				},
@@ -96,7 +95,7 @@ func TestArchiveSectionContents(t *testing.T) {
 			sourceDate:     templatetest.Date.Add(24 * time.Hour),
 			sourceContents: []contentItem{},
 			expectedContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "existingText1",
 				},
@@ -107,13 +106,13 @@ func TestArchiveSectionContents(t *testing.T) {
 			existingContents: []contentItem{},
 			sourceDate:       templatetest.Date.Add(24 * time.Hour),
 			sourceContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "text1",
 				},
 			},
 			expectedContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "text1",
 				},
@@ -122,24 +121,24 @@ func TestArchiveSectionContents(t *testing.T) {
 		"archive contents with single element into populated section": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "existingText1",
 				},
 			},
 			sourceDate: templatetest.Date.Add(24 * time.Hour),
 			sourceContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "sourceText1",
 				},
 			},
 			expectedContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "existingText1",
 				},
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "sourceText1",
 				},
@@ -150,17 +149,17 @@ func TestArchiveSectionContents(t *testing.T) {
 			existingContents: []contentItem{},
 			sourceDate:       templatetest.Date.Add(24 * time.Hour),
 			sourceContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "text1\n",
 				},
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "text2\n\n",
 				},
 			},
 			expectedContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "text1\ntext2\n\n",
 				},
@@ -169,28 +168,28 @@ func TestArchiveSectionContents(t *testing.T) {
 		"archive contents with multiple elements into populated section": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(-24*time.Hour), templatetest.GetOpts()),
 					text:   "existingText",
 				},
 			},
 			sourceDate: templatetest.Date.Add(24 * time.Hour),
 			sourceContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "text1\n",
 				},
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "text2\n\n",
 				},
 			},
 			expectedContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(-24*time.Hour), templatetest.GetOpts()),
 					text:   "existingText",
 				},
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "text1\ntext2\n\n",
 				},
@@ -199,28 +198,28 @@ func TestArchiveSectionContents(t *testing.T) {
 		"archive contents from source with same date": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "existingText",
 				},
 			},
 			sourceDate: templatetest.Date,
 			sourceContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "text1\n",
 				},
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "text2\n\n",
 				},
 			},
 			expectedContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "existingText",
 				},
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date, templatetest.GetOpts()),
 					text:   "text1\ntext2\n\n",
 				},
@@ -231,17 +230,17 @@ func TestArchiveSectionContents(t *testing.T) {
 			existingContents: []contentItem{},
 			sourceDate:       templatetest.Date.Add(24 * time.Hour),
 			sourceContents: []contentItem{
-				contentItem{
+				{
 					header: "doesn't matter 1",
 					text:   "text1\n",
 				},
-				contentItem{
+				{
 					header: "doesn't matter 2",
 					text:   "text2\n\n",
 				},
 			},
 			expectedContents: []contentItem{
-				contentItem{
+				{
 					header: templatetest.MakeItemHeader(templatetest.Date.Add(24*time.Hour), templatetest.GetOpts()),
 					text:   "text1\ntext2\n\n",
 				},
