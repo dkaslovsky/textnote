@@ -79,7 +79,7 @@ func TestGetContentString(t *testing.T) {
 		},
 		"single empty string contents with no header": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "",
 					text:   "",
 				},
@@ -88,7 +88,7 @@ func TestGetContentString(t *testing.T) {
 		},
 		"single empty string contents with header": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "header",
 					text:   "",
 				},
@@ -97,11 +97,11 @@ func TestGetContentString(t *testing.T) {
 		},
 		"multiple empty string contents with no header": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "",
 					text:   "",
 				},
-				contentItem{
+				{
 					header: "",
 					text:   "",
 				},
@@ -110,11 +110,11 @@ func TestGetContentString(t *testing.T) {
 		},
 		"multiple empty string contents with header": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "header1",
 					text:   "",
 				},
-				contentItem{
+				{
 					header: "header2",
 					text:   "",
 				},
@@ -123,7 +123,7 @@ func TestGetContentString(t *testing.T) {
 		},
 		"single nonempty contents with no header missing trailing newline": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "",
 					text:   "text\n goes\n  here",
 				},
@@ -132,7 +132,7 @@ func TestGetContentString(t *testing.T) {
 		},
 		"single nonempty contents with no header": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "",
 					text:   "text\n goes\n  here\n",
 				},
@@ -141,7 +141,7 @@ func TestGetContentString(t *testing.T) {
 		},
 		"single nonempty contents with header": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "header",
 					text:   "text\n goes\n  here\n",
 				},
@@ -150,11 +150,11 @@ func TestGetContentString(t *testing.T) {
 		},
 		"multiple nonempty contents with no headers": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "",
 					text:   "text\n goes\n  here\n",
 				},
-				contentItem{
+				{
 					header: "",
 					text:   "text2\n goes2\n  here2 \n",
 				},
@@ -163,11 +163,11 @@ func TestGetContentString(t *testing.T) {
 		},
 		"multiple nonempty contents with headers": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "header1 ",
 					text:   "text\n goes\n  here\n",
 				},
-				contentItem{
+				{
 					header: " header2",
 					text:   "text2\n goes2\n  here2 \n",
 				},
@@ -339,7 +339,7 @@ func TestIsEmptyContents(t *testing.T) {
 		},
 		"single content with only newlines and empty header": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "",
 					text:   "\n\n\n",
 				},
@@ -348,7 +348,7 @@ func TestIsEmptyContents(t *testing.T) {
 		},
 		"single content with only newlines and populated header": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "header",
 					text:   "\n\n\n",
 				},
@@ -357,11 +357,11 @@ func TestIsEmptyContents(t *testing.T) {
 		},
 		"multiple contents with only newlines and empty headers": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "",
 					text:   "\n\n\n",
 				},
-				contentItem{
+				{
 					header: "",
 					text:   "\n",
 				},
@@ -370,11 +370,11 @@ func TestIsEmptyContents(t *testing.T) {
 		},
 		"multiple contents with only newlines and populated headers": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "header1",
 					text:   "\n\n\n",
 				},
-				contentItem{
+				{
 					header: "header2",
 					text:   "\n",
 				},
@@ -383,7 +383,7 @@ func TestIsEmptyContents(t *testing.T) {
 		},
 		"single content with text and no header": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "",
 					text:   "\n\nfoo\n",
 				},
@@ -392,7 +392,7 @@ func TestIsEmptyContents(t *testing.T) {
 		},
 		"single content with text and populated header": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "header",
 					text:   "\n\nfoo\n",
 				},
@@ -401,11 +401,11 @@ func TestIsEmptyContents(t *testing.T) {
 		},
 		"multiple contents with text and no headers": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "",
 					text:   "\n\nfoo\n",
 				},
-				contentItem{
+				{
 					header: "",
 					text:   "bar",
 				},
@@ -414,11 +414,11 @@ func TestIsEmptyContents(t *testing.T) {
 		},
 		"multiple contents with text and populated headers": {
 			contents: []contentItem{
-				contentItem{
+				{
 					header: "header1",
 					text:   "\n\nfoo\n",
 				},
-				contentItem{
+				{
 					header: "header2",
 					text:   "bar",
 				},

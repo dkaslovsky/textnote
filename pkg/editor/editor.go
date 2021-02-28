@@ -1,6 +1,10 @@
 package editor
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"os/exec"
+)
 
 // EnvEditor is the name of the environment variable specifying the editor for opening notes
 const EnvEditor = "EDITOR"
@@ -13,6 +17,12 @@ const (
 	editorNameVim    = "vim"
 )
 
+// openable is the interface that an editor opens
+type openable interface {
+	GetFilePath() string
+	GetFileCursorLine() int
+}
+
 // Editor encapsulates the commands and args necessary to open an editor in a shell
 type Editor struct {
 	Cmd       string
@@ -21,14 +31,16 @@ type Editor struct {
 	Default   bool
 }
 
-// GetCmd returns the editor's command
-func (e *Editor) GetCmd() string {
-	return e.Cmd
-}
-
-// GetArgsFunc returns the editor's GetArgs function
-func (e *Editor) GetArgsFunc() func(int) []string {
-	return e.GetArgs
+// Open opens an object satisfying the openable interface in the editor
+// NOTE: it is recommended to use Go >= v.1.15.7 due to call to exec.Command()
+// See: https://blog.golang.org/path-security
+func (e *Editor) Open(o openable) error {
+	args := append(e.GetArgs(o.GetFileCursorLine()), o.GetFilePath())
+	cmd := exec.Command(e.Cmd, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 // GetEditor gets an Editor based on a provided name

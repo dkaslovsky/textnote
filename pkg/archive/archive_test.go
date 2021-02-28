@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/dkaslovsky/textnote/pkg/file"
 	"github.com/dkaslovsky/textnote/pkg/template"
 	"github.com/dkaslovsky/textnote/pkg/template/templatetest"
@@ -413,7 +412,7 @@ _p_TestSection3_q_
 
 			expectedFilesWithFullPath := []string{}
 			for _, f := range test.expectedFiles {
-				fullPath := filepath.Join(config.AppDir, f)
+				fullPath := filepath.Join(opts.AppDir, f)
 				expectedFilesWithFullPath = append(expectedFilesWithFullPath, fullPath)
 			}
 			require.ElementsMatch(t, expectedFilesWithFullPath, a.GetArchivedFiles())

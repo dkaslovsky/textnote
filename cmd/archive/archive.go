@@ -29,7 +29,7 @@ func CreateArchiveCmd() *cobra.Command {
 		Long:         "consolidate notes into monthly archive files",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts, err := config.LoadOrCreate()
+			opts, err := config.Load()
 			if err != nil {
 				return err
 			}
@@ -50,7 +50,7 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	archiver := archive.NewArchiver(templateOpts, file.NewReadWriter(), time.Now())
 
-	files, err := ioutil.ReadDir(config.AppDir)
+	files, err := ioutil.ReadDir(templateOpts.AppDir)
 	if err != nil {
 		return err
 	}

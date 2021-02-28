@@ -9,22 +9,26 @@ import (
 	"strings"
 
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
 const (
-	// FileName is the name of the configuration file
-	FileName = ".config.yml"
 	// envAppDir is the name of the environment variable specifying the application directory
 	envAppDir = "TEXTNOTE_DIR"
+	// fileName is the name of the configuration file
+	fileName = ".config.yml"
 )
 
-// AppDir is the directory in which the application stores its files
-var AppDir = os.Getenv(envAppDir)
+var (
+	// appDir is the directory in which the application stores its files
+	appDir = os.Getenv(envAppDir)
+)
 
 // Opts are options that configure the application
 type Opts struct {
+	AppDir  string      `yaml:"-"` // AppDir is always read from the environment and is not written to file
 	Header  HeaderOpts  `yaml:"header"`
 	Section SectionOpts `yaml:"section"`
 	File    FileOpts    `yaml:"file"`
@@ -111,69 +115,85 @@ func getDefaultOpts() Opts {
 	}
 }
 
-// LoadOrCreate loads a config file or creates it using defaults
-func LoadOrCreate() (Opts, error) {
+// Load loads the configuration from file and/or evironment
+func Load() (Opts, error) {
 	opts := Opts{}
 
-	err := EnsureAppDir()
-	if err != nil {
-		return opts, err
-	}
-
-	// write config file using defaults if it dies not exist
-	configPath := filepath.Join(AppDir, FileName)
-	_, err = os.Stat(configPath)
-	if os.IsNotExist(err) {
-		defaults := getDefaultOpts()
-		yml, err := yaml.Marshal(defaults)
-		if err != nil {
-			return opts, errors.Wrap(err, "unable to generate config file")
-		}
-		err = ioutil.WriteFile(configPath, yml, 0644)
-		if err != nil {
-			return opts, errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
-		}
-		log.Printf("created default configuration file: [%s]", configPath)
-	}
-
 	// parse config file allowing environment variable overrides
-	err = cleanenv.ReadConfig(configPath, &opts)
+	err := cleanenv.ReadConfig(GetConfigFilePath(), &opts)
 	if err != nil {
 		return opts, errors.Wrap(err, "unable to read config file")
 	}
 
+	// overwrite defaults with opts from file/env
+	defaults := getDefaultOpts()
+	err = mergo.Merge(&opts, defaults)
+	if err != nil {
+		return opts, errors.Wrap(err, "unable to integrate configuration from file with defaults")
+	}
+
+	// set AppDir as read from environment
+	opts.AppDir = appDir
+
 	err = ValidateOpts(opts)
 	if err != nil {
-		return opts, errors.Wrapf(err, "configuration error in [%s]", FileName)
+		return opts, errors.Wrapf(err, "configuration error in [%s]", fileName)
 	}
 
 	return opts, nil
 }
 
+// CreateIfNotExists writes defaults to the configuration file if it does not already exist
+func CreateIfNotExists() error {
+	configPath := GetConfigFilePath()
+	_, err := os.Stat(configPath)
+	if !os.IsNotExist(err) {
+		// config file exists, nothing to do
+		return nil
+	}
+
+	defaults := getDefaultOpts()
+	yml, err := yaml.Marshal(defaults)
+	if err != nil {
+		return errors.Wrap(err, "unable to generate config file")
+	}
+	err = ioutil.WriteFile(configPath, yml, 0644)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
+	}
+	log.Printf("created default configuration file: [%s]", configPath)
+	return nil
+}
+
 // EnsureAppDir validates that the application directory exists or is created
 func EnsureAppDir() error {
-	if AppDir == "" {
+	if appDir == "" {
 		return fmt.Errorf("required environment variable [%s] is not set", envAppDir)
 	}
 
-	finfo, err := os.Stat(AppDir)
+	finfo, err := os.Stat(appDir)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(AppDir, 0755)
+		err := os.MkdirAll(appDir, 0755)
 		if err != nil {
 			return err
 		}
-		log.Printf("created directory [%s]", AppDir)
+		log.Printf("created directory [%s]", appDir)
 		return nil
 	}
 
 	if !finfo.IsDir() {
-		return fmt.Errorf("[%s=%s] must be a directory", envAppDir, AppDir)
+		return fmt.Errorf("[%s=%s] must be a directory", envAppDir, appDir)
 	}
 	return nil
 }
 
 // ValidateOpts returns an error if the specified options are misconfigured
 func ValidateOpts(opts Opts) error {
+	// validate appDir is not empty
+	if opts.AppDir == "" {
+		return fmt.Errorf("must include path to application directory in %s environment variable", envAppDir)
+	}
+
 	// validate at least one section
 	if len(opts.Section.Names) == 0 {
 		return errors.New("must include at least one section")
@@ -219,4 +239,9 @@ func DescribeEnvVars() string {
 		return ""
 	}
 	return description
+}
+
+// GetConfigFilePath constructs the full path to the configuration file
+func GetConfigFilePath() string {
+	return filepath.Join(appDir, fileName)
 }

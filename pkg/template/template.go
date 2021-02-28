@@ -53,7 +53,7 @@ func (t *Template) GetFileCursorLine() int {
 
 // GetFilePath generates a full path for a file based on the template date
 func (t *Template) GetFilePath() string {
-	name := filepath.Join(config.AppDir, t.date.Format(t.opts.File.TimeFormat))
+	name := filepath.Join(t.opts.AppDir, t.date.Format(t.opts.File.TimeFormat))
 	if t.opts.File.Ext == "" {
 		return name
 	}

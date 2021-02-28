@@ -15,6 +15,7 @@ var Date = time.Date(2020, 12, 20, 1, 1, 1, 1, time.UTC)
 // GetOpts returns a configuration struct for tests - changing these values will affect some tests
 func GetOpts() config.Opts {
 	opts := config.Opts{
+		AppDir: "path/to/app/dir",
 		Header: config.HeaderOpts{
 			Prefix:           "-^-",
 			Suffix:           "-v-",

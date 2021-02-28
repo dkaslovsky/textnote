@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/pkg/errors"
@@ -23,19 +22,14 @@ func CreateConfigCmd() *cobra.Command {
 		Short: "show configuration",
 		Long:  "displays the application's configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := config.LoadOrCreate()
-			if err != nil {
-				return err
-			}
-
-			configPath := filepath.Join(config.AppDir, config.FileName)
+			configPath := config.GetConfigFilePath()
 
 			if cmdOpts.path {
 				fmt.Printf("configuration file path: [%s]\n", configPath)
 				return nil
 			}
 
-			_, err = os.Stat(configPath)
+			_, err := os.Stat(configPath)
 			if os.IsNotExist(err) {
 				return fmt.Errorf("cannot find configuration file [%s]", configPath)
 			}

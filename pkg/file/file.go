@@ -3,7 +3,6 @@ package file
 import (
 	"io"
 	"os"
-	"os/exec"
 )
 
 // ReadWriteable is the interface on which file operations are executed
@@ -51,29 +50,4 @@ func (rw *ReadWriter) Exists(rwable ReadWriteable) bool {
 	fileName := rwable.GetFilePath()
 	_, err := os.Stat(fileName)
 	return !os.IsNotExist(err)
-}
-
-// Openable is the interface for which a file is opened
-type Openable interface {
-	GetFilePath() string
-	GetFileCursorLine() int
-}
-
-// Editor is the interface for which an editor is opened
-type Editor interface {
-	GetCmd() string
-	GetArgsFunc() func(int) []string
-}
-
-// Open opens a template in an editor
-// NOTE: it is recommended to use Go >= v.1.15.7 due to call to exec.Command()
-// See: https://blog.golang.org/path-security
-func Open(o Openable, ed Editor) error {
-	edArgs := append(ed.GetArgsFunc()(o.GetFileCursorLine()), o.GetFilePath())
-
-	cmd := exec.Command(ed.GetCmd(), edArgs...)
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }

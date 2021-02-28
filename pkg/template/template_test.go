@@ -73,10 +73,10 @@ func TestGetFilePath(t *testing.T) {
 		opts.File.Ext = "txt"
 		template := NewTemplate(opts, templatetest.Date)
 		filePath := template.GetFilePath()
-		require.True(t, strings.HasPrefix(filePath, config.AppDir))
+		require.True(t, strings.HasPrefix(filePath, opts.AppDir))
 		require.True(t, strings.HasSuffix(filePath, ".txt"))
 		require.Equal(t, templatetest.Date.Format(opts.File.TimeFormat), stripPrefixSuffix(filePath,
-			fmt.Sprintf("%s/", config.AppDir), ".txt"),
+			fmt.Sprintf("%s/", opts.AppDir), ".txt"),
 		)
 	})
 
@@ -85,10 +85,10 @@ func TestGetFilePath(t *testing.T) {
 		opts.File.Ext = ""
 		template := NewTemplate(opts, templatetest.Date)
 		filePath := template.GetFilePath()
-		require.True(t, strings.HasPrefix(filePath, config.AppDir))
+		require.True(t, strings.HasPrefix(filePath, opts.AppDir))
 		require.False(t, strings.HasSuffix(filePath, "."))
 		require.Equal(t, templatetest.Date.Format(opts.File.TimeFormat), stripPrefixSuffix(filePath,
-			fmt.Sprintf("%s/", config.AppDir), ""),
+			fmt.Sprintf("%s/", opts.AppDir), ""),
 		)
 	})
 }
@@ -109,7 +109,7 @@ func TestCopySectionContents(t *testing.T) {
 		"copy empty contents into populated section": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
-				contentItem{
+				{
 					header: "existingHeader",
 					text:   "existingText1",
 				},
@@ -120,7 +120,7 @@ func TestCopySectionContents(t *testing.T) {
 			sectionName:      "TestSection1",
 			existingContents: []contentItem{},
 			incomingContents: []contentItem{
-				contentItem{
+				{
 					header: "header",
 					text:   "text1",
 				},
@@ -129,13 +129,13 @@ func TestCopySectionContents(t *testing.T) {
 		"copy contents with single element into populated section": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
-				contentItem{
+				{
 					header: "existingHeader",
 					text:   "existingText1",
 				},
 			},
 			incomingContents: []contentItem{
-				contentItem{
+				{
 					header: "header",
 					text:   "text1",
 				},
@@ -145,11 +145,11 @@ func TestCopySectionContents(t *testing.T) {
 			sectionName:      "TestSection1",
 			existingContents: []contentItem{},
 			incomingContents: []contentItem{
-				contentItem{
+				{
 					header: "header1",
 					text:   "text1",
 				},
-				contentItem{
+				{
 					header: "header2",
 					text:   "text2",
 				},
@@ -158,17 +158,17 @@ func TestCopySectionContents(t *testing.T) {
 		"copy contents with multiple elements into populated section": {
 			sectionName: "TestSection1",
 			existingContents: []contentItem{
-				contentItem{
+				{
 					header: "existingHeader",
 					text:   "existingText1",
 				},
 			},
 			incomingContents: []contentItem{
-				contentItem{
+				{
 					header: "header1",
 					text:   "text1",
 				},
-				contentItem{
+				{
 					header: "header2",
 					text:   "text2",
 				},
