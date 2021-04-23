@@ -121,7 +121,6 @@ func TestSetDateOpt(t *testing.T) {
 				"2020-04-09.txt",
 			},
 			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "",
 			shouldErr: true,
 		},
 		"multiple mutually exclusive flags: date and tomorrow set": {
@@ -135,7 +134,6 @@ func TestSetDateOpt(t *testing.T) {
 				"2020-04-09.txt",
 			},
 			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "",
 			shouldErr: true,
 		},
 		"multiple mutually exclusive flags: date and latest set": {
@@ -149,7 +147,6 @@ func TestSetDateOpt(t *testing.T) {
 				"2020-04-09.txt",
 			},
 			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "",
 			shouldErr: true,
 		},
 		"multiple mutually exclusive flags: daysBack and tomorrow set": {
@@ -163,7 +160,6 @@ func TestSetDateOpt(t *testing.T) {
 				"2020-04-09.txt",
 			},
 			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "",
 			shouldErr: true,
 		},
 		"multiple mutually exclusive flags: daysBack and latest set": {
@@ -177,7 +173,6 @@ func TestSetDateOpt(t *testing.T) {
 				"2020-04-09.txt",
 			},
 			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "",
 			shouldErr: true,
 		},
 		"multiple mutually exclusive flags: tomorrow and latest set": {
@@ -191,7 +186,6 @@ func TestSetDateOpt(t *testing.T) {
 				"2020-04-09.txt",
 			},
 			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "",
 			shouldErr: true,
 		},
 		"use date": {
@@ -246,6 +240,25 @@ func TestSetDateOpt(t *testing.T) {
 			expected:  "2020-04-11",
 			shouldErr: false,
 		},
+		"no latest found": {
+			cmdOpts: &commandOptions{
+				latest: true,
+			},
+			files:     []string{},
+			now:       time.Date(2020, 4, 15, 0, 0, 0, 0, time.UTC),
+			shouldErr: true,
+		},
+		"default to today": {
+			cmdOpts: &commandOptions{},
+			files: []string{
+				"2020-04-11.txt",
+				"2020-04-10.txt",
+				"2020-04-09.txt",
+			},
+			now:       time.Date(2020, 4, 15, 0, 0, 0, 0, time.UTC),
+			expected:  "2020-04-15",
+			shouldErr: false,
+		},
 	}
 
 	for name, test := range tests {
@@ -260,6 +273,92 @@ func TestSetDateOpt(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.Equal(t, test.expected, test.cmdOpts.date)
+		})
+	}
+}
+
+func TestSetCopyDateOpt(t *testing.T) {
+	templateOpts := templatetest.GetOpts()
+
+	type testCase struct {
+		cmdOpts   *commandOptions
+		files     []string
+		now       time.Time
+		expected  string
+		shouldErr bool
+	}
+
+	tests := map[string]testCase{
+		"multiple mutually exclusive flags: copyDate and copyDaysBack set": {
+			cmdOpts: &commandOptions{
+				copyDate:     "2020-04-11",
+				copyDaysBack: 2,
+			},
+			files: []string{
+				"2020-04-11.txt",
+				"2020-04-10.txt",
+				"2020-04-09.txt",
+			},
+			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
+			shouldErr: true,
+		},
+		"use copyDate": {
+			cmdOpts: &commandOptions{
+				copyDate: "2020-04-11",
+			},
+			files: []string{
+				"2020-04-11.txt",
+				"2020-04-10.txt",
+				"2020-04-09.txt",
+			},
+			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
+			expected:  "2020-04-11",
+			shouldErr: false,
+		},
+		"use copyDaysBack": {
+			cmdOpts: &commandOptions{
+				copyDaysBack: 2,
+			},
+			files: []string{
+				"2020-04-11.txt",
+				"2020-04-10.txt",
+				"2020-04-09.txt",
+			},
+			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
+			expected:  "2020-04-10",
+			shouldErr: false,
+		},
+		"default to latest": {
+			cmdOpts: &commandOptions{},
+			files: []string{
+				"2020-04-11.txt",
+				"2020-04-10.txt",
+				"2020-04-09.txt",
+			},
+			now:       time.Date(2020, 4, 15, 0, 0, 0, 0, time.UTC),
+			expected:  "2020-04-11",
+			shouldErr: false,
+		},
+		"no latest found": {
+			cmdOpts:   &commandOptions{},
+			files:     []string{},
+			now:       time.Date(2020, 4, 15, 0, 0, 0, 0, time.UTC),
+			shouldErr: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			getFiles := func(dir string) ([]string, error) {
+				return test.files, nil
+			}
+			err := setCopyDateOpt(test.cmdOpts, templateOpts, getFiles, test.now)
+			if test.shouldErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, test.expected, test.cmdOpts.copyDate)
 		})
 	}
 }

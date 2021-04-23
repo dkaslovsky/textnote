@@ -52,7 +52,10 @@ func CreateOpenCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			setCopyDateOpt(&cmdOpts, now, opts)
+			err = setCopyDateOpt(&cmdOpts, opts, getDirFiles, now)
+			if err != nil {
+				return err
+			}
 			return run(opts, cmdOpts)
 		},
 	}
@@ -67,18 +70,18 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags.StringVar(&cmdOpts.date, "date", "", "date for note to be opened (defaults to today)")
 	flags.UintVarP(&cmdOpts.daysBack, "days-back", "d", 0, "number of days back from today for opening a note (cannot be used with date, tomorrow, or latest flags)")
 	flags.BoolVarP(&cmdOpts.tomorrow, "tomorrow", "t", false, "specify tomorrow as the date for note to be opened (cannot be used with date, days-back, or latest flags)")
-	flags.BoolVarP(&cmdOpts.latest, "latest", "l", false, "specify the date of the last written note as the date to be opened (cannot be used with date, days-back, or tomorrow flags)")
+	flags.BoolVarP(&cmdOpts.latest, "latest", "l", false, "specify the most recent dated note to be opened (cannot be used with date, days-back, or tomorrow flags)")
 
 	// mutually exclusive flags for copy date
-	flags.StringVar(&cmdOpts.copyDate, "copy", "", "date of note for copying sections (defaults to yesterday)")
-	flags.UintVarP(&cmdOpts.copyDaysBack, "copy-back", "c", 0, "number of days back from today for copying from a note (ignored if copy flag is used)")
+	flags.StringVar(&cmdOpts.copyDate, "copy", "", "date of note for copying sections (defaults to date of most recent note, cannot be used with copy-back flag)")
+	flags.UintVarP(&cmdOpts.copyDaysBack, "copy-back", "c", 0, "number of days back from today for copying from a note (cannot be used with copy flag)")
 
 	flags.StringSliceVarP(&cmdOpts.sections, "section", "s", []string{}, "section to copy (defaults to none)")
 	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete sections after copy")
 }
 
 func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func(string) ([]string, error), now time.Time) error {
-	errMutuallyExclusive := errors.New("only one of [date, days-back, tomorrow, latest] flags may be specified")
+	errMutuallyExclusive := errors.New("only one of [date, days-back, tomorrow, latest] flags may be used")
 	date := ""
 
 	if cmdOpts.date != "" {
@@ -118,30 +121,42 @@ func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func
 		date = latest
 	}
 
+	// default to today
 	if date == "" {
-		return errors.New("date for opening note is unspecified")
+		date = now.Format(templateOpts.Cli.TimeFormat)
 	}
 
 	cmdOpts.date = date
 	return nil
 }
 
-func setCopyDateOpt(cmdOpts *commandOptions, now time.Time, templateOpts config.Opts) {
-	if cmdOpts.copyDate != "" {
-		return
+func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func(string) ([]string, error), now time.Time) error {
+	if cmdOpts.copyDate != "" && cmdOpts.copyDaysBack != 0 {
+		return errors.New("only one of [copy, copy-back] flags may be used")
 	}
-	if cmdOpts.tomorrow {
-		// default to today if copying to tomorrow's note
-		cmdOpts.copyDate = now.Format(templateOpts.Cli.TimeFormat)
-		return
+
+	if cmdOpts.copyDate != "" {
+		return nil
 	}
 	if cmdOpts.copyDaysBack != 0 {
-		// use copyDaysBack if specified
 		cmdOpts.copyDate = now.Add(-day * time.Duration(cmdOpts.copyDaysBack)).Format(templateOpts.Cli.TimeFormat)
-		return
+		return nil
 	}
-	// default is yesterday
-	cmdOpts.copyDate = now.Add(-day).Format(templateOpts.Cli.TimeFormat)
+
+	// default to latest
+	files, err := getFiles(templateOpts.AppDir)
+	if err != nil {
+		return err
+	}
+	latest, err := getLatestFile(files, now, templateOpts.File)
+	if err != nil {
+		return err
+	}
+	if templateOpts.File.Ext != "" {
+		latest = strings.TrimSuffix(latest, fmt.Sprintf(".%s", templateOpts.File.Ext))
+	}
+	cmdOpts.copyDate = latest
+	return nil
 }
 
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
@@ -256,7 +271,7 @@ func getLatestFile(files []string, now time.Time, opts config.FileOpts) (string,
 	}
 
 	if latest == "" {
-		return "", errors.New("no timestamped template files")
+		return "", errors.New("cannot find latest file, no timestamped template files")
 	}
 	return latest, nil
 }
