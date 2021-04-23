@@ -2,8 +2,11 @@ package open
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"math"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
@@ -17,13 +20,18 @@ import (
 const day = 24 * time.Hour
 
 type commandOptions struct {
-	date         string
+	// mutually exclusive flags for date to open
+	date     string
+	daysBack uint
+	tomorrow bool
+	latest   bool
+
+	// mutually exclusive flags for copy date
 	copyDate     string
-	daysBack     uint
 	copyDaysBack uint
-	tomorrow     bool
-	sections     []string
-	delete       bool
+
+	sections []string
+	delete   bool
 }
 
 // CreateOpenCmd creates the open subcommand
@@ -40,7 +48,10 @@ func CreateOpenCmd() *cobra.Command {
 				return err
 			}
 			now := time.Now()
-			setDateOpt(&cmdOpts, now, opts)
+			err = setDateOpt(&cmdOpts, opts, getDirFiles, now)
+			if err != nil {
+				return err
+			}
 			setCopyDateOpt(&cmdOpts, now, opts)
 			return run(opts, cmdOpts)
 		},
@@ -51,31 +62,68 @@ func CreateOpenCmd() *cobra.Command {
 
 func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags := cmd.Flags()
+
+	// mutually exclusive flags for date to open
 	flags.StringVar(&cmdOpts.date, "date", "", "date for note to be opened (defaults to today)")
+	flags.UintVarP(&cmdOpts.daysBack, "days-back", "d", 0, "number of days back from today for opening a note (cannot be used with date, tomorrow, or latest flags)")
+	flags.BoolVarP(&cmdOpts.tomorrow, "tomorrow", "t", false, "specify tomorrow as the date for note to be opened (cannot be used with date, days-back, or latest flags)")
+	flags.BoolVarP(&cmdOpts.latest, "latest", "l", false, "specify the date of the last written note as the date to be opened (cannot be used with date, days-back, or tomorrow flags)")
+
+	// mutually exclusive flags for copy date
 	flags.StringVar(&cmdOpts.copyDate, "copy", "", "date of note for copying sections (defaults to yesterday)")
-	flags.UintVarP(&cmdOpts.daysBack, "days-back", "d", 0, "number of days back from today for opening a note (ignored if date or tomorrow flags are used)")
 	flags.UintVarP(&cmdOpts.copyDaysBack, "copy-back", "c", 0, "number of days back from today for copying from a note (ignored if copy flag is used)")
-	flags.BoolVarP(&cmdOpts.tomorrow, "tomorrow", "t", false, "specify tomorrow as the date for note to be opened (ignored if date flag is used)")
+
 	flags.StringSliceVarP(&cmdOpts.sections, "section", "s", []string{}, "section to copy (defaults to none)")
 	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete sections after copy")
 }
 
-func setDateOpt(cmdOpts *commandOptions, now time.Time, templateOpts config.Opts) {
+func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func(string) ([]string, error), now time.Time) error {
+	errMutuallyExclusive := errors.New("only one of [date, days-back, tomorrow, latest] flags may be specified")
+	date := ""
+
 	if cmdOpts.date != "" {
-		return
+		date = cmdOpts.date
 	}
-	if cmdOpts.tomorrow {
-		// set date as tomorrow
-		cmdOpts.date = now.Add(day).Format(templateOpts.Cli.TimeFormat)
-		return
-	}
+
 	if cmdOpts.daysBack != 0 {
-		// use daysBack if specified
-		cmdOpts.date = now.Add(-day * time.Duration(cmdOpts.daysBack)).Format(templateOpts.Cli.TimeFormat)
-		return
+		if date != "" {
+			return errMutuallyExclusive
+		}
+		date = now.Add(-day * time.Duration(cmdOpts.daysBack)).Format(templateOpts.Cli.TimeFormat)
 	}
-	// default is today
-	cmdOpts.date = now.Format(templateOpts.Cli.TimeFormat)
+
+	if cmdOpts.tomorrow {
+		if date != "" {
+			return errMutuallyExclusive
+		}
+		date = now.Add(day).Format(templateOpts.Cli.TimeFormat)
+	}
+
+	if cmdOpts.latest {
+		if date != "" {
+			return errMutuallyExclusive
+		}
+
+		files, err := getFiles(templateOpts.AppDir)
+		if err != nil {
+			return err
+		}
+		latest, err := getLatestFile(files, now, templateOpts.File)
+		if err != nil {
+			return err
+		}
+		if templateOpts.File.Ext != "" {
+			latest = strings.TrimSuffix(latest, fmt.Sprintf(".%s", templateOpts.File.Ext))
+		}
+		date = latest
+	}
+
+	if date == "" {
+		return errors.New("date for opening note is unspecified")
+	}
+
+	cmdOpts.date = date
+	return nil
 }
 
 func setCopyDateOpt(cmdOpts *commandOptions, now time.Time, templateOpts config.Opts) {
@@ -186,4 +234,47 @@ func openInEditor(t *template.Template, ed *editor.Editor) error {
 		log.Printf("Environment variable [%s] not set, attempting to use default editor [%s]", editor.EnvEditor, ed.Cmd)
 	}
 	return ed.Open(t)
+}
+
+func getLatestFile(files []string, now time.Time, opts config.FileOpts) (string, error) {
+	delta := math.Inf(1)
+	latest := ""
+
+	for _, f := range files {
+		fileTime, ok := template.ParseTemplateFileName(f, opts)
+		if !ok {
+			continue
+		}
+		curdelta := now.Sub(fileTime).Hours()
+		if curdelta < 0 {
+			continue
+		}
+		if curdelta < delta {
+			delta = curdelta
+			latest = f
+		}
+	}
+
+	if latest == "" {
+		return "", errors.New("no timestamped template files")
+	}
+	return latest, nil
+}
+
+func getDirFiles(dir string) ([]string, error) {
+	fileNames := []string{}
+
+	fInfo, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return fileNames, err
+	}
+
+	for _, f := range fInfo {
+		if f.IsDir() {
+			continue
+		}
+		fileNames = append(fileNames, f.Name())
+	}
+
+	return fileNames, nil
 }
