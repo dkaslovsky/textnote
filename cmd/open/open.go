@@ -149,8 +149,8 @@ func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles 
 		return err
 	}
 	latest, found := getLatestFile(files, now, templateOpts.File)
-	// set copyDate to be empty if no latest file is found, otherwise an error will be raised on
-	// the app's first use
+	// set copyDate to be empty if no latest file is found and return nil error,
+	// otherwise an error will be raised on the app's first use
 	if !found {
 		cmdOpts.copyDate = ""
 		return nil

@@ -12,43 +12,43 @@ func TestGetLatestFile(t *testing.T) {
 	opts := templatetest.GetOpts()
 
 	type testCase struct {
-		files     []string
-		now       time.Time
-		expected  string
-		shouldErr bool
+		files    []string
+		now      time.Time
+		expected string
+		found    bool
 	}
 
 	tests := map[string]testCase{
 		"empty directory": {
-			files:     []string{},
-			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "",
-			shouldErr: true,
+			files:    []string{},
+			now:      time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
+			expected: "",
+			found:    false,
 		},
 		"no timestamped template files": {
 			files: []string{
 				"archive-Dec2019.txt",
 				"archive-2019-11-01.txt",
 			},
-			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "",
-			shouldErr: true,
+			now:      time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
+			expected: "",
+			found:    false,
 		},
 		"single template file in future": {
 			files: []string{
 				"2020-04-13.txt",
 			},
-			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "",
-			shouldErr: true,
+			now:      time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
+			expected: "",
+			found:    false,
 		},
 		"single template file": {
 			files: []string{
 				"2020-03-11.txt",
 			},
-			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "2020-03-11.txt",
-			shouldErr: false,
+			now:      time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
+			expected: "2020-03-11.txt",
+			found:    true,
 		},
 		"multiple template files": {
 			files: []string{
@@ -56,9 +56,9 @@ func TestGetLatestFile(t *testing.T) {
 				"2020-03-12.txt",
 				"2020-03-13.txt",
 			},
-			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "2020-03-13.txt",
-			shouldErr: false,
+			now:      time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
+			expected: "2020-03-13.txt",
+			found:    true,
 		},
 		"multiple template files with one in future": {
 			files: []string{
@@ -66,9 +66,9 @@ func TestGetLatestFile(t *testing.T) {
 				"2020-04-12.txt",
 				"2020-04-13.txt",
 			},
-			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "2020-04-12.txt",
-			shouldErr: false,
+			now:      time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
+			expected: "2020-04-12.txt",
+			found:    true,
 		},
 		"mix of timestamped template files and other files": {
 			files: []string{
@@ -79,20 +79,16 @@ func TestGetLatestFile(t *testing.T) {
 				"2020-03-13.txt",
 				"archive_April2020",
 			},
-			now:       time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
-			expected:  "2020-03-13.txt",
-			shouldErr: false,
+			now:      time.Date(2020, 4, 12, 0, 0, 0, 0, time.UTC),
+			expected: "2020-03-13.txt",
+			found:    true,
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			latest, err := getLatestFile(test.files, test.now, opts.File)
-			if test.shouldErr {
-				require.Error(t, err)
-				return
-			}
-			require.NoError(t, err)
+			latest, found := getLatestFile(test.files, test.now, opts.File)
+			require.Equal(t, test.found, found)
 			require.Equal(t, test.expected, latest)
 		})
 	}
@@ -343,7 +339,8 @@ func TestSetCopyDateOpt(t *testing.T) {
 			cmdOpts:   &commandOptions{},
 			files:     []string{},
 			now:       time.Date(2020, 4, 15, 0, 0, 0, 0, time.UTC),
-			shouldErr: true,
+			expected:  "",
+			shouldErr: false,
 		},
 	}
 
