@@ -111,9 +111,9 @@ func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func
 		if err != nil {
 			return err
 		}
-		latest, err := getLatestFile(files, now, templateOpts.File)
-		if err != nil {
-			return err
+		latest, found := getLatestFile(files, now, templateOpts.File)
+		if !found {
+			return fmt.Errorf("failed to find latest template file in [%s]", templateOpts.AppDir)
 		}
 		if templateOpts.File.Ext != "" {
 			latest = strings.TrimSuffix(latest, fmt.Sprintf(".%s", templateOpts.File.Ext))
@@ -148,9 +148,12 @@ func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles 
 	if err != nil {
 		return err
 	}
-	latest, err := getLatestFile(files, now, templateOpts.File)
-	if err != nil {
-		return err
+	latest, found := getLatestFile(files, now, templateOpts.File)
+	// set copyDate to be empty if no latest file is found, otherwise an error will be raised on
+	// the app's first use
+	if !found {
+		cmdOpts.copyDate = ""
+		return nil
 	}
 	if templateOpts.File.Ext != "" {
 		latest = strings.TrimSuffix(latest, fmt.Sprintf(".%s", templateOpts.File.Ext))
@@ -181,6 +184,12 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	}
 
 	// load source for copy
+	if cmdOpts.copyDate == "" {
+		return fmt.Errorf("cannot find note to copy, [%s] might be empty", templateOpts.AppDir)
+	}
+	if cmdOpts.copyDate == cmdOpts.date {
+		return errors.New("cannot copy from note being written")
+	}
 	copyDate, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.copyDate)
 	if err != nil {
 		return errors.Wrapf(err, "cannot copy note from malformed date [%s]", cmdOpts.copyDate)
@@ -251,7 +260,7 @@ func openInEditor(t *template.Template, ed *editor.Editor) error {
 	return ed.Open(t)
 }
 
-func getLatestFile(files []string, now time.Time, opts config.FileOpts) (string, error) {
+func getLatestFile(files []string, now time.Time, opts config.FileOpts) (string, bool) {
 	delta := math.Inf(1)
 	latest := ""
 
@@ -270,10 +279,8 @@ func getLatestFile(files []string, now time.Time, opts config.FileOpts) (string,
 		}
 	}
 
-	if latest == "" {
-		return "", errors.New("cannot find latest file, no timestamped template files")
-	}
-	return latest, nil
+	found := latest != ""
+	return latest, found
 }
 
 func getDirFiles(dir string) ([]string, error) {
