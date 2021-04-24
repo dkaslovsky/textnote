@@ -18,6 +18,8 @@ import (
 
 const day = 24 * time.Hour
 
+const numTemplateFilesWarningTresh = 100 // TODO: move to config, validate greater than archive after
+
 type commandOptions struct {
 	// mutually exclusive flags for date to open
 	date     string
@@ -110,8 +112,8 @@ func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func
 		if err != nil {
 			return err
 		}
-		latest, found := getLatestTemplateFile(files, now, templateOpts.File)
-		if !found {
+		latest, _ := getLatestTemplateFile(files, now, templateOpts.File)
+		if latest == "" {
 			return fmt.Errorf("failed to find latest template file in [%s]", templateOpts.AppDir)
 		}
 		if templateOpts.File.Ext != "" {
@@ -147,13 +149,8 @@ func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles 
 	if err != nil {
 		return err
 	}
-	latest, found := getLatestTemplateFile(files, now, templateOpts.File)
-	// set copyDate to be empty if no latest file is found and return nil error,
-	// otherwise an error will be raised on the app's first use
-	if !found {
-		cmdOpts.copyDate = ""
-		return nil
-	}
+	latest, numFound := getLatestTemplateFile(files, now, templateOpts.File)
+	warnTooManyTemplateFiles(numFound)
 	if templateOpts.File.Ext != "" {
 		latest = strings.TrimSuffix(latest, fmt.Sprintf(".%s", templateOpts.File.Ext))
 	}
@@ -259,9 +256,10 @@ func openInEditor(t *template.Template, ed *editor.Editor) error {
 	return ed.Open(t)
 }
 
-func getLatestTemplateFile(files []string, now time.Time, opts config.FileOpts) (string, bool) {
-	delta := math.Inf(1)
+func getLatestTemplateFile(files []string, now time.Time, opts config.FileOpts) (string, int) {
 	latest := ""
+	delta := math.Inf(1)
+	numTemplateFiles := 0
 
 	for _, f := range files {
 		fileTime, ok := template.ParseTemplateFileName(f, opts)
@@ -269,6 +267,7 @@ func getLatestTemplateFile(files []string, now time.Time, opts config.FileOpts) 
 			// skip archive files and other non-template files that cannot be parsed
 			continue
 		}
+		numTemplateFiles++
 		curdelta := now.Sub(fileTime).Hours()
 		if curdelta < 0 {
 			continue
@@ -279,8 +278,7 @@ func getLatestTemplateFile(files []string, now time.Time, opts config.FileOpts) 
 		}
 	}
 
-	found := latest != ""
-	return latest, found
+	return latest, numTemplateFiles
 }
 
 func getDirFiles(dir string) ([]string, error) {
@@ -299,4 +297,10 @@ func getDirFiles(dir string) ([]string, error) {
 	}
 
 	return fileNames, nil
+}
+
+func warnTooManyTemplateFiles(n int) {
+	if n > numTemplateFilesWarningTresh {
+		log.Printf("Found %d template files, consider running archive command for more efficient performance", n)
+	}
 }
