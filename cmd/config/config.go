@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
@@ -25,7 +26,7 @@ func CreateConfigCmd() *cobra.Command {
 			configPath := config.GetConfigFilePath()
 
 			if cmdOpts.path {
-				fmt.Printf("configuration file path: [%s]\n", configPath)
+				log.Printf("configuration file path: [%s]\n", configPath)
 				return nil
 			}
 
@@ -41,7 +42,7 @@ func CreateConfigCmd() *cobra.Command {
 			if err != nil {
 				return errors.Wrapf(err, "unable to read configuration file [%s]", configPath)
 			}
-			fmt.Printf("%s", c)
+			log.Printf("%s", c)
 			return nil
 		},
 	}
