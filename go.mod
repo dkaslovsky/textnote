@@ -1,6 +1,6 @@
 module github.com/dkaslovsky/textnote
 
-go 1.15
+go 1.16
 
 require (
 	github.com/ilyakaznacheev/cleanenv v1.2.5
