@@ -2,7 +2,6 @@ package open
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -267,6 +266,7 @@ func getLatestFile(files []string, now time.Time, opts config.FileOpts) (string,
 	for _, f := range files {
 		fileTime, ok := template.ParseTemplateFileName(f, opts)
 		if !ok {
+			// skip archive files and other non-template files that cannot be parsed
 			continue
 		}
 		curdelta := now.Sub(fileTime).Hours()
@@ -286,16 +286,16 @@ func getLatestFile(files []string, now time.Time, opts config.FileOpts) (string,
 func getDirFiles(dir string) ([]string, error) {
 	fileNames := []string{}
 
-	fInfo, err := ioutil.ReadDir(dir)
+	dirItems, err := os.ReadDir(dir)
 	if err != nil {
 		return fileNames, err
 	}
 
-	for _, f := range fInfo {
-		if f.IsDir() {
+	for _, item := range dirItems {
+		if item.IsDir() {
 			continue
 		}
-		fileNames = append(fileNames, f.Name())
+		fileNames = append(fileNames, item.Name())
 	}
 
 	return fileNames, nil

@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -157,7 +156,7 @@ func CreateIfNotExists() error {
 	if err != nil {
 		return errors.Wrap(err, "unable to generate config file")
 	}
-	err = ioutil.WriteFile(configPath, yml, 0644)
+	err = os.WriteFile(configPath, yml, 0644)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
 	}

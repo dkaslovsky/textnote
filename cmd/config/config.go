@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 
@@ -38,7 +38,7 @@ func CreateConfigCmd() *cobra.Command {
 			if err != nil {
 				return errors.Wrapf(err, "unable to open configuration file [%s]", configPath)
 			}
-			c, err := ioutil.ReadAll(f)
+			c, err := io.ReadAll(f)
 			if err != nil {
 				return errors.Wrapf(err, "unable to read configuration file [%s]", configPath)
 			}

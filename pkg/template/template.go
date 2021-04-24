@@ -3,7 +3,6 @@ package template
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"time"
@@ -92,7 +91,7 @@ func (t *Template) DeleteSectionContents(sectionName string) error {
 
 // Load populates a Template from the contents of a reader
 func (t *Template) Load(r io.Reader) error {
-	raw, err := ioutil.ReadAll(r)
+	raw, err := io.ReadAll(r)
 	if err != nil {
 		return errors.Wrap(err, "error loading template")
 	}
