@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetLatestFile(t *testing.T) {
+func TestGetLatestTemplateFile(t *testing.T) {
 	opts := templatetest.GetOpts()
 
 	type testCase struct {
@@ -87,7 +87,7 @@ func TestGetLatestFile(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			latest, found := getLatestFile(test.files, test.now, opts.File)
+			latest, found := getLatestTemplateFile(test.files, test.now, opts.File)
 			require.Equal(t, test.found, found)
 			require.Equal(t, test.expected, latest)
 		})

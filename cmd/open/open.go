@@ -110,7 +110,7 @@ func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func
 		if err != nil {
 			return err
 		}
-		latest, found := getLatestFile(files, now, templateOpts.File)
+		latest, found := getLatestTemplateFile(files, now, templateOpts.File)
 		if !found {
 			return fmt.Errorf("failed to find latest template file in [%s]", templateOpts.AppDir)
 		}
@@ -147,7 +147,7 @@ func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles 
 	if err != nil {
 		return err
 	}
-	latest, found := getLatestFile(files, now, templateOpts.File)
+	latest, found := getLatestTemplateFile(files, now, templateOpts.File)
 	// set copyDate to be empty if no latest file is found and return nil error,
 	// otherwise an error will be raised on the app's first use
 	if !found {
@@ -259,7 +259,7 @@ func openInEditor(t *template.Template, ed *editor.Editor) error {
 	return ed.Open(t)
 }
 
-func getLatestFile(files []string, now time.Time, opts config.FileOpts) (string, bool) {
+func getLatestTemplateFile(files []string, now time.Time, opts config.FileOpts) (string, bool) {
 	delta := math.Inf(1)
 	latest := ""
 
