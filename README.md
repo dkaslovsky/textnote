@@ -38,7 +38,7 @@ $ textnote
 
 To first configure textnote before creating notes, run
 ```
-$ textnote config -p
+$ textnote init
 ```
 and then edit the configuration file found at the displayed path.
 
@@ -116,12 +116,12 @@ opens yesterday's note.
 
 Sections from previous notes can be copied or moved into a current note.
 Each section to be copied is specified in a separate `-s` flag.
-The previous day's note is used as the source by default and a specific date for a source note can be provided through the `--copy` flag.
+The most recent dated note is used as the source by default and a specific date for a source note can be provided through the `--copy` flag.
 For example,
 ```
 $ textnote open -s TODO -s NOTES
 ```
-will create today's note with the "TODO" and "NOTES" sections copied from yesterday's note, while
+will create today's note with the "TODO" and "NOTES" sections copied from the most recently dated (often yesterday's) note, while
 ```
 $ textnote open --copy 2021-01-17 -s TODO
 ```
@@ -146,12 +146,21 @@ For convenience, the `-t` flag can be used to open tomorrow's note:
 ```
 $ textnote open -t
 ```
-in which case the copy source defaults to today.
 For example,
 ```
 $ textnote open -t -s TODO
 ```
-creates a note for tomorrow with a copy of today's "TODO" section contents.
+creates a note for tomorrow with a copy of today's "TODO" section contents, assuming a note for today exits.
+Also for convenience, the latest dated note can be opened using the `-l` flag, noting that notes dated in the future are ignored.
+For example,
+```
+$ textnote open -l
+```
+opens today's note if it exists or the most recently dated note otherwise.
+
+When opening or copying from a note requires searching for the latest (most recently dated) note, textnote checks the number of template files that were required to be searched.
+If this number is above a threshold (as set in the [configuration](#configuration)), a message suggesting to run the [archive](#archive) command to reduce the number of template files is displayed.
+This message can be effectively disabled by configuring the `templateFileCountThresh` configuration parameter to be very large, but doing so is not recommended.
 
 The flag options are summarized by the command's help:
 ```
@@ -163,14 +172,15 @@ Usage:
   textnote open [flags]
 
 Flags:
-      --copy string       date of note for copying sections (defaults to yesterday)
-  -c, --copy-back uint    number of days back from today for copying from a note (ignored if copy flag is used)
+      --copy string       date of note for copying sections (defaults to date of most recent note, cannot be used with copy-back flag)
+  -c, --copy-back uint    number of days back from today for copying from a note (cannot be used with copy flag)
       --date string       date for note to be opened (defaults to today)
-  -d, --days-back uint    number of days back from today for opening a note (ignored if date or tomorrow flags are used)
+  -d, --days-back uint    number of days back from today for opening a note (cannot be used with date, tomorrow, or latest flags)
   -x, --delete            delete sections after copy
   -h, --help              help for open
+  -l, --latest            specify the most recent dated note to be opened (cannot be used with date, days-back, or tomorrow flags)
   -s, --section strings   section to copy (defaults to none)
-  -t, --tomorrow          specify tomorrow as the date for note to be opened (ignored if date flag is used)
+  -t, --tomorrow          specify tomorrow as the date for note to be opened (cannot be used with date, days-back, or latest flags)
 ```
 
 
@@ -261,13 +271,18 @@ Individual configuration parameters also can be overridden with [environment var
 
 Importantly, if textnote's configuration is changed, notes created using a previous configuration might be incompatible with textnote's functionality.
 
-The current configuration can be displayed by running the `config` command:
+The configuration file can be displayed by running the `config` command with the `-f` flag:
 ```
-$ textnote config
+$ textnote config -f
 ```
 The configuration file path is displayed by using the `-p` flag:
 ```
 $ textnote config -p
+```
+[Defaults](#defaults) are used for configuration parameters omitted from the configuration file or configuration [environment variables](#environment-variable-overrides).
+The `config` command with the `-a` flag displays the full "active" configuration used when the application runs, including default and environment parameters:
+```
+$ textnote config -a
 ```
 
 ### Defaults
@@ -301,6 +316,7 @@ archive:
   monthTimeFormat: Jan2006                # Golang format for month archive file and header dates
 cli:
   timeFormat: "2006-01-02"                # Golang format for CLI date input
+templateFileCountTresh: 90                # threshold for displaying a warning for too many template files
 ```
 
 ### Environment Variable Overrides
@@ -308,6 +324,8 @@ Any configuration parameter can be overridden by setting a corresponding environ
 Note that setting an environment variable does not change the value specified in the configuration file.
 The full list of environment variables is listed below and is always available by running `textnote --help`:
 ```
+  TEXTNOTE_TEMPLATE_FILE_COUNT_THRESH int
+    	threshold for warning too many template files
   TEXTNOTE_HEADER_PREFIX string
     	prefix to attach to header
   TEXTNOTE_HEADER_SUFFIX string
