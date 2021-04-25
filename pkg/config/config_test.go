@@ -119,6 +119,22 @@ func TestValidateOpts(t *testing.T) {
 		err := ValidateOpts(opts)
 		require.NoError(t, err)
 	})
+
+	t.Run("template file count threshold not greater than archive after days should error", func(t *testing.T) {
+		opts := getTestOpts()
+		opts.Archive.AfterDays = 100
+		opts.TemplateFileCountThresh = 100
+		err := ValidateOpts(opts)
+		require.Error(t, err)
+	})
+
+	t.Run("template file count threshold greater than archive after days should not error", func(t *testing.T) {
+		opts := getTestOpts()
+		opts.Archive.AfterDays = 100
+		opts.TemplateFileCountThresh = 101
+		err := ValidateOpts(opts)
+		require.NoError(t, err)
+	})
 }
 
 func getTestOpts() Opts {

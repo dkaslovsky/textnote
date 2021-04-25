@@ -18,8 +18,6 @@ import (
 
 const day = 24 * time.Hour
 
-const numTemplateFilesWarningTresh = 100 // TODO: move to config, validate greater than archive after
-
 type commandOptions struct {
 	// mutually exclusive flags for date to open
 	date     string
@@ -49,13 +47,16 @@ func CreateOpenCmd() *cobra.Command {
 				return err
 			}
 			now := time.Now()
-			err = setDateOpt(&cmdOpts, opts, getDirFiles, now)
+			shouldWarnForDate, err := setDateOpt(&cmdOpts, opts, getDirFiles, now)
 			if err != nil {
 				return err
 			}
-			err = setCopyDateOpt(&cmdOpts, opts, getDirFiles, now)
+			shouldWarnForCopy, err := setCopyDateOpt(&cmdOpts, opts, getDirFiles, now)
 			if err != nil {
 				return err
+			}
+			if shouldWarnForDate || shouldWarnForCopy {
+				log.Printf("found more than %d template files when searching for latest, consider running archive command to more efficient performance", opts.TemplateFileCountThresh)
 			}
 			return run(opts, cmdOpts)
 		},
@@ -81,9 +82,10 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete sections after copy")
 }
 
-func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func(string) ([]string, error), now time.Time) error {
+func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func(string) ([]string, error), now time.Time) (bool, error) {
 	errMutuallyExclusive := errors.New("only one of [date, days-back, tomorrow, latest] flags may be used")
 	date := ""
+	shouldWarn := false
 
 	if cmdOpts.date != "" {
 		date = cmdOpts.date
@@ -91,35 +93,38 @@ func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func
 
 	if cmdOpts.daysBack != 0 {
 		if date != "" {
-			return errMutuallyExclusive
+			return shouldWarn, errMutuallyExclusive
 		}
 		date = now.Add(-day * time.Duration(cmdOpts.daysBack)).Format(templateOpts.Cli.TimeFormat)
 	}
 
 	if cmdOpts.tomorrow {
 		if date != "" {
-			return errMutuallyExclusive
+			return shouldWarn, errMutuallyExclusive
 		}
 		date = now.Add(day).Format(templateOpts.Cli.TimeFormat)
 	}
 
 	if cmdOpts.latest {
 		if date != "" {
-			return errMutuallyExclusive
+			return shouldWarn, errMutuallyExclusive
 		}
 
 		files, err := getFiles(templateOpts.AppDir)
 		if err != nil {
-			return err
+			return shouldWarn, err
 		}
-		latest, _ := getLatestTemplateFile(files, now, templateOpts.File)
+		latest, numFound := getLatestTemplateFile(files, now, templateOpts.File)
 		if latest == "" {
-			return fmt.Errorf("failed to find latest template file in [%s]", templateOpts.AppDir)
+			return shouldWarn, fmt.Errorf("failed to find latest template file in [%s]", templateOpts.AppDir)
 		}
 		if templateOpts.File.Ext != "" {
 			latest = strings.TrimSuffix(latest, fmt.Sprintf(".%s", templateOpts.File.Ext))
 		}
 		date = latest
+
+		// check if warning for too many template files should be displayed
+		shouldWarn = numFound > templateOpts.TemplateFileCountThresh
 	}
 
 	// default to today
@@ -128,34 +133,37 @@ func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func
 	}
 
 	cmdOpts.date = date
-	return nil
+	return shouldWarn, nil
 }
 
-func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func(string) ([]string, error), now time.Time) error {
+func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func(string) ([]string, error), now time.Time) (bool, error) {
 	if cmdOpts.copyDate != "" && cmdOpts.copyDaysBack != 0 {
-		return errors.New("only one of [copy, copy-back] flags may be used")
+		return false, errors.New("only one of [copy, copy-back] flags may be used")
 	}
 
 	if cmdOpts.copyDate != "" {
-		return nil
+		return false, nil
 	}
 	if cmdOpts.copyDaysBack != 0 {
 		cmdOpts.copyDate = now.Add(-day * time.Duration(cmdOpts.copyDaysBack)).Format(templateOpts.Cli.TimeFormat)
-		return nil
+		return false, nil
 	}
 
 	// default to latest
 	files, err := getFiles(templateOpts.AppDir)
 	if err != nil {
-		return err
+		return false, err
 	}
 	latest, numFound := getLatestTemplateFile(files, now, templateOpts.File)
-	warnTooManyTemplateFiles(numFound)
 	if templateOpts.File.Ext != "" {
 		latest = strings.TrimSuffix(latest, fmt.Sprintf(".%s", templateOpts.File.Ext))
 	}
 	cmdOpts.copyDate = latest
-	return nil
+
+	// check if warning for too many template files should be displayed
+	shouldWarn := numFound > templateOpts.TemplateFileCountThresh
+
+	return shouldWarn, nil
 }
 
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
@@ -184,7 +192,7 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 		return fmt.Errorf("cannot find note to copy, [%s] might be empty", templateOpts.AppDir)
 	}
 	if cmdOpts.copyDate == cmdOpts.date {
-		return errors.New("cannot copy from note being written")
+		return fmt.Errorf("copying from note dated [%s] not allowed when writting to note for date [%s]", cmdOpts.copyDate, cmdOpts.date)
 	}
 	copyDate, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.copyDate)
 	if err != nil {
@@ -299,8 +307,8 @@ func getDirFiles(dir string) ([]string, error) {
 	return fileNames, nil
 }
 
-func warnTooManyTemplateFiles(n int) {
-	if n > numTemplateFilesWarningTresh {
-		log.Printf("Found %d template files, consider running archive command for more efficient performance", n)
-	}
-}
+// func warnIfTooManyTemplateFiles(n int, thresh int) {
+// 	if n > thresh {
+// 		log.Printf("Found %d template files, consider running archive command for more efficient performance", n)
+// 	}
+// }

@@ -50,6 +50,7 @@ func GetOpts() config.Opts {
 		Cli: config.CliOpts{
 			TimeFormat: "2006-01-02",
 		},
+		TemplateFileCountThresh: 90,
 	}
 
 	err := config.ValidateOpts(opts)
