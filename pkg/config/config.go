@@ -251,3 +251,16 @@ func DescribeEnvVars() string {
 func GetConfigFilePath() string {
 	return filepath.Join(appDir, fileName)
 }
+
+// InitApp initializes the application by ensuring the necessary directories and files exist
+func InitApp() error {
+	err := EnsureAppDir()
+	if err != nil {
+		return err
+	}
+	err = CreateIfNotExists()
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -14,12 +14,7 @@ var version string // set by build ldflags
 func main() {
 	log.SetFlags(0)
 
-	err := config.EnsureAppDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = config.CreateIfNotExists()
+	err := config.InitApp()
 	if err != nil {
 		log.Fatal(err)
 	}

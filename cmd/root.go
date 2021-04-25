@@ -6,6 +6,7 @@ import (
 
 	"github.com/dkaslovsky/textnote/cmd/archive"
 	"github.com/dkaslovsky/textnote/cmd/config"
+	"github.com/dkaslovsky/textnote/cmd/initialize"
 	"github.com/dkaslovsky/textnote/cmd/open"
 	pkgconf "github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/spf13/cobra"
@@ -28,6 +29,7 @@ func Run(name string, version string) error {
 		open.CreateOpenCmd(),
 		archive.CreateArchiveCmd(),
 		config.CreateConfigCmd(),
+		initialize.CreateInitCmd(),
 	)
 
 	setVersion(cmd, version)
