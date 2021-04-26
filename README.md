@@ -284,6 +284,39 @@ The `config` command with the `-a` flag displays the full "active" configuration
 ```
 $ textnote config -a
 ```
+To update the configuration file to match the active configuration, run
+```
+$ textnote config update
+```
+This command overwrites the existing configuration file.
+It can be used instead of manual updates to the configuration file by passing environment variables.
+For example,
+```
+$ TEXTNOTE_ARCHIVE_FILE_PREFIX="my_archive-" textnote config update
+```
+The `update` command is also helpful for writing configuration parameters that have been added with new versions of textnote.
+
+The `config` command options are summarized by the command's help:
+```
+$ textnote config -h
+
+manages the application's configuration
+
+Usage:
+  textnote config [flags]
+  textnote config [command]
+
+Available Commands:
+  update      update the configuration file with active configuration
+
+Flags:
+  -a, --active   display configuration the application actively uses (includes environment variable configuration)
+  -f, --file     display contents of configuration file (default)
+  -h, --help     help for config
+  -p, --path     display path to configuration file
+
+Use "textnote config [command] --help" for more information about a command.
+```
 
 ### Defaults
 The default configuration file is automatically written the first time textnote is run:

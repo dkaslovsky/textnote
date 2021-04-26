@@ -23,8 +23,8 @@ func CreateConfigCmd() *cobra.Command {
 	cmdOpts := commandOptions{}
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "show configuration",
-		Long:  "displays the application's configuration",
+		Short: "manage configuration",
+		Long:  "manages the application's configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			configPath := config.GetConfigFilePath()
 
@@ -42,6 +42,7 @@ func CreateConfigCmd() *cobra.Command {
 		},
 	}
 	attachOpts(cmd, &cmdOpts)
+	cmd.AddCommand(CreateConfigUpdateCmd())
 	return cmd
 }
 
@@ -50,6 +51,23 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags.BoolVarP(&cmdOpts.path, "path", "p", false, "display path to configuration file")
 	flags.BoolVarP(&cmdOpts.active, "active", "a", false, "display configuration the application actively uses (includes environment variable configuration)")
 	flags.BoolVarP(&cmdOpts.file, "file", "f", false, "display contents of configuration file (default)")
+}
+
+// CreateConfigUpdateCmd creates the config update subcommand
+func CreateConfigUpdateCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update",
+		Short: "update the configuration file with active configuration",
+		Long:  "update the configuration file to match the active configuration",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			active, err := getActiveConfigYaml()
+			if err != nil {
+				return err
+			}
+			return os.WriteFile(config.GetConfigFilePath(), active, 0644)
+		},
+	}
+	return cmd
 }
 
 func displayConfigFile(configPath string) error {
@@ -70,16 +88,18 @@ func displayConfigFile(configPath string) error {
 }
 
 func displayActiveConfig() error {
-	opts, err := config.Load()
+	yml, err := getActiveConfigYaml()
 	if err != nil {
 		return err
 	}
-
-	yml, err := yaml.Marshal(opts)
-	if err != nil {
-		return err
-	}
-
 	log.Print(string(yml))
 	return nil
+}
+
+func getActiveConfigYaml() ([]byte, error) {
+	opts, err := config.Load()
+	if err != nil {
+		return []byte{}, err
+	}
+	return yaml.Marshal(opts)
 }
