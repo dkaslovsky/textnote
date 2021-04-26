@@ -3,7 +3,9 @@ package open
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
@@ -17,13 +19,18 @@ import (
 const day = 24 * time.Hour
 
 type commandOptions struct {
-	date         string
+	// mutually exclusive flags for date to open
+	date     string
+	daysBack uint
+	tomorrow bool
+	latest   bool
+
+	// mutually exclusive flags for copy date
 	copyDate     string
-	daysBack     uint
 	copyDaysBack uint
-	tomorrow     bool
-	sections     []string
-	delete       bool
+
+	sections []string
+	delete   bool
 }
 
 // CreateOpenCmd creates the open subcommand
@@ -40,8 +47,17 @@ func CreateOpenCmd() *cobra.Command {
 				return err
 			}
 			now := time.Now()
-			setDateOpt(&cmdOpts, now, opts)
-			setCopyDateOpt(&cmdOpts, now, opts)
+			shouldWarnForDate, err := setDateOpt(&cmdOpts, opts, getDirFiles, now)
+			if err != nil {
+				return err
+			}
+			shouldWarnForCopy, err := setCopyDateOpt(&cmdOpts, opts, getDirFiles, now)
+			if err != nil {
+				return err
+			}
+			if shouldWarnForDate || shouldWarnForCopy {
+				log.Printf("found more than %d template files when searching for latest, consider running archive command to more efficient performance", opts.TemplateFileCountThresh)
+			}
 			return run(opts, cmdOpts)
 		},
 	}
@@ -51,49 +67,103 @@ func CreateOpenCmd() *cobra.Command {
 
 func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags := cmd.Flags()
+
+	// mutually exclusive flags for date to open
 	flags.StringVar(&cmdOpts.date, "date", "", "date for note to be opened (defaults to today)")
-	flags.StringVar(&cmdOpts.copyDate, "copy", "", "date of note for copying sections (defaults to yesterday)")
-	flags.UintVarP(&cmdOpts.daysBack, "days-back", "d", 0, "number of days back from today for opening a note (ignored if date or tomorrow flags are used)")
-	flags.UintVarP(&cmdOpts.copyDaysBack, "copy-back", "c", 0, "number of days back from today for copying from a note (ignored if copy flag is used)")
-	flags.BoolVarP(&cmdOpts.tomorrow, "tomorrow", "t", false, "specify tomorrow as the date for note to be opened (ignored if date flag is used)")
+	flags.UintVarP(&cmdOpts.daysBack, "days-back", "d", 0, "number of days back from today for opening a note (cannot be used with date, tomorrow, or latest flags)")
+	flags.BoolVarP(&cmdOpts.tomorrow, "tomorrow", "t", false, "specify tomorrow as the date for note to be opened (cannot be used with date, days-back, or latest flags)")
+	flags.BoolVarP(&cmdOpts.latest, "latest", "l", false, "specify the most recent dated note to be opened (cannot be used with date, days-back, or tomorrow flags)")
+
+	// mutually exclusive flags for copy date
+	flags.StringVar(&cmdOpts.copyDate, "copy", "", "date of note for copying sections (defaults to date of most recent note, cannot be used with copy-back flag)")
+	flags.UintVarP(&cmdOpts.copyDaysBack, "copy-back", "c", 0, "number of days back from today for copying from a note (cannot be used with copy flag)")
+
 	flags.StringSliceVarP(&cmdOpts.sections, "section", "s", []string{}, "section to copy (defaults to none)")
 	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete sections after copy")
 }
 
-func setDateOpt(cmdOpts *commandOptions, now time.Time, templateOpts config.Opts) {
+func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func(string) ([]string, error), now time.Time) (bool, error) {
+	errMutuallyExclusive := errors.New("only one of [date, days-back, tomorrow, latest] flags may be used")
+	date := ""
+	shouldWarn := false
+
 	if cmdOpts.date != "" {
-		return
+		date = cmdOpts.date
 	}
-	if cmdOpts.tomorrow {
-		// set date as tomorrow
-		cmdOpts.date = now.Add(day).Format(templateOpts.Cli.TimeFormat)
-		return
-	}
+
 	if cmdOpts.daysBack != 0 {
-		// use daysBack if specified
-		cmdOpts.date = now.Add(-day * time.Duration(cmdOpts.daysBack)).Format(templateOpts.Cli.TimeFormat)
-		return
+		if date != "" {
+			return shouldWarn, errMutuallyExclusive
+		}
+		date = now.Add(-day * time.Duration(cmdOpts.daysBack)).Format(templateOpts.Cli.TimeFormat)
 	}
-	// default is today
-	cmdOpts.date = now.Format(templateOpts.Cli.TimeFormat)
+
+	if cmdOpts.tomorrow {
+		if date != "" {
+			return shouldWarn, errMutuallyExclusive
+		}
+		date = now.Add(day).Format(templateOpts.Cli.TimeFormat)
+	}
+
+	if cmdOpts.latest {
+		if date != "" {
+			return shouldWarn, errMutuallyExclusive
+		}
+
+		files, err := getFiles(templateOpts.AppDir)
+		if err != nil {
+			return shouldWarn, err
+		}
+		latest, numFound := getLatestTemplateFile(files, now, templateOpts.File)
+		if latest == "" {
+			return shouldWarn, fmt.Errorf("failed to find latest template file in [%s]", templateOpts.AppDir)
+		}
+		if templateOpts.File.Ext != "" {
+			latest = strings.TrimSuffix(latest, fmt.Sprintf(".%s", templateOpts.File.Ext))
+		}
+		date = latest
+
+		// check if warning for too many template files should be displayed
+		shouldWarn = numFound > templateOpts.TemplateFileCountThresh
+	}
+
+	// default to today
+	if date == "" {
+		date = now.Format(templateOpts.Cli.TimeFormat)
+	}
+
+	cmdOpts.date = date
+	return shouldWarn, nil
 }
 
-func setCopyDateOpt(cmdOpts *commandOptions, now time.Time, templateOpts config.Opts) {
-	if cmdOpts.copyDate != "" {
-		return
+func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func(string) ([]string, error), now time.Time) (bool, error) {
+	if cmdOpts.copyDate != "" && cmdOpts.copyDaysBack != 0 {
+		return false, errors.New("only one of [copy, copy-back] flags may be used")
 	}
-	if cmdOpts.tomorrow {
-		// default to today if copying to tomorrow's note
-		cmdOpts.copyDate = now.Format(templateOpts.Cli.TimeFormat)
-		return
+
+	if cmdOpts.copyDate != "" {
+		return false, nil
 	}
 	if cmdOpts.copyDaysBack != 0 {
-		// use copyDaysBack if specified
 		cmdOpts.copyDate = now.Add(-day * time.Duration(cmdOpts.copyDaysBack)).Format(templateOpts.Cli.TimeFormat)
-		return
+		return false, nil
 	}
-	// default is yesterday
-	cmdOpts.copyDate = now.Add(-day).Format(templateOpts.Cli.TimeFormat)
+
+	// default to latest
+	files, err := getFiles(templateOpts.AppDir)
+	if err != nil {
+		return false, err
+	}
+	latest, numFound := getLatestTemplateFile(files, now, templateOpts.File)
+	if templateOpts.File.Ext != "" {
+		latest = strings.TrimSuffix(latest, fmt.Sprintf(".%s", templateOpts.File.Ext))
+	}
+	cmdOpts.copyDate = latest
+
+	// check if warning for too many template files should be displayed
+	shouldWarn := numFound > templateOpts.TemplateFileCountThresh
+
+	return shouldWarn, nil
 }
 
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
@@ -118,6 +188,12 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	}
 
 	// load source for copy
+	if cmdOpts.copyDate == "" {
+		return fmt.Errorf("cannot find note to copy, [%s] might be empty", templateOpts.AppDir)
+	}
+	if cmdOpts.copyDate == cmdOpts.date {
+		return fmt.Errorf("copying from note dated [%s] not allowed when writting to note for date [%s]", cmdOpts.copyDate, cmdOpts.date)
+	}
 	copyDate, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.copyDate)
 	if err != nil {
 		return errors.Wrapf(err, "cannot copy note from malformed date [%s]", cmdOpts.copyDate)
@@ -187,3 +263,52 @@ func openInEditor(t *template.Template, ed *editor.Editor) error {
 	}
 	return ed.Open(t)
 }
+
+func getLatestTemplateFile(files []string, now time.Time, opts config.FileOpts) (string, int) {
+	latest := ""
+	delta := math.Inf(1)
+	numTemplateFiles := 0
+
+	for _, f := range files {
+		fileTime, ok := template.ParseTemplateFileName(f, opts)
+		if !ok {
+			// skip archive files and other non-template files that cannot be parsed
+			continue
+		}
+		numTemplateFiles++
+		curdelta := now.Sub(fileTime).Hours()
+		if curdelta < 0 {
+			continue
+		}
+		if curdelta < delta {
+			delta = curdelta
+			latest = f
+		}
+	}
+
+	return latest, numTemplateFiles
+}
+
+func getDirFiles(dir string) ([]string, error) {
+	fileNames := []string{}
+
+	dirItems, err := os.ReadDir(dir)
+	if err != nil {
+		return fileNames, err
+	}
+
+	for _, item := range dirItems {
+		if item.IsDir() {
+			continue
+		}
+		fileNames = append(fileNames, item.Name())
+	}
+
+	return fileNames, nil
+}
+
+// func warnIfTooManyTemplateFiles(n int, thresh int) {
+// 	if n > thresh {
+// 		log.Printf("Found %d template files, consider running archive command for more efficient performance", n)
+// 	}
+// }

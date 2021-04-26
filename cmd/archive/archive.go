@@ -2,7 +2,6 @@ package archive
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -50,7 +49,7 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	archiver := archive.NewArchiver(templateOpts, file.NewReadWriter(), time.Now())
 
-	files, err := ioutil.ReadDir(templateOpts.AppDir)
+	files, err := os.ReadDir(templateOpts.AppDir)
 	if err != nil {
 		return err
 	}

@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -28,12 +27,13 @@ var (
 
 // Opts are options that configure the application
 type Opts struct {
-	AppDir  string      `yaml:"-"` // AppDir is always read from the environment and is not written to file
-	Header  HeaderOpts  `yaml:"header"`
-	Section SectionOpts `yaml:"section"`
-	File    FileOpts    `yaml:"file"`
-	Archive ArchiveOpts `yaml:"archive"`
-	Cli     CliOpts     `yaml:"cli"`
+	AppDir                  string      `yaml:"-"` // AppDir is always read from the environment and is not written to file
+	Header                  HeaderOpts  `yaml:"header"`
+	Section                 SectionOpts `yaml:"section"`
+	File                    FileOpts    `yaml:"file"`
+	Archive                 ArchiveOpts `yaml:"archive"`
+	Cli                     CliOpts     `yaml:"cli"`
+	TemplateFileCountThresh int         `yaml:"templateFileCountTresh" env:"TEXTNOTE_TEMPLATE_FILE_COUNT_THRESH" env-description:"threshold for warning too many template files"`
 }
 
 // HeaderOpts are options for configuring the header of a note
@@ -112,6 +112,7 @@ func getDefaultOpts() Opts {
 		Cli: CliOpts{
 			TimeFormat: "2006-01-02",
 		},
+		TemplateFileCountThresh: 90,
 	}
 }
 
@@ -157,7 +158,7 @@ func CreateIfNotExists() error {
 	if err != nil {
 		return errors.Wrap(err, "unable to generate config file")
 	}
-	err = ioutil.WriteFile(configPath, yml, 0644)
+	err = os.WriteFile(configPath, yml, 0644)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
 	}
@@ -228,6 +229,11 @@ func ValidateOpts(opts Opts) error {
 		return errors.New("cursor line must not be negative")
 	}
 
+	// validate threshold for warning on too many template files is larger than archive after days
+	if opts.TemplateFileCountThresh <= opts.Archive.AfterDays {
+		return errors.New("template file count threshold must be larger than archive after days")
+	}
+
 	return nil
 }
 
@@ -244,4 +250,17 @@ func DescribeEnvVars() string {
 // GetConfigFilePath constructs the full path to the configuration file
 func GetConfigFilePath() string {
 	return filepath.Join(appDir, fileName)
+}
+
+// InitApp initializes the application by ensuring the necessary directories and files exist
+func InitApp() error {
+	err := EnsureAppDir()
+	if err != nil {
+		return err
+	}
+	err = CreateIfNotExists()
+	if err != nil {
+		return err
+	}
+	return nil
 }

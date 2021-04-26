@@ -12,12 +12,9 @@ const name = "textnote"
 var version string // set by build ldflags
 
 func main() {
-	err := config.EnsureAppDir()
-	if err != nil {
-		log.Fatal(err)
-	}
+	log.SetFlags(0)
 
-	err = config.CreateIfNotExists()
+	err := config.InitApp()
 	if err != nil {
 		log.Fatal(err)
 	}
