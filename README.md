@@ -151,15 +151,16 @@ For example,
 $ textnote open -t -s TODO
 ```
 creates a note for tomorrow with a copy of today's "TODO" section contents, assuming a note for today exits.
-Also for convenience, the latest dated note can be opened using the `-l` flag, noting that notes dated in the future are ignored.
-For example,
+
+Also for convenience, the latest (most recent) dated note can be opened using the `-l` flag:
 ```
 $ textnote open -l
 ```
-opens today's note if it exists or the most recently dated note otherwise.
+The most recently dated note is typically from the previous day or a few days ago, but this command will return the note for the current date if it already exists.
+It will ignore notes dated in the future.
 
-When opening or copying from a note requires searching for the latest (most recently dated) note, textnote checks the number of template files that were required to be searched.
-If this number is above a threshold (as set in the [configuration](#configuration)), a message suggesting to run the [archive](#archive) command to reduce the number of template files is displayed.
+When opening/copying requires searching for the latest (most recently dated) note, textnote checks the number of template files that were required to be searched.
+If this number is above a threshold (as set in the [configuration](#configuration)), a message is displayed suggesting to run the [archive](#archive) command to reduce the number of template files.
 This message can be effectively disabled by configuring the `templateFileCountThresh` configuration parameter to be very large, but doing so is not recommended.
 
 The flag options are summarized by the command's help:
@@ -403,10 +404,10 @@ The full list of environment variables is listed below and is always available b
 
 ### Editor-Specific Configuration
 Currently, textnote supports the `file.cusorLine` and `TEXTNOTE_FILE_CURSOR_LINE` configuration for the following editors:
-* vi/vim
-* emacs
-* neovim
-* nano
+* Vi/Vim
+* Emacs
+* Neovim
+* Nano
 
 textnote will work with all other editors but will not respect this congifuration parameter.
 
