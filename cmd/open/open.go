@@ -29,8 +29,11 @@ type commandOptions struct {
 	copyDate     string
 	copyDaysBack uint
 
+	deleteFlagVal  int  // count of number of times delete flag is passed
+	deleteSections bool // delete sections on copy (deleteFlagVal > 0)
+	deleteEmpty    bool // delete file if empty after deleting sections (deleteFlagVal > 1)
+
 	sections []string
-	delete   bool
 }
 
 // CreateOpenCmd creates the open subcommand
@@ -58,6 +61,7 @@ func CreateOpenCmd() *cobra.Command {
 			if shouldWarnForDate || shouldWarnForCopy {
 				log.Printf("found more than %d template files when searching for latest, consider running archive command to more efficient performance", opts.TemplateFileCountThresh)
 			}
+			setDeleteOpts(&cmdOpts)
 			return run(opts, cmdOpts)
 		},
 	}
@@ -79,7 +83,7 @@ func attachOpts(cmd *cobra.Command, cmdOpts *commandOptions) {
 	flags.UintVarP(&cmdOpts.copyDaysBack, "copy-back", "c", 0, "number of days back from today for copying from a note (cannot be used with copy flag)")
 
 	flags.StringSliceVarP(&cmdOpts.sections, "section", "s", []string{}, "section to copy (defaults to none)")
-	flags.BoolVarP(&cmdOpts.delete, "delete", "x", false, "delete sections after copy")
+	flags.CountVarP(&cmdOpts.deleteFlagVal, "delete", "x", "delete sections after copy (pass flag twice to also delete empty source note)")
 }
 
 func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func(string) ([]string, error), now time.Time) (bool, error) {
@@ -166,6 +170,11 @@ func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles 
 	return shouldWarn, nil
 }
 
+func setDeleteOpts(cmdOpts *commandOptions) {
+	cmdOpts.deleteSections = cmdOpts.deleteFlagVal > 0
+	cmdOpts.deleteEmpty = cmdOpts.deleteFlagVal > 1
+}
+
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	date, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.date)
 	if err != nil {
@@ -216,14 +225,23 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 		return err
 	}
 
-	if cmdOpts.delete {
+	if cmdOpts.deleteSections {
 		err = deleteSections(src, cmdOpts.sections)
 		if err != nil {
 			return errors.Wrap(err, "failed to remove section content from source file")
 		}
-		err = rw.Overwrite(src)
-		if err != nil {
-			return errors.Wrap(err, "failed to save changes to source file")
+
+		if cmdOpts.deleteEmpty && src.IsEmpty() {
+			err = os.Remove(src.GetFilePath())
+			if err != nil {
+				return errors.Wrapf(err, "failed to remove empty source file")
+			}
+		} else {
+			err = rw.Overwrite(src)
+			if err != nil {
+				return errors.Wrap(err, "failed to save changes to source file")
+			}
+
 		}
 	}
 

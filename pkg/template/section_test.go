@@ -326,7 +326,116 @@ func TestParseSectionContents(t *testing.T) {
 	}
 }
 
-func TestIsEmptyContents(t *testing.T) {
+// func TestIsEmptyContents(t *testing.T) {
+// 	type testCase struct {
+// 		contents []contentItem
+// 		expected bool
+// 	}
+
+// 	tests := map[string]testCase{
+// 		"empty contents": {
+// 			contents: []contentItem{},
+// 			expected: true,
+// 		},
+// 		"single content with only newlines and empty header": {
+// 			contents: []contentItem{
+// 				{
+// 					header: "",
+// 					text:   "\n\n\n",
+// 				},
+// 			},
+// 			expected: true,
+// 		},
+// 		"single content with only newlines and populated header": {
+// 			contents: []contentItem{
+// 				{
+// 					header: "header",
+// 					text:   "\n\n\n",
+// 				},
+// 			},
+// 			expected: true,
+// 		},
+// 		"multiple contents with only newlines and empty headers": {
+// 			contents: []contentItem{
+// 				{
+// 					header: "",
+// 					text:   "\n\n\n",
+// 				},
+// 				{
+// 					header: "",
+// 					text:   "\n",
+// 				},
+// 			},
+// 			expected: true,
+// 		},
+// 		"multiple contents with only newlines and populated headers": {
+// 			contents: []contentItem{
+// 				{
+// 					header: "header1",
+// 					text:   "\n\n\n",
+// 				},
+// 				{
+// 					header: "header2",
+// 					text:   "\n",
+// 				},
+// 			},
+// 			expected: true,
+// 		},
+// 		"single content with text and no header": {
+// 			contents: []contentItem{
+// 				{
+// 					header: "",
+// 					text:   "\n\nfoo\n",
+// 				},
+// 			},
+// 			expected: false,
+// 		},
+// 		"single content with text and populated header": {
+// 			contents: []contentItem{
+// 				{
+// 					header: "header",
+// 					text:   "\n\nfoo\n",
+// 				},
+// 			},
+// 			expected: false,
+// 		},
+// 		"multiple contents with text and no headers": {
+// 			contents: []contentItem{
+// 				{
+// 					header: "",
+// 					text:   "\n\nfoo\n",
+// 				},
+// 				{
+// 					header: "",
+// 					text:   "bar",
+// 				},
+// 			},
+// 			expected: false,
+// 		},
+// 		"multiple contents with text and populated headers": {
+// 			contents: []contentItem{
+// 				{
+// 					header: "header1",
+// 					text:   "\n\nfoo\n",
+// 				},
+// 				{
+// 					header: "header2",
+// 					text:   "bar",
+// 				},
+// 			},
+// 			expected: false,
+// 		},
+// 	}
+
+// 	for name, test := range tests {
+// 		t.Run(name, func(t *testing.T) {
+// 			val := isEmptyContents(test.contents)
+// 			require.Equal(t, test.expected, val)
+// 		})
+// 	}
+// }
+
+func TestIsEmpty(t *testing.T) {
 	type testCase struct {
 		contents []contentItem
 		expected bool
@@ -429,8 +538,59 @@ func TestIsEmptyContents(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			val := isEmptyContents(test.contents)
+			s := newSection("name", test.contents...)
+			val := s.isEmpty()
 			require.Equal(t, test.expected, val)
 		})
 	}
+}
+
+func TestContentItemIsEmpty(t *testing.T) {
+	type testCase struct {
+		item     contentItem
+		expected bool
+	}
+
+	tests := map[string]testCase{
+		"empty": {
+			item:     contentItem{},
+			expected: true,
+		},
+		"only newlines and empty header": {
+			item: contentItem{
+				header: "",
+				text:   "\n\n\n",
+			},
+			expected: true,
+		},
+		"only newlines and populated header": {
+			item: contentItem{
+				header: "header",
+				text:   "\n\n\n",
+			},
+			expected: true,
+		},
+		"text and no header": {
+			item: contentItem{
+				header: "",
+				text:   "\n\nfoo\n",
+			},
+			expected: false,
+		},
+		"text and populated header": {
+			item: contentItem{
+				header: "header",
+				text:   "\n\nfoo\n",
+			},
+			expected: false,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			val := test.item.isEmpty()
+			require.Equal(t, test.expected, val)
+		})
+	}
+
 }

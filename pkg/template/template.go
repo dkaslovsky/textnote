@@ -89,6 +89,15 @@ func (t *Template) DeleteSectionContents(sectionName string) error {
 	return nil
 }
 
+func (t *Template) IsEmpty() bool {
+	for _, sec := range t.sections {
+		if !sec.isEmpty() {
+			return false
+		}
+	}
+	return true
+}
+
 // Load populates a Template from the contents of a reader
 func (t *Template) Load(r io.Reader) error {
 	raw, err := io.ReadAll(r)

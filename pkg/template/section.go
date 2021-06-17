@@ -35,6 +35,15 @@ func (s *section) sortContents() {
 	})
 }
 
+func (s *section) isEmpty() bool {
+	for _, content := range s.contents {
+		if !content.isEmpty() {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *section) getNameString(prefix string, suffix string) string {
 	return fmt.Sprintf("%s%s%s\n", prefix, s.name, suffix)
 }
@@ -63,6 +72,12 @@ func (ci contentItem) string() string {
 	return ci.text
 }
 
+func (ci contentItem) isEmpty() bool {
+	// exclude trailing newlines for empty content check
+	strippedTxt := strings.Replace(ci.text, "\n", "", -1)
+	return len(strippedTxt) == 0
+}
+
 func parseSection(text string, opts config.Opts) (*section, error) {
 	if len(text) == 0 {
 		return nil, errors.New("cannot parse Section from empty input")
@@ -77,10 +92,14 @@ func parseSection(text string, opts config.Opts) (*section, error) {
 		opts.File.TimeFormat,
 	)
 
-	if isEmptyContents(contents) {
-		return newSection(name), nil
+	// return section populated with contents if any contentItem is non-empty
+	for _, content := range contents {
+		if !content.isEmpty() {
+			return newSection(name, contents...), nil
+		}
 	}
-	return newSection(name, contents...), nil
+	// all contents are empty so return unpopulated section
+	return newSection(name), nil
 }
 
 func parseSectionContents(lines []string, prefix string, suffix string, format string) []contentItem {
@@ -137,18 +156,4 @@ func getSectionNameRegex(prefix string, suffix string) (*regexp.Regexp, error) {
 		return sectionNameRegex, fmt.Errorf("invalid section prefix [%s] or suffix [%s]", prefix, suffix)
 	}
 	return sectionNameRegex, nil
-}
-
-func isEmptyContents(contents []contentItem) bool {
-	if len(contents) == 0 {
-		return true
-	}
-	for _, content := range contents {
-		// do not include trailing newlines as content for empty section
-		strippedTxt := strings.Replace(content.text, "\n", "", -1)
-		if len(strippedTxt) != 0 {
-			return false
-		}
-	}
-	return true
 }

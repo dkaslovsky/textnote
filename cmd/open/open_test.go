@@ -420,3 +420,57 @@ func TestSetCopyDateOpt(t *testing.T) {
 		})
 	}
 }
+
+func TestSetDeleteOpts(t *testing.T) {
+	type testCase struct {
+		cmdOpts                *commandOptions
+		expectedDeleteSections bool
+		expectedDeleteEmpty    bool
+	}
+
+	tests := map[string]testCase{
+		"deleteFlagVal = 0": {
+			cmdOpts: &commandOptions{
+				deleteFlagVal: 0,
+			},
+			expectedDeleteSections: false,
+			expectedDeleteEmpty:    false,
+		},
+		"deleteFlagVal < 0": {
+			cmdOpts: &commandOptions{
+				deleteFlagVal: -1,
+			},
+			expectedDeleteSections: false,
+			expectedDeleteEmpty:    false,
+		},
+		"deleteFlagVal = 1": {
+			cmdOpts: &commandOptions{
+				deleteFlagVal: 1,
+			},
+			expectedDeleteSections: true,
+			expectedDeleteEmpty:    false,
+		},
+		"deleteFlagVal = 2": {
+			cmdOpts: &commandOptions{
+				deleteFlagVal: 2,
+			},
+			expectedDeleteSections: true,
+			expectedDeleteEmpty:    true,
+		},
+		"deleteFlagVal > 2": {
+			cmdOpts: &commandOptions{
+				deleteFlagVal: 3,
+			},
+			expectedDeleteSections: true,
+			expectedDeleteEmpty:    true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			setDeleteOpts(test.cmdOpts)
+			require.Equal(t, test.expectedDeleteSections, test.cmdOpts.deleteSections)
+			require.Equal(t, test.expectedDeleteEmpty, test.cmdOpts.deleteEmpty)
+		})
+	}
+}

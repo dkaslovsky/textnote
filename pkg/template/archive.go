@@ -124,8 +124,5 @@ func isArchiveItemHeader(line string, prefix string, suffix string, format strin
 		return false
 	}
 	_, err := time.Parse(format, stripPrefixSuffix(line, prefix, suffix))
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
