@@ -1,4 +1,4 @@
-## 1.3.0 / 2021-06-16
+## 1.3.0 / 2021-06-19
 
 * [ADDED] Second `--delete`/`-x` flag deletes source file left empty after moving section(s)
 
