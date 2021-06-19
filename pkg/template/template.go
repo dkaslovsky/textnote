@@ -89,6 +89,7 @@ func (t *Template) DeleteSectionContents(sectionName string) error {
 	return nil
 }
 
+// IsEmpty evaluates if a template is empty (ignores whitespace)
 func (t *Template) IsEmpty() bool {
 	for _, sec := range t.sections {
 		if !sec.isEmpty() {

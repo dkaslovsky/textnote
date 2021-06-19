@@ -808,3 +808,63 @@ func TestParseTemplateFileName(t *testing.T) {
 		})
 	}
 }
+
+func TestIsEmpty(t *testing.T) {
+	type testCase struct {
+		templateFile string
+		expected     bool
+	}
+
+	tests := map[string]testCase{
+		"no text": {
+			templateFile: ``,
+			expected:     true,
+		},
+		"empty with one section": {
+			templateFile: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+`,
+			expected: true,
+		},
+		"empty with multiple section": {
+			templateFile: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+_p_TestSection2_q_
+
+_p_TestSection3_q_
+
+
+
+
+`,
+			expected: true,
+		},
+		"not empty": {
+			templateFile: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+_p_TestSection2_q_
+foobar
+
+
+_p_TestSection3_q_
+
+`,
+			expected: false,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			template := NewTemplate(templatetest.GetOpts(), templatetest.Date)
+			err := template.Load(strings.NewReader(test.templateFile))
+			require.NoError(t, err)
+			require.Equal(t, test.expected, template.IsEmpty())
+		})
+	}
+}
