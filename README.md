@@ -140,6 +140,11 @@ $ textnote open --copy 2021-01-17 -s NOTES -x
 ```
 moves the "NOTES" section contents from the 2021-01-17 note into the note for today.
 
+Pass two delete flags (`-xx`) to also delete the source note if moving section(s) leaves the source empty:
+```
+$ textnote open --copy 2021-01-17 -s NOTES -xx
+```
+
 The `--date` and `--copy` (or `-d` and `-c`) flags can be used in combination if such a workflow is desired.
 
 For convenience, the `-t` flag can be used to open tomorrow's note:
@@ -177,7 +182,7 @@ Flags:
   -c, --copy-back uint    number of days back from today for copying from a note (cannot be used with copy flag)
       --date string       date for note to be opened (defaults to today)
   -d, --days-back uint    number of days back from today for opening a note (cannot be used with date, tomorrow, or latest flags)
-  -x, --delete            delete sections after copy
+  -x, --delete count      delete sections after copy (pass flag twice to also delete empty source note)
   -h, --help              help for open
   -l, --latest            specify the most recent dated note to be opened (cannot be used with date, days-back, or tomorrow flags)
   -s, --section strings   section to copy (defaults to none)
