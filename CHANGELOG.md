@@ -1,3 +1,7 @@
+## 1.3.0 / 2021-06-16
+
+* [ADDED] Second `--delete`/`-x` flag deletes source file left empty after moving section(s)
+
 ## 1.2.0 / 2021-04-26
 
 * [ADDED] Flag to open most recently dated ("latest") note
