@@ -843,7 +843,7 @@ _p_TestSection3_q_
 `,
 			expected: true,
 		},
-		"not empty": {
+		"not empty with text": {
 			templateFile: `-^-[Sun] 20 Dec 2020-v-
 
 _p_TestSection1_q_
@@ -855,6 +855,17 @@ foobar
 _p_TestSection3_q_
 
 `,
+			expected: false,
+		},
+		"not empty with whitespace": {
+			templateFile: `-^-[Sun] 20 Dec 2020-v-
+
+_p_TestSection1_q_
+
+_p_TestSection2_q_
+
+_p_TestSection3_q_
+    `,
 			expected: false,
 		},
 	}
