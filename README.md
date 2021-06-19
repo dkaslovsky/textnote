@@ -6,6 +6,8 @@ Simple tool for creating and organizing daily notes on the command line
 [![Go Report Card](https://goreportcard.com/badge/github.com/dkaslovsky/textnote)](https://goreportcard.com/report/github.com/dkaslovsky/textnote)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dkaslovsky/textnote/blob/main/LICENSE)
 
+<br/>
+
 ## Overview
 textnote is a command line tool for quickly creating and managing daily plain text notes.
 It is designed for ease of use to encourage the practice of daily, organized note taking.
@@ -22,6 +24,26 @@ Notes can easily be synced to a remote server or cloud service if so desired by 
 
 textnote opens notes using the text editor specified by the environment variable `$EDITOR` and defaults to Vim if the environment variable is not set.
 See the [Editor-Specific Configuration](#editor-specific-configuration) subsection for more details. 
+
+<br/>
+
+## Table of Contents
+- [Overview](overview)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+  - [Releases](#releases)
+  - [Installing from source](#installing-from-source)
+- [Usage](#usage)
+  - [`open`](#open)
+  - [`archive`](#archive)
+  - [Additional Functionality](#additional-functionality)
+- [Configuration](#configuration)
+  - [Defaults](#defaults)
+  - [Environment Variable Overrides](#environment-variable-overrides)
+  - [Editor-Specific Configuration](#editor-specific-configuration)
+- [License](#license)
+
+<br/>
 
 ## Quick Start
 1. Install textnote (see [Installation](#installation))
@@ -42,8 +64,12 @@ $ textnote init
 ```
 and then edit the configuration file found at the displayed path.
 
+<br/>
+
 ## Installation
 textnote can be installed by downloading a prebuilt binary or by the `go get` command.
+
+<br/>
 
 ### Releases
 The recommended installation method is downloading the latest released binary.
@@ -64,6 +90,8 @@ Windows
 > curl.exe -o textnote.exe -L https://github.com/dkaslovsky/textnote/releases/latest/download/textnote_windows_amd64.exe
 ```
 
+<br/>
+
 ### Installing from source
 
 textnote can also be installed using Go's built-in tooling:
@@ -74,10 +102,14 @@ Build from source by cloning this repository and running `go build`.
 
 It is recommended to build using Go 1.15.7 or greater to avoid a potential security issue when looking for the desired editor in the `$PATH` ([details](https://blog.golang.org/path-security)).
 
+<br/>
+
 ## Usage
 textnote is intentionally simple to use and supports two main commands: `open` for creating/opening notes and `archive` for consolidating notes into monthly archive files.
 
-### **open**
+<br/>
+
+### **`open`**
 The `open` command will open a dated note in an editor, creating it first if it does not exist.
 
 Opening or creating a note for the current day is the default action.
@@ -190,7 +222,9 @@ Flags:
 ```
 
 
-## **archive**
+<br/>
+
+### **`archive`**
 The `archive` command consolidates all daily notes into month archives, gathering together the contents for each section of a month in chronological order, labeled by the original date.
 Only notes older than a number of days specified in the configuration are archived.
 
@@ -262,9 +296,13 @@ Flags:
   -n, --no-write   disable writing archive files (helpful for deleting previously archived files)
 ```
 
+<br/>
+
 ### **Additional Functionality**
 textnote is designed for simplicity. 
 Because textnote writes files to a single directory on the local filesystem, most functionality outside of the scope described above can be easily accomplished using stanard command line tools (e.g., `grep` for search).
+
+<br/>
 
 ## Configuration
 While textnote is intended to be extremely lightweight, it is also designed to be highly configurable.
@@ -323,6 +361,8 @@ Flags:
 
 Use "textnote config [command] --help" for more information about a command.
 ```
+
+<br/>
 
 ### Defaults
 The default configuration file is automatically written the first time textnote is run:
@@ -407,6 +447,8 @@ The full list of environment variables is listed below and is always available b
     	formatting string for timestamp CLI flags
 ```
 
+<br/>
+
 ### Editor-Specific Configuration
 Currently, textnote supports the `file.cusorLine` and `TEXTNOTE_FILE_CURSOR_LINE` configuration for the following editors:
 * Vi/Vim
@@ -415,6 +457,8 @@ Currently, textnote supports the `file.cusorLine` and `TEXTNOTE_FILE_CURSOR_LINE
 * Nano
 
 textnote will work with all other editors but will not respect this congifuration parameter.
+
+<br/>
 
 ## License
 textnote is released under the [MIT License](https://github.com/dkaslovsky/textnote/blob/main/LICENSE).
