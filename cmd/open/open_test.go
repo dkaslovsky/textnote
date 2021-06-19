@@ -95,8 +95,6 @@ func TestGetLatestTemplateFile(t *testing.T) {
 }
 
 func TestSetDateOpt(t *testing.T) {
-	templateOpts := templatetest.GetOpts()
-
 	type testCase struct {
 		cmdOpts    *commandOptions
 		files      []string
@@ -292,10 +290,12 @@ func TestSetDateOpt(t *testing.T) {
 			getFiles := func(dir string) ([]string, error) {
 				return test.files, nil
 			}
+			templateOpts := templatetest.GetOpts()
 			if test.shouldWarn {
 				templateOpts.TemplateFileCountThresh = test.warnThresh
 			}
 
+			// test
 			shouldWarn, err := setDateOpt(test.cmdOpts, templateOpts, getFiles, test.now)
 			if test.shouldErr {
 				require.Error(t, err)
@@ -309,8 +309,6 @@ func TestSetDateOpt(t *testing.T) {
 }
 
 func TestSetCopyDateOpt(t *testing.T) {
-	templateOpts := templatetest.GetOpts()
-
 	type testCase struct {
 		cmdOpts    *commandOptions
 		files      []string
@@ -405,10 +403,12 @@ func TestSetCopyDateOpt(t *testing.T) {
 			getFiles := func(dir string) ([]string, error) {
 				return test.files, nil
 			}
+			templateOpts := templatetest.GetOpts()
 			if test.shouldWarn {
 				templateOpts.TemplateFileCountThresh = test.warnThresh
 			}
 
+			// test
 			shouldWarn, err := setCopyDateOpt(test.cmdOpts, templateOpts, getFiles, test.now)
 			if test.shouldErr {
 				require.Error(t, err)
