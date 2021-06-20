@@ -28,7 +28,7 @@ See the [Editor-Specific Configuration](#editor-specific-configuration) subsecti
 <br/>
 
 ## Table of Contents
-- [Overview](overview)
+- [Overview](#overview)
 - [Quick Start](#quick-start)
 - [Installation](#installation)
   - [Releases](#releases)
