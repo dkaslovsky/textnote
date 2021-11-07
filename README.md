@@ -302,6 +302,8 @@ Flags:
 textnote is designed for simplicity. 
 Because textnote writes files to a single directory on the local filesystem, most functionality outside of the scope described above can be easily accomplished using stanard command line tools (e.g., `grep` for search).
 
+A few simple command line functions for searching, listing, and printing notes are available in a [gist](https://gist.github.com/dkaslovsky/010fd26c4d0975639a5c286fa631d6c9).
+
 <br/>
 
 ## Configuration
@@ -456,7 +458,7 @@ Currently, textnote supports the `file.cusorLine` and `TEXTNOTE_FILE_CURSOR_LINE
 * Neovim
 * Nano
 
-textnote will work with all other editors but will not respect this congifuration parameter.
+textnote will work with all other editors but will not respect this configuration parameter.
 
 <br/>
 
