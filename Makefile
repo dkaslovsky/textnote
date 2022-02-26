@@ -5,7 +5,7 @@ STATUS := "$(shell git status -s)"
 BUILD_OUTDIR = "dist"
 BUILD_FILE_PATTERN := "${PROJ}_{{.OS}}_{{.Arch}}"
 
-BUILD_ARCH = "amd64"
+BUILD_ARCH = "amd64 arm64"
 BUILD_OS = "linux darwin windows"
 BUILD_LDFLAGS := "-s -w -X main.version=$(BRANCH)"
 
