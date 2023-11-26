@@ -9,7 +9,7 @@ import (
 	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type commandOptions struct {
@@ -64,7 +64,7 @@ func CreateConfigUpdateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return os.WriteFile(config.GetConfigFilePath(), active, 0644)
+			return os.WriteFile(config.GetConfigFilePath(), active, 0o644)
 		},
 	}
 	return cmd
