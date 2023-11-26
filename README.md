@@ -397,7 +397,7 @@ archive:
   monthTimeFormat: Jan2006                # Golang format for month archive file and header dates
 cli:
   timeFormat: "2006-01-02"                # Golang format for CLI date input
-templateFileCountTresh: 90                # threshold for displaying a warning for too many template files
+templateFileCountThresh: 90               # threshold for displaying a warning for too many template files
 ```
 
 ### Environment Variable Overrides
