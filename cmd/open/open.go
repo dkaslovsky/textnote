@@ -118,7 +118,8 @@ func setDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles func
 		if err != nil {
 			return numFiles, err
 		}
-		latest, numFiles := getLatestTemplateFile(files, now, templateOpts.File)
+		var latest string
+		latest, numFiles = getLatestTemplateFile(files, now, templateOpts.File)
 		if latest == "" {
 			return numFiles, fmt.Errorf("failed to find latest template file in [%s]", templateOpts.AppDir)
 		}
