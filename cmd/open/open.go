@@ -201,7 +201,7 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 		return fmt.Errorf("cannot find note to copy, [%s] might be empty", templateOpts.AppDir)
 	}
 	if cmdOpts.copyDate == cmdOpts.date {
-		return fmt.Errorf("copying from note dated [%s] not allowed when writting to note for date [%s]", cmdOpts.copyDate, cmdOpts.date)
+		return fmt.Errorf("copying from note dated [%s] not allowed when writing to note for date [%s]", cmdOpts.copyDate, cmdOpts.date)
 	}
 	copyDate, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.copyDate)
 	if err != nil {
