@@ -20,10 +20,8 @@ const (
 	fileName = ".config.yml"
 )
 
-var (
-	// appDir is the directory in which the application stores its files
-	appDir = os.Getenv(envAppDir)
-)
+// appDir is the directory in which the application stores its files
+var appDir = os.Getenv(envAppDir)
 
 // Opts are options that configure the application
 type Opts struct {
@@ -33,7 +31,7 @@ type Opts struct {
 	File                    FileOpts    `yaml:"file"`
 	Archive                 ArchiveOpts `yaml:"archive"`
 	Cli                     CliOpts     `yaml:"cli"`
-	TemplateFileCountThresh int         `yaml:"templateFileCountTresh" env:"TEXTNOTE_TEMPLATE_FILE_COUNT_THRESH" env-description:"threshold for warning too many template files"`
+	TemplateFileCountThresh int         `yaml:"templateFileCountThresh" env:"TEXTNOTE_TEMPLATE_FILE_COUNT_THRESH" env-description:"threshold for warning too many template files"`
 }
 
 // HeaderOpts are options for configuring the header of a note
@@ -74,6 +72,13 @@ type ArchiveOpts struct {
 // CliOpts are options for configuring the CLI
 type CliOpts struct {
 	TimeFormat string `yaml:"timeFormat" env:"TEXTNOTE_CLI_TIME_FORMAT" env-description:"formatting string for timestamp CLI flags"`
+}
+
+// OptsBackCompat are options maintained for backwards compatibility that will be honored in the absence (zero-value) of their
+// replacements as handled in loadBackCompat()
+type OptsBackCompat struct {
+	// TemplateFileCountThresh holds the value of the field "templateFileCountTresh" (note the typo) in a yaml configuration file
+	TemplateFileCountThresh int `yaml:"templateFileCountTresh"`
 }
 
 func getDefaultOpts() Opts {
@@ -121,7 +126,7 @@ func Load() (Opts, error) {
 	opts := Opts{}
 
 	// parse config file allowing environment variable overrides
-	err := cleanenv.ReadConfig(GetConfigFilePath(), &opts)
+	err := loadFromEnv(GetConfigFilePath(), &opts)
 	if err != nil {
 		return opts, errors.Wrap(err, "unable to read config file")
 	}
@@ -144,6 +149,34 @@ func Load() (Opts, error) {
 	return opts, nil
 }
 
+func loadFromEnv(path string, opts *Opts) error {
+	err := cleanenv.ReadConfig(path, opts)
+	if err != nil {
+		return err
+	}
+
+	err = loadBackCompat(path, opts)
+	if err != nil {
+		return errors.Wrapf(err, "unable to read config file for backwards compatibility fields")
+	}
+
+	return nil
+}
+
+func loadBackCompat(path string, opts *Opts) error {
+	// TemplateFileCountThresh backwards compatibility with previously typo'd field
+	if opts.TemplateFileCountThresh != 0 {
+		return nil
+	}
+	backcompat := OptsBackCompat{}
+	err := cleanenv.ReadConfig(GetConfigFilePath(), &backcompat)
+	if err != nil {
+		return err
+	}
+	opts.TemplateFileCountThresh = backcompat.TemplateFileCountThresh
+	return nil
+}
+
 // CreateIfNotExists writes defaults to the configuration file if it does not already exist
 func CreateIfNotExists() error {
 	configPath := GetConfigFilePath()
@@ -158,7 +191,7 @@ func CreateIfNotExists() error {
 	if err != nil {
 		return errors.Wrap(err, "unable to generate config file")
 	}
-	err = os.WriteFile(configPath, yml, 0644)
+	err = os.WriteFile(configPath, yml, 0o644)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
 	}
@@ -174,7 +207,7 @@ func EnsureAppDir() error {
 
 	finfo, err := os.Stat(appDir)
 	if os.IsNotExist(err) {
-		err := os.MkdirAll(appDir, 0755)
+		err := os.MkdirAll(appDir, 0o755)
 		if err != nil {
 			return err
 		}
