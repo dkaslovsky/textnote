@@ -146,6 +146,9 @@ func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles 
 	}
 
 	if cmdOpts.copyDate != "" {
+		if _, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.copyDate); err != nil {
+			return numFiles, errors.Wrapf(err, "cannot copy note from malformed date [%s]", cmdOpts.copyDate)
+		}
 		return numFiles, nil
 	}
 	if cmdOpts.copyDaysBack != 0 {
