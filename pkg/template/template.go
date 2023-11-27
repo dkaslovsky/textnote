@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
-	"github.com/pkg/errors"
 )
 
 // Template contains the structure of a note
@@ -69,11 +68,11 @@ type sectionGettable interface {
 func (t *Template) CopySectionContents(src sectionGettable, sectionName string) error {
 	tgtSec, err := t.getSection(sectionName)
 	if err != nil {
-		return errors.Wrap(err, "failed to find section in target")
+		return fmt.Errorf("failed to find section in target: %w", err)
 	}
 	srcSec, err := src.getSection(sectionName)
 	if err != nil {
-		return errors.Wrap(err, "failed to find section in source")
+		return fmt.Errorf("failed to find section in source: %w", err)
 	}
 	tgtSec.contents = append(tgtSec.contents, srcSec.contents...)
 	return nil
@@ -83,7 +82,7 @@ func (t *Template) CopySectionContents(src sectionGettable, sectionName string) 
 func (t *Template) DeleteSectionContents(sectionName string) error {
 	sec, err := t.getSection(sectionName)
 	if err != nil {
-		return errors.Wrap(err, "cannot delete section")
+		return fmt.Errorf("cannot delete section: %w", err)
 	}
 	sec.deleteContents()
 	return nil
@@ -103,13 +102,13 @@ func (t *Template) IsEmpty() bool {
 func (t *Template) Load(r io.Reader) error {
 	raw, err := io.ReadAll(r)
 	if err != nil {
-		return errors.Wrap(err, "error loading template")
+		return fmt.Errorf("error loading template: %w", err)
 	}
 	sectionText := string(raw)
 
 	sectionNameRegex, err := getSectionNameRegex(t.opts.Section.Prefix, t.opts.Section.Suffix)
 	if err != nil {
-		return errors.Wrap(err, "cannot parse sections")
+		return fmt.Errorf("cannot parse sections: %w", err)
 	}
 	sectionBoundaries := sectionNameRegex.FindAllStringSubmatchIndex(sectionText, -1)
 	numSections := len(sectionBoundaries)
@@ -127,7 +126,7 @@ func (t *Template) Load(r io.Reader) error {
 
 		section, err := parseSection(sectionText[idxs[0]:curSecEnd], t.opts)
 		if err != nil {
-			return errors.Wrap(err, "failed to parse section while reading textnote")
+			return fmt.Errorf("failed to parse section while reading textnote: %w", err)
 		}
 
 		idx, found := t.sectionIdx[section.name]

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
-	"github.com/pkg/errors"
 )
 
 // MonthArchiveTemplate contains the structure of a month archive
@@ -49,11 +48,11 @@ func (t *MonthArchiveTemplate) GetFilePath() string {
 func (t *MonthArchiveTemplate) ArchiveSectionContents(src *Template, sectionName string) error {
 	tgtSec, err := t.getSection(sectionName)
 	if err != nil {
-		return errors.Wrap(err, "failed to find section in target")
+		return fmt.Errorf("failed to find section in target: %w", err)
 	}
 	srcSec, err := src.getSection(sectionName)
 	if err != nil {
-		return errors.Wrap(err, "failed to find section in source")
+		return fmt.Errorf("failed to find section in source: %w", err)
 	}
 
 	// flatten text from contents into a single string

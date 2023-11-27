@@ -128,14 +128,14 @@ func Load() (Opts, error) {
 	// parse config file allowing environment variable overrides
 	err := loadFromEnv(GetConfigFilePath(), &opts)
 	if err != nil {
-		return opts, errors.Wrap(err, "unable to read config file")
+		return opts, fmt.Errorf("unable to read config file: %w", err)
 	}
 
 	// overwrite defaults with opts from file/env
 	defaults := getDefaultOpts()
 	err = mergo.Merge(&opts, defaults)
 	if err != nil {
-		return opts, errors.Wrap(err, "unable to integrate configuration from file with defaults")
+		return opts, fmt.Errorf("unable to integrate configuration from file with defaults: %w", err)
 	}
 
 	// set AppDir as read from environment
@@ -143,7 +143,7 @@ func Load() (Opts, error) {
 
 	err = ValidateOpts(opts)
 	if err != nil {
-		return opts, errors.Wrapf(err, "configuration error in [%s]", fileName)
+		return opts, fmt.Errorf("configuration error in [%s]: %w", fileName, err)
 	}
 
 	return opts, nil
@@ -157,7 +157,7 @@ func loadFromEnv(path string, opts *Opts) error {
 
 	err = loadBackCompat(path, opts)
 	if err != nil {
-		return errors.Wrapf(err, "unable to read config file for backwards compatibility fields")
+		return fmt.Errorf("unable to read config file for backwards compatibility fields: %w", err)
 	}
 
 	return nil
@@ -189,11 +189,11 @@ func CreateIfNotExists() error {
 	defaults := getDefaultOpts()
 	yml, err := yaml.Marshal(defaults)
 	if err != nil {
-		return errors.Wrap(err, "unable to generate config file")
+		return fmt.Errorf("unable to generate config file: %w", err)
 	}
 	err = os.WriteFile(configPath, yml, 0o644)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("unable to create configuration file: [%s]", configPath))
+		return fmt.Errorf("unable to create configuration file [%s]: %w", configPath, err)
 	}
 	log.Printf("created default configuration file: [%s]", configPath)
 	return nil

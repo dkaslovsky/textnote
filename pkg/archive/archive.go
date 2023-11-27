@@ -1,13 +1,13 @@
 package archive
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
 	"github.com/dkaslovsky/textnote/pkg/file"
 	"github.com/dkaslovsky/textnote/pkg/template"
-	"github.com/pkg/errors"
 )
 
 // Archiver consolidates templates into archives
@@ -44,7 +44,7 @@ func (a *Archiver) Add(date time.Time) error {
 	t := template.NewTemplate(a.opts, date)
 	err := a.rw.Read(t)
 	if err != nil {
-		return errors.Wrapf(err, "cannot add unreadable file [%s] to archive", t.GetFilePath())
+		return fmt.Errorf("cannot add unreadable file [%s] to archive: %w", t.GetFilePath(), err)
 	}
 
 	monthKey := date.Format(a.opts.Archive.MonthTimeFormat)
@@ -56,7 +56,7 @@ func (a *Archiver) Add(date time.Time) error {
 	for _, section := range a.opts.Section.Names {
 		err := archive.ArchiveSectionContents(t, section)
 		if err != nil {
-			return errors.Wrapf(err, "cannot add contents from [%s] to archive", t.GetFilePath())
+			return fmt.Errorf("cannot add contents from [%s] to archive: %w", t.GetFilePath(), err)
 		}
 	}
 
@@ -71,17 +71,17 @@ func (a *Archiver) Write() error {
 			existing := template.NewMonthArchiveTemplate(a.opts, t.GetDate())
 			err := a.rw.Read(existing)
 			if err != nil {
-				return errors.Wrapf(err, "unable to open existing archive file [%s]", existing.GetFilePath())
+				return fmt.Errorf("unable to open existing archive file [%s]: %w", existing.GetFilePath(), err)
 			}
 			err = t.Merge(existing)
 			if err != nil {
-				return errors.Wrapf(err, "unable to from merge existing archive file [%s]", existing.GetFilePath())
+				return fmt.Errorf("unable to from merge existing archive file [%s] %w", existing.GetFilePath(), err)
 			}
 		}
 
 		err := a.rw.Overwrite(t)
 		if err != nil {
-			return errors.Wrapf(err, "failed to write archive file [%s]", t.GetFilePath())
+			return fmt.Errorf("failed to write archive file [%s]: %w", t.GetFilePath(), err)
 		}
 		log.Printf("wrote archive file [%s]", t.GetFilePath())
 	}

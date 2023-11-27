@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/dkaslovsky/textnote/pkg/config"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -77,11 +76,11 @@ func displayConfigFile(configPath string) error {
 	}
 	f, err := os.Open(configPath)
 	if err != nil {
-		return errors.Wrapf(err, "unable to open configuration file [%s]", configPath)
+		return fmt.Errorf("unable to open configuration file [%s]: %w", configPath, err)
 	}
 	c, err := io.ReadAll(f)
 	if err != nil {
-		return errors.Wrapf(err, "unable to read configuration file [%s]", configPath)
+		return fmt.Errorf("unable to read configuration file [%s]: %w", configPath, err)
 	}
 	log.Print(string(c))
 	return nil
