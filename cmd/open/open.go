@@ -147,7 +147,7 @@ func setCopyDateOpt(cmdOpts *commandOptions, templateOpts config.Opts, getFiles 
 
 	if cmdOpts.copyDate != "" {
 		if _, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.copyDate); err != nil {
-			return numFiles, errors.Wrapf(err, "cannot copy note from malformed date [%s]", cmdOpts.copyDate)
+			return numFiles, fmt.Errorf("cannot copy note from malformed date [%s]: %w", cmdOpts.copyDate, err)
 		}
 		return numFiles, nil
 	}
@@ -178,7 +178,7 @@ func setDeleteOpts(cmdOpts *commandOptions) {
 func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	date, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.date)
 	if err != nil {
-		return errors.Wrapf(err, "cannot create note for malformed date [%s]", cmdOpts.date)
+		return fmt.Errorf("cannot create note for malformed date [%s]: %w", cmdOpts.date, err)
 	}
 
 	t := template.NewTemplate(templateOpts, date)
@@ -205,18 +205,18 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	}
 	copyDate, err := time.Parse(templateOpts.Cli.TimeFormat, cmdOpts.copyDate)
 	if err != nil {
-		return errors.Wrapf(err, "cannot copy note from malformed date [%s]", cmdOpts.copyDate)
+		return fmt.Errorf("cannot copy note from malformed date [%s]: %w", cmdOpts.copyDate, err)
 	}
 	src := template.NewTemplate(templateOpts, copyDate)
 	err = rw.Read(src)
 	if err != nil {
-		return errors.Wrap(err, "cannot read source file for copy")
+		return fmt.Errorf("cannot read source file for copy: %w", err)
 	}
 	// load template contents if it exists
 	if rw.Exists(t) {
 		err := rw.Read(t)
 		if err != nil {
-			return errors.Wrap(err, "cannot load template file")
+			return fmt.Errorf("cannot load template file: %w", err)
 		}
 	}
 	// copy from source to template
@@ -228,18 +228,18 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 	if cmdOpts.deleteSections {
 		err = deleteSections(src, cmdOpts.sections)
 		if err != nil {
-			return errors.Wrap(err, "failed to remove section content from source file")
+			return fmt.Errorf("failed to remove section content from source file: %w", err)
 		}
 
 		if cmdOpts.deleteEmpty && src.IsEmpty() {
 			err = os.Remove(src.GetFilePath())
 			if err != nil {
-				return errors.Wrapf(err, "failed to remove empty source file")
+				return fmt.Errorf("failed to remove empty source file: %w", err)
 			}
 		} else {
 			err = rw.Overwrite(src)
 			if err != nil {
-				return errors.Wrap(err, "failed to save changes to source file")
+				return fmt.Errorf("failed to save changes to source file: %w", err)
 			}
 
 		}
@@ -247,7 +247,7 @@ func run(templateOpts config.Opts, cmdOpts commandOptions) error {
 
 	err = rw.Overwrite(t)
 	if err != nil {
-		return errors.Wrap(err, "failed to write file")
+		return fmt.Errorf("failed to write file: %w", err)
 	}
 	return openInEditor(t, ed)
 }
@@ -256,7 +256,7 @@ func copySections(src *template.Template, tgt *template.Template, sectionNames [
 	for _, sectionName := range sectionNames {
 		err := tgt.CopySectionContents(src, sectionName)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("cannot copy section [%s] from source to target", sectionName))
+			return fmt.Errorf("cannot copy section [%s] from source to target: %w", sectionName, err)
 		}
 	}
 	return nil
@@ -266,7 +266,7 @@ func deleteSections(t *template.Template, sectionNames []string) error {
 	for _, sectionName := range sectionNames {
 		err := t.DeleteSectionContents(sectionName)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("cannot delete section [%s] from template", sectionName))
+			return fmt.Errorf("cannot delete section [%s] from template: %w", sectionName, err)
 		}
 	}
 	return nil
